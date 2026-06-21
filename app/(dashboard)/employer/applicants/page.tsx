@@ -24,7 +24,8 @@ const experienceLevels = ['All', '1-2 years', '3-4 years', '5+ years'];
 
 export default function EmployerApplicantsPage() {
   const { currentUser } = useDemoAuth();
-  const { isShortlisted, toggleShortlist } = useMockData();
+  const mockData = useMockData();
+  const { isShortlisted, toggleShortlist } = mockData;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [englishFilter, setEnglishFilter] = useState('All');
@@ -34,7 +35,7 @@ export default function EmployerApplicantsPage() {
   const [modalOpen, setModalOpen] = useState(false);
 
   const employerProfile = currentUser?.employer_profile_id
-    ? useMockData().getEmployerById(currentUser.employer_profile_id)
+    ? mockData.getEmployerById(currentUser.employer_profile_id)
     : undefined;
 
   const employerId = employerProfile?.id || 'ep-acme';

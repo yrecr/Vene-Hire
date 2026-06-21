@@ -32,6 +32,7 @@ export default function TalentProfilePage() {
   const employerId = isEmployer && currentUser?.employer_profile_id
     ? (getEmployerById(currentUser.employer_profile_id)?.id || 'ep-acme')
     : null;
+  const backLink = isEmployer ? '/employer/applicants' : '/talent';
 
   if (!talent) {
     return (
@@ -44,7 +45,7 @@ export default function TalentProfilePage() {
           <p className="text-gray-500 mb-8">
             The talent profile you are looking for does not exist or has been removed.
           </p>
-          <Link href="/talent">
+          <Link href={backLink}>
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Talent
@@ -63,7 +64,7 @@ export default function TalentProfilePage() {
   return (
     <div className="min-h-screen pt-24 pb-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <Link href="/talent">
+        <Link href={backLink}>
           <Button variant="ghost" className="gap-2 text-gray-600 hover:text-gray-900 -ml-2">
             <ArrowLeft className="w-4 h-4" />
             Back to Talent

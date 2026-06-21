@@ -14,10 +14,11 @@ import type { TalentProfile } from '@/types';
 
 export default function EmployerShortlistPage() {
   const { currentUser } = useDemoAuth();
-  const { shortlistedIds, toggleShortlist } = useMockData();
+  const mockData = useMockData();
+  const { shortlistedIds, toggleShortlist } = mockData;
 
   const employerProfile = currentUser?.employer_profile_id
-    ? useMockData().getEmployerById(currentUser.employer_profile_id)
+    ? mockData.getEmployerById(currentUser.employer_profile_id)
     : undefined;
 
   const employerId = employerProfile?.id || 'ep-acme';
