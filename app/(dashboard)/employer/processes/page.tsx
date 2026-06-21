@@ -2,19 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { GitBranch } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
 import { useDemoAuth } from '@/lib/demo-auth';
-import {
-  mockEmployerProfiles,
-  getProcessesForEmployer,
-  getApplicantById,
-} from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
+import { mockEmployerProfiles } from '@/data/mock';
 
 const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
-
 type FilterTab = typeof filterTabs[number];
 
 function tabToStatus(tab: FilterTab): string | null {
@@ -26,6 +21,7 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useDemoAuth();
+  const { selectionProcesses, getApplicantById } = useMockData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
 
   const employerProfile = currentUser?.employer_profile_id
@@ -33,7 +29,11 @@ export default function EmployerProcessesPage() {
     : mockEmployerProfiles[0];
 
   const employerId = employerProfile?.id || 'ep-acme';
-  const processes = getProcessesForEmployer(employerId);
+
+  const processes = useMemo(
+    () => selectionProcesses.filter((p) => p.employer_id === employerId),
+    [selectionProcesses, employerId]
+  );
 
   const filteredProcesses = useMemo(() => {
     const statusFilter = tabToStatus(activeTab);
@@ -44,15 +44,12 @@ export default function EmployerProcessesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">
-          Selection Processes
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground">Selection Processes</h2>
         <p className="text-muted-foreground mt-1">
           Track and manage your active hiring pipelines.
         </p>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
         {filterTabs.map((tab) => (
           <button
@@ -69,14 +66,13 @@ export default function EmployerProcessesPage() {
         ))}
       </div>
 
-      {/* Process cards */}
       {filteredProcesses.length === 0 ? (
         <EmptyState
           icon={GitBranch}
           title="No processes found"
           description={
             activeTab === 'All'
-              ? 'You have no selection processes yet. Start by browsing applicants.'
+              ? 'You have no selection processes yet. Start by browsing applicants and sending interview requests.'
               : `No processes with "${activeTab}" status.`
           }
         />
@@ -89,7 +85,6 @@ export default function EmployerProcessesPage() {
                 key={process.id}
                 className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow"
               >
-                {/* Top row: applicant info + status */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {applicant && (
@@ -103,15 +98,12 @@ export default function EmployerProcessesPage() {
                       <h3 className="font-semibold text-foreground">
                         {applicant?.display_name || 'Unknown Applicant'}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {process.role_title}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{process.role_title}</p>
                     </div>
                   </div>
                   <ProcessStatusBadge status={process.status} />
                 </div>
 
-                {/* Timeline */}
                 <div className="mb-4">
                   <ProcessTimeline
                     currentStage={process.current_stage as 'intro_interview' | 'technical_interview' | 'contract_signing'}
@@ -122,19 +114,15 @@ export default function EmployerProcessesPage() {
                   />
                 </div>
 
-                {/* Notes and date */}
                 {process.notes && (
                   <p className="text-sm text-muted-foreground mb-2">
-                    <span className="font-medium text-foreground">Notes:</span>{' '}
-                    {process.notes}
+                    <span className="font-medium text-foreground">Notes:</span> {process.notes}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
                   Started{' '}
                   {new Date(process.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
+                    month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
               </div>

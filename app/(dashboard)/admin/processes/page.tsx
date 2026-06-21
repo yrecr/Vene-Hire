@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
-import { mockSelectionProcesses, getApplicantById, getEmployerById } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
+import { getApplicantById, getEmployerById } from '@/data/mock';
 import type { SelectionProcess } from '@/types';
 import { Eye } from 'lucide-react';
 
@@ -18,13 +19,14 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
+  const { selectionProcesses } = useMockData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {
-    if (activeFilter === 'All') return mockSelectionProcesses;
+    if (activeFilter === 'All') return selectionProcesses;
     const statusValue = statusMap[activeFilter];
-    return mockSelectionProcesses.filter((p) => p.status === statusValue);
-  }, [activeFilter]);
+    return selectionProcesses.filter((p) => p.status === statusValue);
+  }, [activeFilter, selectionProcesses]);
 
   const columns: DataTableColumn<SelectionProcess>[] = [
     {
@@ -121,7 +123,7 @@ export default function ProcessesPage() {
       <div className="flex items-center gap-3">
         <h2 className="text-2xl font-bold text-foreground">Selection Processes</h2>
         <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
-          {mockSelectionProcesses.length}
+          {selectionProcesses.length}
         </span>
       </div>
 

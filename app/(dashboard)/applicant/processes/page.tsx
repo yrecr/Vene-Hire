@@ -3,15 +3,17 @@
 import { useState, useMemo } from 'react';
 import { GitBranch } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
+import { useMockData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { mockTalentProfiles, mockEmployerProfiles, getProcessesForApplicant, demoUsers } from '@/data/mock';
+import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function ApplicantProcessesPage() {
   const { currentUser } = useDemoAuth();
+  const { selectionProcesses } = useMockData();
   const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
 
   const talentProfile = useMemo(function () {
@@ -21,8 +23,8 @@ export default function ApplicantProcessesPage() {
 
   const processes = useMemo(function () {
     if (!talentProfile) return [];
-    return getProcessesForApplicant(talentProfile.id);
-  }, [talentProfile]);
+    return selectionProcesses.filter(function (p) { return p.applicant_id === talentProfile.id; });
+  }, [talentProfile, selectionProcesses]);
 
   const [filter, setFilter] = useState<FilterType>('all');
 
@@ -31,7 +33,6 @@ export default function ApplicantProcessesPage() {
     if (filter === 'active') {
       return processes.filter(function (p) { return p.status === 'active'; });
     }
-    // completed = on_hold, hired, not_selected
     return processes.filter(function (p) {
       return p.status === 'on_hold' || p.status === 'hired' || p.status === 'not_selected';
     });
@@ -63,7 +64,6 @@ export default function ApplicantProcessesPage() {
         </p>
       </div>
 
-      {/* Filter Tabs */}
       <div className="flex items-center gap-2">
         {filterOptions.map(function (option) {
           var isActive = filter === option.key;
@@ -80,7 +80,6 @@ export default function ApplicantProcessesPage() {
         })}
       </div>
 
-      {/* Process Cards */}
       {filteredProcesses.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
@@ -133,9 +132,7 @@ export default function ApplicantProcessesPage() {
 
                 <p className="text-xs text-muted-foreground mt-3">
                   Started {new Date(process.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
+                    month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
               </div>
