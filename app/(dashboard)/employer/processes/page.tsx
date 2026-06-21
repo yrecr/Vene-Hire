@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -28,11 +28,12 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useDemoAuth();
-  const { selectionProcesses, setProcessStage, getApplicantById, getAvailabilityForApplicant } = useMockData();
+  const { selectionProcesses, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract } = useMockData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+  const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -64,10 +65,20 @@ export default function EmployerProcessesPage() {
   }, [processes, activeTab]);
 
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
-    setSchedulingProcess(process);
-    setSelectedDate(undefined);
-    setSelectedTimeSlot('');
+    if (stageKey === 'contract_signing') {
+      setContractProcess(process);
+    } else {
+      setSchedulingProcess(process);
+      setSelectedDate(undefined);
+      setSelectedTimeSlot('');
+    }
   }, []);
+
+  const handleInitiateContract = useCallback(() => {
+    if (!contractProcess) return;
+    initiateContract(contractProcess.id);
+    setContractProcess(null);
+  }, [contractProcess, initiateContract]);
 
   const handleSchedule = useCallback(() => {
     if (!schedulingProcess || !selectedDate || !selectedTimeSlot) return;
@@ -265,6 +276,34 @@ export default function EmployerProcessesPage() {
             </DialogClose>
             <Button onClick={handleSchedule} disabled={!selectedDate || !selectedTimeSlot}>
               Schedule Interview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!contractProcess} onOpenChange={(open) => { if (!open) setContractProcess(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Initiate Contract Signing</DialogTitle>
+            <DialogDescription>
+              {contractProcess && (
+                <>Proceed with contract signing for {getApplicantById(contractProcess.applicant_id)?.display_name || 'the candidate'} for {contractProcess.role_title}? The candidate will be notified and the admin will be prompted to upload the contract.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
+            <FileSignature className="w-8 h-8 text-blue-600" />
+            <p className="text-sm text-blue-800">
+              This will advance the process to the Contract Signing stage. The candidate will receive a notification to review the contract.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleInitiateContract} className="gap-2">
+              <FileSignature className="w-4 h-4" />
+              Initiate Contract
             </Button>
           </DialogFooter>
         </DialogContent>

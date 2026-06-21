@@ -41,6 +41,9 @@ interface MockDataContextType {
   getApplicantById: (id: string) => (TalentProfile & { skills: import('@/types').TalentSkill[] }) | undefined;
   getEmployerById: (id: string) => typeof mockEmployerProfiles[0] | undefined;
   updateAvailabilitySlots: (applicantId: string, slots: AvailabilitySlot[]) => void;
+  initiateContract: (processId: string) => void;
+  uploadContract: (processId: string) => void;
+  getProcessById: (processId: string) => SelectionProcess | undefined;
 }
 
 const MockDataContext = createContext<MockDataContextType | null>(null);
@@ -204,6 +207,47 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     ]);
   }, []);
 
+  const initiateContract = useCallback((processId: string) => {
+    setSelectionProcesses((prev) =>
+      prev.map((p) =>
+        p.id === processId
+          ? { ...p, current_stage: 'contract_signing', contract_status: 'pending', notes: p.notes || 'Contract initiated by employer.' }
+          : p
+      )
+    );
+    const process = selectionProcesses.find((p) => p.id === processId) ?? initialProcesses.find((p) => p.id === processId);
+    if (!process) return;
+    const applicant = initialTalentProfiles.find((t) => t.id === process.applicant_id);
+    const employer = mockEmployerProfiles.find((e) => e.id === process.employer_id);
+    const applicantUserId = applicant?.user_id;
+    if (applicantUserId) {
+      setNotifications((prev) => [...prev, {
+        id: genId('n-'), user_id: applicantUserId,
+        title: 'Contract Ready for Review',
+        message: `${employer?.company_name || 'The employer'} has initiated contract signing for ${process.role_title}.`,
+        type: 'contract' as const, read: false, created_at: new Date().toISOString(),
+      }]);
+    }
+    setNotifications((prev) => [...prev, {
+      id: genId('n-'), user_id: 'p-admin1',
+      title: 'Contract Upload Required',
+      message: `Contract for ${applicant?.display_name || 'candidate'} at ${employer?.company_name || 'company'} needs to be uploaded.`,
+      type: 'contract' as const, read: false, created_at: new Date().toISOString(),
+    }]);
+  }, [selectionProcesses]);
+
+  const uploadContract = useCallback((processId: string) => {
+    setSelectionProcesses((prev) =>
+      prev.map((p) =>
+        p.id === processId ? { ...p, contract_status: 'signed', status: 'hired' } : p
+      )
+    );
+  }, []);
+
+  const getProcessById = useCallback((processId: string) => {
+    return selectionProcesses.find((p) => p.id === processId) ?? initialProcesses.find((p) => p.id === processId);
+  }, [selectionProcesses]);
+
   const getNotifsForUser = useCallback(
     (userId: string) => notifications.filter((n) => n.user_id === userId),
     [notifications]
@@ -225,6 +269,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       getApplicantById: (id) => initialTalentProfiles.find((t) => t.id === id),
       getEmployerById: (id) => mockEmployerProfiles.find((e) => e.id === id),
       updateAvailabilitySlots,
+      initiateContract,
+      uploadContract,
+      getProcessById,
     }),
     [
       interviewRequests,
@@ -239,6 +286,9 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       getAvailabilityForApplicant,
       getNotifsForUser,
       updateAvailabilitySlots,
+      initiateContract,
+      uploadContract,
+      getProcessById,
     ]
   );
 

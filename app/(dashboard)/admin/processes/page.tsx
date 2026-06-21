@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useMockData } from '@/lib/data-context';
 import { getApplicantById, getEmployerById } from '@/data/mock';
 import type { SelectionProcess } from '@/types';
-import { Eye } from 'lucide-react';
+import { Eye, Upload } from 'lucide-react';
 
 const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
 
@@ -19,7 +19,7 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
-  const { selectionProcesses } = useMockData();
+  const { selectionProcesses, uploadContract } = useMockData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {
@@ -69,50 +69,29 @@ export default function ProcessesPage() {
       render: (item) => <ProcessStatusBadge status={item.status} />,
     },
     {
-      key: 'dates',
-      header: 'Dates',
+      key: 'contract',
+      header: 'Contract',
       render: (item) => (
-        <div className="text-xs text-muted-foreground space-y-0.5">
-          {item.intro_interview_date && (
-            <p>
-              Intro:{' '}
-              {new Date(item.intro_interview_date).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
-            </p>
-          )}
-          {item.technical_interview_date && (
-            <p>
-              Tech:{' '}
-              {new Date(item.technical_interview_date).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
-            </p>
-          )}
-          {!item.intro_interview_date && !item.technical_interview_date && (
-            <p>No dates set</p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'notes',
-      header: 'Notes',
-      render: (item) => (
-        <span className="text-muted-foreground text-xs" title={item.notes}>
-          {item.notes.length > 50 ? item.notes.slice(0, 50) + '...' : item.notes}
+        <span className={`text-xs font-medium ${item.contract_status === 'signed' ? 'text-emerald-600' : item.contract_status === 'pending' ? 'text-amber-600' : 'text-gray-400'}`}>
+          {item.contract_status ? item.contract_status.replace('_', ' ') : '—'}
         </span>
       ),
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: () => (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Eye className="w-4 h-4" />
-        </Button>
+      render: (item) => (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Eye className="w-4 h-4" />
+          </Button>
+          {item.contract_status === 'pending' && (
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => uploadContract(item.id)}>
+              <Upload className="w-3.5 h-3.5" />
+              Upload
+            </Button>
+          )}
+        </div>
       ),
     },
   ];

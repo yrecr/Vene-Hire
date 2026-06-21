@@ -88,7 +88,7 @@ export function ProcessTimeline({
     if (!onStageClick) return false;
     if (status !== 'active') return false;
     if (getStepState(index) !== 'future') return false;
-    return index < stages.length - 1; // can only schedule next stage
+    return true;
   }
 
   function renderIcon(index: number) {
