@@ -215,11 +215,11 @@ export const mockSelectionProcesses: SelectionProcess[] = [
 
 // ─── Interview Requests ──────────────────────────────────
 export const mockInterviewRequests: InterviewRequest[] = [
-  { id: 'ir1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', requested_date: '2024-04-22T14:00:00Z', status: 'scheduled', message: 'We would love to discuss the senior backend role with Sofia.', created_at: '2024-04-10' },
-  { id: 'ir2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', requested_date: '2024-04-25T10:00:00Z', status: 'completed', message: 'Interested in Daniel for our AI team.', created_at: '2024-03-10' },
-  { id: 'ir3', applicant_id: 'tp-juan', employer_id: 'ep-acme', requested_date: '2024-04-20T16:00:00Z', status: 'pending', message: 'Juan looks like a great fit for our fullstack position.', created_at: '2024-04-15' },
-  { id: 'ir4', applicant_id: 'tp-camila', employer_id: 'ep-next', requested_date: null, status: 'pending', message: 'Interested in Camila for .NET development work.', created_at: '2024-04-12' },
-  { id: 'ir5', applicant_id: 'tp-sofia', employer_id: 'ep-innova', requested_date: '2024-04-28T11:00:00Z', status: 'pending', message: 'Sofia has the backend skills we need.', created_at: '2024-04-18' },
+  { id: 'ir1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', role_title: 'Senior Backend Engineer', requested_date: '2024-04-22T14:00:00Z', status: 'scheduled', message: 'We would love to discuss the senior backend role with Sofia.', created_at: '2024-04-10' },
+  { id: 'ir2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', role_title: 'AI / ML Engineer', requested_date: '2024-04-25T10:00:00Z', status: 'completed', message: 'Interested in Daniel for our AI team.', created_at: '2024-03-10' },
+  { id: 'ir3', applicant_id: 'tp-juan', employer_id: 'ep-acme', role_title: 'Full Stack Developer', requested_date: '2024-04-20T16:00:00Z', status: 'pending', message: 'Juan looks like a great fit for our fullstack position.', created_at: '2024-04-15' },
+  { id: 'ir4', applicant_id: 'tp-camila', employer_id: 'ep-next', role_title: 'C# / .NET Developer', requested_date: null, status: 'pending', message: 'Interested in Camila for .NET development work.', created_at: '2024-04-12' },
+  { id: 'ir5', applicant_id: 'tp-sofia', employer_id: 'ep-innova', role_title: 'Backend Engineer', requested_date: '2024-04-28T11:00:00Z', status: 'pending', message: 'Sofia has the backend skills we need.', created_at: '2024-04-18' },
 ];
 
 // ─── Access Requests ─────────────────────────────────────

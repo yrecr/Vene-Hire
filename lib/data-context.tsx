@@ -56,6 +56,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       id: genId('ir-'),
       applicant_id: data.applicant_id,
       employer_id: data.employer_id,
+      role_title: data.role_title,
       requested_date: data.requested_date,
       status: 'pending',
       message: data.message,

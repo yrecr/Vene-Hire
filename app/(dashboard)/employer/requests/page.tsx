@@ -69,7 +69,7 @@ export default function EmployerRequestsPage() {
                         {applicant?.display_name || 'Unknown Applicant'}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {applicant?.title || ''}
+                        {interview.role_title}
                       </p>
                     </div>
                   </div>

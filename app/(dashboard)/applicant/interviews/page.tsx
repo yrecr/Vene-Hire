@@ -76,7 +76,7 @@ export default function ApplicantInterviewsPage() {
                         {employer?.company_name || 'Unknown Company'}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {employer?.contact_name || ''}
+                        {interview.role_title}
                       </p>
                     </div>
                   </div>
