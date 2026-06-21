@@ -50,7 +50,7 @@ export function InterviewRequestModal({
   const slotsForSelectedDay = useMemo(() => {
     if (!date) return [];
     const dayOfWeek = date.getDay();
-    return availabilitySlots.filter((s) => s.day_of_week === dayOfWeek);
+    return availabilitySlots.filter((s) => (s.day_of_week % 7) === dayOfWeek);
   }, [date, availabilitySlots]);
 
   function handleSubmit() {
@@ -157,7 +157,7 @@ export function InterviewRequestModal({
                 availabilitySlots.map((slot) => (
                   <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {DAY_NAMES[slot.day_of_week]}: {slot.start_time} - {slot.end_time}
+                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time} - {slot.end_time}
                   </Badge>
                 ))
               )}
@@ -175,7 +175,7 @@ export function InterviewRequestModal({
               onSelect={handleCalendarSelect}
               disabled={(day) => {
                 const dayOfWeek = day.getDay();
-                return !availabilitySlots.some((s) => s.day_of_week === dayOfWeek);
+                return !availabilitySlots.some((s) => (s.day_of_week % 7) === dayOfWeek);
               }}
               className="rounded-lg border border-gray-200"
             />

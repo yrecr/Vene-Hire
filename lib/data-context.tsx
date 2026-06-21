@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import type {
-  TalentProfile, InterviewRequest, SelectionProcess, Notification,
+  TalentProfile, InterviewRequest, SelectionProcess, Notification, AvailabilitySlot,
 } from '@/types';
 import {
   mockTalentProfiles as initialTalentProfiles,
   mockEmployerProfiles,
-  mockAvailabilitySlots,
+  mockAvailabilitySlots as initialAvailabilitySlots,
   mockInterviewRequests as initialInterviewRequests,
   mockSelectionProcesses as initialProcesses,
   mockNotifications as initialNotifications,
@@ -36,10 +36,11 @@ interface MockDataContextType {
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
   toggleShortlist: (applicantId: string) => void;
   isShortlisted: (applicantId: string) => boolean;
-  getAvailabilityForApplicant: (applicantId: string) => typeof mockAvailabilitySlots;
+  getAvailabilityForApplicant: (applicantId: string) => AvailabilitySlot[];
   getNotificationsForUser: (userId: string) => Notification[];
   getApplicantById: (id: string) => (TalentProfile & { skills: import('@/types').TalentSkill[] }) | undefined;
   getEmployerById: (id: string) => typeof mockEmployerProfiles[0] | undefined;
+  updateAvailabilitySlots: (applicantId: string, slots: AvailabilitySlot[]) => void;
 }
 
 const MockDataContext = createContext<MockDataContextType | null>(null);
@@ -51,6 +52,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
   const [shortlistedIds, setShortlistedIds] = useState<string[]>(
     initialTalentProfiles.slice(0, 3).map((t) => t.id)
   );
+  const [availabilitySlots, setAvailabilitySlots] = useState(initialAvailabilitySlots);
 
   const createInterviewRequest = useCallback((data: NewInterviewData) => {
     const newRequest: InterviewRequest = {
@@ -98,7 +100,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         id: genId('sp-'),
         applicant_id: request.applicant_id,
         employer_id: request.employer_id,
-        role_title: 'Position',
+        role_title: request.role_title,
         current_stage: 'intro_interview',
         status: 'active',
         intro_interview_date: request.requested_date,
@@ -192,7 +194,14 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
   );
 
   const getAvailabilityForApplicant = useCallback((applicantId: string) => {
-    return mockAvailabilitySlots.filter((s) => s.applicant_id === applicantId);
+    return availabilitySlots.filter((s) => s.applicant_id === applicantId);
+  }, [availabilitySlots]);
+
+  const updateAvailabilitySlots = useCallback((applicantId: string, slots: AvailabilitySlot[]) => {
+    setAvailabilitySlots((prev) => [
+      ...prev.filter((s) => s.applicant_id !== applicantId),
+      ...slots,
+    ]);
   }, []);
 
   const getNotifsForUser = useCallback(
@@ -215,6 +224,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       getNotificationsForUser: getNotifsForUser,
       getApplicantById: (id) => initialTalentProfiles.find((t) => t.id === id),
       getEmployerById: (id) => mockEmployerProfiles.find((e) => e.id === id),
+      updateAvailabilitySlots,
     }),
     [
       interviewRequests,
@@ -228,6 +238,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       isShortlisted,
       getAvailabilityForApplicant,
       getNotifsForUser,
+      updateAvailabilitySlots,
     ]
   );
 

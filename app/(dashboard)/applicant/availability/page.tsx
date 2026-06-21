@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Clock, Plus, Trash2, Save } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
+import { useMockData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockTalentProfiles, mockAvailabilitySlots, demoUsers } from '@/data/mock';
+import { mockTalentProfiles, demoUsers } from '@/data/mock';
 import type { AvailabilitySlot } from '@/types';
 
 const timezones = [
@@ -49,6 +50,7 @@ const timeSlots = [
 
 export default function ApplicantAvailabilityPage() {
   const { currentUser } = useDemoAuth();
+  const { getAvailabilityForApplicant, updateAvailabilitySlots } = useMockData();
   const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
 
   const talentProfile = useMemo(function () {
@@ -58,8 +60,8 @@ export default function ApplicantAvailabilityPage() {
 
   const initialSlots = useMemo(function () {
     if (!talentProfile) return [];
-    return mockAvailabilitySlots.filter(function (s) { return s.applicant_id === talentProfile.id; });
-  }, [talentProfile]);
+    return getAvailabilityForApplicant(talentProfile.id);
+  }, [talentProfile, getAvailabilityForApplicant]);
 
   const [timezone, setTimezone] = useState(talentProfile?.timezone || 'America/Bogota');
   const [generalAvailability, setGeneralAvailability] = useState('Available Immediately');
@@ -97,6 +99,8 @@ export default function ApplicantAvailabilityPage() {
   }
 
   function handleSave() {
+    if (!talentProfile) return;
+    updateAvailabilitySlots(talentProfile.id, slots);
     setSaved(true);
     setTimeout(function () { setSaved(false); }, 3000);
   }

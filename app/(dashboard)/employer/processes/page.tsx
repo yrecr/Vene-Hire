@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
@@ -16,6 +17,7 @@ import { format } from 'date-fns';
 
 const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
 type FilterTab = typeof filterTabs[number];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function tabToStatus(tab: FilterTab): string | null {
   if (tab === 'All') return null;
@@ -26,10 +28,23 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useDemoAuth();
-  const { selectionProcesses, setProcessStage, getApplicantById } = useMockData();
+  const { selectionProcesses, setProcessStage, getApplicantById, getAvailabilityForApplicant } = useMockData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
+
+  const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
+  const schedulingSlots = schedulingApplicant
+    ? getAvailabilityForApplicant(schedulingApplicant.id)
+    : [];
+  const schedulingTimezone = schedulingApplicant?.timezone || 'America/Bogota';
+
+  const slotsForSelectedDay = useMemo(() => {
+    if (!selectedDate) return [];
+    const dayOfWeek = selectedDate.getDay();
+    return schedulingSlots.filter((s) => (s.day_of_week % 7) === dayOfWeek);
+  }, [selectedDate, schedulingSlots]);
 
   const employerProfile = currentUser?.employer_profile_id
     ? mockEmployerProfiles.find((e) => e.id === currentUser.employer_profile_id)
@@ -51,15 +66,18 @@ export default function EmployerProcessesPage() {
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
     setSchedulingProcess(process);
     setSelectedDate(undefined);
+    setSelectedTimeSlot('');
   }, []);
 
   const handleSchedule = useCallback(() => {
-    if (!schedulingProcess || !selectedDate) return;
-    const dateStr = selectedDate.toISOString();
+    if (!schedulingProcess || !selectedDate || !selectedTimeSlot) return;
+    const [startTime] = selectedTimeSlot.split(' - ');
+    const dateStr = `${format(selectedDate, 'yyyy-MM-dd')}T${startTime}:00`;
     setProcessStage(schedulingProcess.id, 'technical_interview', dateStr);
     setSchedulingProcess(null);
     setSelectedDate(undefined);
-  }, [schedulingProcess, selectedDate, setProcessStage]);
+    setSelectedTimeSlot('');
+  }, [schedulingProcess, selectedDate, selectedTimeSlot, setProcessStage]);
 
   return (
     <div className="space-y-6">
@@ -152,30 +170,92 @@ export default function EmployerProcessesPage() {
         </div>
       )}
 
-      <Dialog open={!!schedulingProcess} onOpenChange={(open) => { if (!open) setSchedulingProcess(null); }}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={!!schedulingProcess} onOpenChange={(open) => { if (!open) { setSchedulingProcess(null); setSelectedTimeSlot(''); } }}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Schedule Technical Interview</DialogTitle>
             <DialogDescription>
               {schedulingProcess && (
-                <>Select a date for the technical interview with {getApplicantById(schedulingProcess.applicant_id)?.display_name || 'the candidate'} for {schedulingProcess.role_title}.</>
+                <>Select a date and time slot for the technical interview with {getApplicantById(schedulingProcess.applicant_id)?.display_name || 'the candidate'} for {schedulingProcess.role_title}.</>
               )}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex justify-center py-4">
+          {/* Availability badges */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">Available Slots ({schedulingTimezone})</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {schedulingSlots.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No availability slots set.</p>
+              ) : (
+                schedulingSlots.map((slot) => (
+                  <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time} - {slot.end_time}
+                  </Badge>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Calendar */}
+          <div className="flex justify-center py-2">
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(day) => day < new Date()}
+              onSelect={(day) => { setSelectedDate(day); setSelectedTimeSlot(''); }}
+              disabled={(day) => {
+                const dayOfWeek = day.getDay();
+                return !schedulingSlots.some((s) => (s.day_of_week % 7) === dayOfWeek);
+              }}
               className="rounded-lg border border-gray-200"
             />
           </div>
 
+          {/* Time slots for selected day */}
+          {selectedDate && slotsForSelectedDay.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Select Time Slot <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {slotsForSelectedDay.flatMap((slot) => {
+                  const times = [];
+                  const [startH, startM] = slot.start_time.split(':').map(Number);
+                  const [endH, endM] = slot.end_time.split(':').map(Number);
+                  const startMinutes = startH * 60 + startM;
+                  const endMinutes = endH * 60 + endM;
+                  for (let m = startMinutes; m + 60 <= endMinutes; m += 60) {
+                    const from = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+                    const to = `${String(Math.floor((m + 60) / 60)).padStart(2, '0')}:${String((m + 60) % 60).padStart(2, '0')}`;
+                    const label = `${from} - ${to}`;
+                    times.push(
+                      <button
+                        key={label}
+                        onClick={() => setSelectedTimeSlot(label)}
+                        className={`px-3 py-2 rounded-lg text-sm border text-left transition-colors ${
+                          selectedTimeSlot === label
+                            ? 'bg-[hsl(210,100%,45%)] text-white border-[hsl(210,100%,45%)]'
+                            : 'bg-white text-foreground border-gray-200 hover:border-[hsl(210,100%,45%)]'
+                        }`}
+                      >
+                        {from} - {to}
+                      </button>
+                    );
+                  }
+                  return times;
+                })}
+              </div>
+            </div>
+          )}
+
           {selectedDate && (
             <p className="text-sm text-center text-muted-foreground">
               Selected: <span className="font-medium text-foreground">{format(selectedDate, 'PPP')}</span>
+              {selectedTimeSlot && <> at <span className="font-medium text-foreground">{selectedTimeSlot}</span></>}
             </p>
           )}
 
@@ -183,7 +263,7 @@ export default function EmployerProcessesPage() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button onClick={handleSchedule} disabled={!selectedDate}>
+            <Button onClick={handleSchedule} disabled={!selectedDate || !selectedTimeSlot}>
               Schedule Interview
             </Button>
           </DialogFooter>
