@@ -33,6 +33,7 @@ interface MockDataContextType {
   shortlistedIds: string[];
   createInterviewRequest: (data: NewInterviewData) => void;
   respondToInterview: (requestId: string, status: 'accepted' | 'declined') => void;
+  setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
   toggleShortlist: (applicantId: string) => void;
   isShortlisted: (applicantId: string) => boolean;
   getAvailabilityForApplicant: (applicantId: string) => typeof mockAvailabilitySlots;
@@ -162,6 +163,21 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     }
   }, [interviewRequests]);
 
+  const setProcessStage = useCallback((processId: string, stage: 'technical_interview', date: string) => {
+    setSelectionProcesses((prev) =>
+      prev.map((p) =>
+        p.id === processId
+          ? {
+              ...p,
+              current_stage: stage,
+              technical_interview_date: date,
+              notes: p.notes || `Technical interview scheduled.`,
+            }
+          : p
+      )
+    );
+  }, []);
+
   const toggleShortlist = useCallback((applicantId: string) => {
     setShortlistedIds((prev) =>
       prev.includes(applicantId)
@@ -192,6 +208,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       shortlistedIds,
       createInterviewRequest,
       respondToInterview,
+      setProcessStage,
       toggleShortlist,
       isShortlisted,
       getAvailabilityForApplicant,
@@ -206,6 +223,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       shortlistedIds,
       createInterviewRequest,
       respondToInterview,
+      setProcessStage,
       toggleShortlist,
       isShortlisted,
       getAvailabilityForApplicant,
