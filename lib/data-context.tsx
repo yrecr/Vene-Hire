@@ -99,79 +99,50 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       initialInterviewRequests.find((r) => r.id === requestId);
 
     if (status === 'accepted' && request) {
-      const existingProcess = selectionProcesses.find(
+      const isTechnical = request.role_title.startsWith('Technical Interview - ');
+      const existingProcess = !isTechnical ? null : selectionProcesses.find(
         (p) => p.applicant_id === request.applicant_id && p.employer_id === request.employer_id
       );
-      if (existingProcess) {
-        const applicant = initialTalentProfiles.find((t) => t.id === request.applicant_id);
-        const employer = mockEmployerProfiles.find((e) => e.id === request.employer_id);
-        const applicantUserId = applicant?.user_id;
-        if (applicantUserId) {
-          setNotifications((prev) => [...prev, {
-            id: genId('n-'), user_id: applicantUserId,
-            title: 'Technical Interview Accepted',
-            message: `You accepted the technical interview with ${employer?.company_name || 'employer'} for ${request.role_title}.`,
-            type: 'interview' as const, read: false, created_at: new Date().toISOString(),
-          }]);
-        }
-        const employerUserId = employer?.user_id;
-        if (employerUserId) {
-          setNotifications((prev) => [...prev, {
-            id: genId('n-'), user_id: employerUserId,
-            title: 'Technical Interview Accepted',
-            message: `${applicant?.display_name || 'Applicant'} accepted the technical interview.`,
-            type: 'interview' as const, read: false, created_at: new Date().toISOString(),
-          }]);
-        }
-      } else {
-        const newProcess: SelectionProcess = {
-          id: genId('sp-'),
-          applicant_id: request.applicant_id,
-          employer_id: request.employer_id,
-          role_title: request.role_title,
-          current_stage: 'intro_interview',
-          status: 'active',
-          intro_interview_date: request.requested_date,
-          technical_interview_date: null,
-          contract_status: null,
-          notes: 'Process started from interview request acceptance.',
-          created_at: new Date().toISOString(),
-        };
-        setSelectionProcesses((prev) => [...prev, newProcess]);
+      const newProcess: SelectionProcess = {
+        id: genId('sp-'),
+        applicant_id: request.applicant_id,
+        employer_id: request.employer_id,
+        role_title: request.role_title,
+        current_stage: 'intro_interview',
+        status: 'active',
+        intro_interview_date: request.requested_date,
+        technical_interview_date: null,
+        contract_status: null,
+        notes: 'Process started from interview request acceptance.',
+        created_at: new Date().toISOString(),
+      };
+      // ponytail: skip duplicate process for technical interview acceptance
+      if (!existingProcess) setSelectionProcesses((prev) => [...prev, newProcess]);
 
       const applicant = initialTalentProfiles.find((t) => t.id === request.applicant_id);
       const employer = mockEmployerProfiles.find((e) => e.id === request.employer_id);
       const applicantUserId = applicant?.user_id;
       if (applicantUserId) {
-        setNotifications((prev) => [
-          ...prev,
-          {
-            id: genId('n-'),
-            user_id: applicantUserId,
-            title: 'Interview Accepted',
-            message: `You accepted the interview with ${employer?.company_name || 'employer'}. A selection process has been created.`,
-            type: 'process' as const,
-            read: false,
-            created_at: new Date().toISOString(),
-          },
-        ]);
+        setNotifications((prev) => [...prev, {
+          id: genId('n-'), user_id: applicantUserId,
+          title: existingProcess ? 'Technical Interview Accepted' : 'Interview Accepted',
+          message: existingProcess
+            ? `You accepted the technical interview with ${employer?.company_name || 'employer'} for ${request.role_title}.`
+            : `You accepted the interview with ${employer?.company_name || 'employer'}. A selection process has been created.`,
+          type: 'interview' as const, read: false, created_at: new Date().toISOString(),
+        }]);
       }
       const empProfile = initialTalentProfiles.find((t) => t.id === request?.applicant_id);
       const employerUserId = employer?.user_id;
       if (employerUserId) {
-        setNotifications((prev) => [
-          ...prev,
-          {
-            id: genId('n-'),
-            user_id: employerUserId,
-            title: 'Interview Accepted',
-            message: `${empProfile?.display_name || 'Applicant'} accepted your interview request.`,
-            type: 'process' as const,
-            read: false,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-      }
+        setNotifications((prev) => [...prev, {
+          id: genId('n-'), user_id: employerUserId,
+          title: existingProcess ? 'Technical Interview Accepted' : 'Interview Accepted',
+          message: existingProcess
+            ? `${applicant?.display_name || 'Applicant'} accepted the technical interview.`
+            : `${empProfile?.display_name || 'Applicant'} accepted your interview request.`,
+          type: 'process' as const, read: false, created_at: new Date().toISOString(),
+        }]);
       }
     } else if (status === 'declined' && request) {
       const applicant = initialTalentProfiles.find((t) => t.id === request.applicant_id);
@@ -192,7 +163,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         ]);
       }
     }
-  }, [interviewRequests]);
+  }, [interviewRequests, selectionProcesses]);
 
   const setProcessStage = useCallback((processId: string, stage: 'technical_interview', date: string) => {
     setSelectionProcesses((prev) =>
