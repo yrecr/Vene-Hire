@@ -32,6 +32,21 @@ function formatDate(date: string | null | undefined): string | null {
   }
 }
 
+function formatTime(date: string | null | undefined): string | null {
+  if (!date) return null;
+  try {
+    const d = new Date(date);
+    const startH = d.getHours().toString().padStart(2, '0');
+    const startM = d.getMinutes().toString().padStart(2, '0');
+    const end = new Date(d.getTime() + 60 * 60 * 1000);
+    const endH = end.getHours().toString().padStart(2, '0');
+    const endM = end.getMinutes().toString().padStart(2, '0');
+    return `${startH}:${startM} - ${endH}:${endM}`;
+  } catch {
+    return null;
+  }
+}
+
 export function ProcessTimeline({
   currentStage,
   status,
@@ -53,6 +68,12 @@ export function ProcessTimeline({
       };
       return labels[contractStatus] || null;
     }
+    return null;
+  }
+
+  function getStepTime(index: number): string | null {
+    if (index === 0) return formatTime(introDate);
+    if (index === 1) return formatTime(technicalDate);
     return null;
   }
 
@@ -152,9 +173,16 @@ export function ProcessTimeline({
                 {stage.label}
               </span>
               {getStepDate(index) && (
-                <span className="mt-0.5 text-[10px] text-muted-foreground">
-                  {getStepDate(index)}
-                </span>
+                <>
+                  <span className="mt-0.5 text-[10px] text-muted-foreground">
+                    {getStepDate(index)}
+                  </span>
+                  {getStepTime(index) && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {getStepTime(index)}
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
