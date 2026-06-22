@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle, Video } from 'lucide-react';
+import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { RoleBadge } from '@/components/role-badge';
 import { EmptyState } from '@/components/empty-state';
 import { useDemoAuth } from '@/lib/demo-auth';
@@ -98,18 +98,6 @@ export default function EmployerRequestsPage() {
                     })}
                   </span>
                 </div>
-
-                {interview.meeting_url && (
-                  <a
-                    href={interview.meeting_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    Join Zoom Meeting
-                  </a>
-                )}
 
                 {interview.status === 'accepted' && (
                   <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-600">

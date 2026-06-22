@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CircleCheck, CircleX, CirclePause, CalendarPlus, Video, VideoOff } from 'lucide-react';
+import { CircleCheck, CircleX, CirclePause, CalendarPlus, Video, FileText } from 'lucide-react';
 
 interface ProcessTimelineProps {
   currentStage: 'intro_interview' | 'technical_interview' | 'contract_signing';
@@ -103,6 +103,7 @@ export function ProcessTimeline({
 
       const stepNumber = index + 1;
       const zoom = hasZoom(index);
+      const isContract = stages[index].key === 'contract_signing';
       return (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
@@ -114,6 +115,8 @@ export function ProcessTimeline({
               <Video className="w-4 h-4 text-white group-hover:scale-110 transition-transform" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             </>
+          ) : isContract ? (
+            <FileText className="w-4 h-4 text-white" />
           ) : stepNumber}
         </div>
       );
