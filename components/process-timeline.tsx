@@ -86,7 +86,7 @@ export function ProcessTimeline({
   }
 
   function hasZoom(index: number): boolean {
-    return !!meetingUrl && index === currentIndex && status === 'active';
+    return !!meetingUrl && index === currentIndex && status === 'active' && stages[index].key !== 'contract_signing';
   }
 
   function renderIcon(index: number) {
