@@ -88,7 +88,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
           r.id === newRequest.id ? { ...r, meeting_url: meeting.join_url } : r
         )
       );
-    });
+    }).catch(() => {});
 
     const userId = applicant?.user_id;
     if (userId) {
@@ -225,7 +225,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
           r.id === techInterviewReq.id ? { ...r, meeting_url: meeting.join_url } : r
         )
       );
-    });
+    }).catch(() => {});
   }, [selectionProcesses]);
 
   const toggleShortlist = useCallback((applicantId: string) => {
