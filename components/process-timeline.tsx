@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX, CirclePause, CalendarPlus } from 'lucide-react';
+import { CircleCheck, CircleX, CirclePause, CalendarPlus, Video } from 'lucide-react';
 
 interface ProcessTimelineProps {
   currentStage: 'intro_interview' | 'technical_interview' | 'contract_signing';
@@ -6,6 +6,7 @@ interface ProcessTimelineProps {
   introDate?: string | null;
   technicalDate?: string | null;
   contractStatus?: 'pending' | 'under_review' | 'signed' | null;
+  meetingUrl?: string | null;
   onStageClick?: (stageKey: string) => void;
 }
 
@@ -53,6 +54,7 @@ export function ProcessTimeline({
   introDate,
   technicalDate,
   contractStatus,
+  meetingUrl,
   onStageClick,
 }: ProcessTimelineProps) {
   const currentIndex = getStageIndex(currentStage);
@@ -183,6 +185,17 @@ export function ProcessTimeline({
                     </span>
                   )}
                 </>
+              )}
+              {meetingUrl && index === currentIndex && (
+                <a
+                  href={meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-medium text-blue-600 hover:text-blue-700"
+                >
+                  <Video className="w-3 h-3" />
+                  Join Zoom
+                </a>
               )}
             </div>
 

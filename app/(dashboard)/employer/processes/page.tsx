@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Video } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -160,6 +160,7 @@ export default function EmployerProcessesPage() {
                     introDate={process.intro_interview_date}
                     technicalDate={process.technical_interview_date}
                     contractStatus={process.contract_status as 'pending' | 'under_review' | 'signed' | null}
+                    meetingUrl={process.meeting_url}
                     onStageClick={(stageKey) => handleStageClick(process, stageKey)}
                   />
                 </div>
@@ -171,22 +172,10 @@ export default function EmployerProcessesPage() {
                 )}
                 <p className="text-xs text-muted-foreground">
                   Started{' '}
-                  Started{' '}
                   {new Date(process.created_at).toLocaleDateString('en-US', {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
-                {process.meeting_url && (
-                  <a
-                    href={process.meeting_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    Join Zoom Meeting
-                  </a>
-                )}
               </div>
             );
           })}

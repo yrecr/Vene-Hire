@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { GitBranch, Video } from 'lucide-react';
+import { GitBranch } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
@@ -120,6 +120,7 @@ export default function ApplicantProcessesPage() {
                   introDate={process.intro_interview_date}
                   technicalDate={process.technical_interview_date}
                   contractStatus={process.contract_status}
+                  meetingUrl={process.meeting_url}
                 />
 
                 {process.notes && (
@@ -135,17 +136,6 @@ export default function ApplicantProcessesPage() {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
-                {process.meeting_url && (
-                  <a
-                    href={process.meeting_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
-                  >
-                    <Video className="w-3.5 h-3.5" />
-                    Join Zoom Meeting
-                  </a>
-                )}
               </div>
             );
           })}
