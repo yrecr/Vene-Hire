@@ -69,6 +69,7 @@ export interface SelectionProcess {
   status: 'active' | 'hired' | 'not_selected' | 'on_hold';
   intro_interview_date: string | null;
   technical_interview_date: string | null;
+  meeting_url?: string | null;
   contract_status: 'pending' | 'under_review' | 'signed' | null;
   notes: string;
   created_at: string;
@@ -85,6 +86,7 @@ export interface InterviewRequest {
   status: 'pending' | 'accepted' | 'declined' | 'scheduled' | 'completed';
   message: string;
   created_at: string;
+  meeting_url?: string | null;
   applicant?: TalentProfile;
   employer?: EmployerProfile;
 }

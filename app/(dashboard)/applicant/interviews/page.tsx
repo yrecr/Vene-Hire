@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle } from 'lucide-react';
+import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle, Video } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
@@ -124,11 +124,22 @@ export default function ApplicantInterviewsPage() {
                 )}
 
                 {interview.status === 'accepted' && (
-                  <div className="pt-2 border-t border-gray-100">
+                  <div className="pt-2 border-t border-gray-100 space-y-2">
                     <span className="text-sm font-medium text-emerald-600 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
                       Accepted — A selection process has been created.
                     </span>
+                    {interview.meeting_url && (
+                      <a
+                        href={interview.meeting_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        <Video className="w-4 h-4" />
+                        Join Zoom Meeting
+                      </a>
+                    )}
                   </div>
                 )}
 

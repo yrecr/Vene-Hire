@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Video } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -168,6 +168,17 @@ export default function EmployerProcessesPage() {
                   <p className="text-sm text-muted-foreground mb-2">
                     <span className="font-medium text-foreground">Notes:</span> {process.notes}
                   </p>
+                )}
+                {process.meeting_url && (
+                  <a
+                    href={process.meeting_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 mb-2"
+                  >
+                    <Video className="w-4 h-4" />
+                    Join Zoom Meeting
+                  </a>
                 )}
                 <p className="text-xs text-muted-foreground">
                   Started{' '}

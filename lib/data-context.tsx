@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useCallback, useMemo, ReactNode } 
 import type {
   TalentProfile, InterviewRequest, SelectionProcess, Notification, AvailabilitySlot,
 } from '@/types';
+import { createZoomMeeting } from '@/lib/zoom';
 import {
   mockTalentProfiles as initialTalentProfiles,
   mockEmployerProfiles,
@@ -67,9 +68,21 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       status: 'pending',
       message: data.message,
       created_at: new Date().toISOString(),
+      meeting_url: null,
     };
 
     setInterviewRequests((prev) => [...prev, newRequest]);
+
+    createZoomMeeting({
+      topic: data.role_title,
+      start_time: data.requested_date,
+    }).then((meeting) => {
+      setInterviewRequests((prev) =>
+        prev.map((r) =>
+          r.id === newRequest.id ? { ...r, meeting_url: meeting.join_url } : r
+        )
+      );
+    });
 
     const applicant = initialTalentProfiles.find((t) => t.id === data.applicant_id);
     const employer = mockEmployerProfiles.find((e) => e.id === data.employer_id);
@@ -112,6 +125,7 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
         status: 'active',
         intro_interview_date: request.requested_date,
         technical_interview_date: null,
+        meeting_url: request.meeting_url,
         contract_status: null,
         notes: 'Process started from interview request acceptance.',
         created_at: new Date().toISOString(),
@@ -191,6 +205,17 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       created_at: new Date().toISOString(),
     };
     setInterviewRequests((prev) => [...prev, techInterviewReq]);
+
+    createZoomMeeting({
+      topic: techInterviewReq.role_title,
+      start_time: date,
+    }).then((meeting) => {
+      setInterviewRequests((prev) =>
+        prev.map((r) =>
+          r.id === techInterviewReq.id ? { ...r, meeting_url: meeting.join_url } : r
+        )
+      );
+    });
   }, [selectionProcesses]);
 
   const toggleShortlist = useCallback((applicantId: string) => {
