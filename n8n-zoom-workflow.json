@@ -2,7 +2,6 @@
   "name": "Zoom Meeting Creator",
   "nodes": [
     {
-      "parameters": {},
       "id": "webhook-entry",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
@@ -16,6 +15,11 @@
       }
     },
     {
+      "id": "zoom-create",
+      "name": "Create Zoom Meeting",
+      "type": "n8n-nodes-base.zoom",
+      "typeVersion": 1,
+      "position": [500, 300],
       "parameters": {
         "resource": "meeting",
         "operation": "create",
@@ -33,52 +37,66 @@
         },
         "authentication": "oAuth2",
         "oauthAccountId": "zoom_oauth"
-      },
-      "id": "zoom-create",
-      "name": "Create Zoom Meeting",
-      "type": "n8n-nodes-base.zoom",
-      "typeVersion": 1,
-      "position": [500, 300]
+      }
     },
     {
+      "id": "merge-data",
+      "name": "Merge Interview ID",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [750, 200],
       "parameters": {
-        "url": "={{ $env.VENE_HIRE_WEBHOOK_URL || 'http://localhost:3000/api/n8n-webhook' }}",
-        "options": {
-          "timeout": 10000,
-          "allowUnauthorizedCerts": true
-        },
-        "sendBody": true,
-        "bodyContentType": "json",
-        "bodyParameters": {
-          "parameters": [
-            { "name": "interview_id", "value": "={{ $json.interview_id }}", },
-            { "name": "zoom_meeting_id", "value": "={{ $json.id }}", },
-            { "name": "join_url", "value": "={{ $json.join_url }}", },
-            { "name": "start_url", "value": "={{ $json.start_url }}", },
-            { "name": "topic", "value": "={{ $json.topic }}", },
-            { "name": "start_time", "value": "={{ $json.start_time }}", },
-            { "name": "duration", "value": "={{ $json.duration }}", },
-            { "name": "password", "value": "={{ $json.password }}", }
+        "values": {
+          "string": [
+            {
+              "name": "interview_id",
+              "value": "={{ $node['Webhook'].json.interview_id }}"
+            }
           ]
-        }
-      },
+        },
+        "options": {}
+      }
+    },
+    {
       "id": "callback",
       "name": "Callback to VeneHire",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [750, 300]
+      "position": [1000, 100],
+      "parameters": {
+        "url": "={{ $env.VENE_HIRE_CALLBACK_URL || 'http://localhost:3000/api/n8n-webhook' }}",
+        "method": "POST",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "bodyParameters": {
+          "parameters": [
+            { "name": "interview_id", "value": "={{ $json.interview_id }}" },
+            { "name": "zoom_meeting_id", "value": "={{ $json.id }}" },
+            { "name": "join_url", "value": "={{ $json.join_url }}" },
+            { "name": "start_url", "value": "={{ $json.start_url }}" },
+            { "name": "topic", "value": "={{ $json.topic }}" },
+            { "name": "start_time", "value": "={{ $json.start_time }}" },
+            { "name": "duration", "value": "={{ $json.duration }}" },
+            { "name": "password", "value": "={{ $json.password }}" }
+          ]
+        },
+        "options": {
+          "timeout": 10000,
+          "allowUnauthorizedCerts": true
+        }
+      }
     },
     {
-      "parameters": {
-        "operation": "respondToWebhook",
-        "responseCode": 200,
-        "responseBody": "={\n  \"ok\": true,\n  \"meeting_id\": {{ $json.id }},\n  \"join_url\": \"{{ $json.join_url }}\"\n}"
-      },
       "id": "respond",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [750, 500]
+      "position": [1000, 400],
+      "parameters": {
+        "operation": "respondToWebhook",
+        "responseCode": 200,
+        "responseBody": "={{ $json }}"
+      }
     }
   ],
   "connections": {
@@ -86,10 +104,13 @@
       "main": [[ { "node": "zoom-create", "type": "main", "index": 0 } ]]
     },
     "zoom-create": {
-      "main": [[ { "node": "callback", "type": "main", "index": 0 } ]]
+      "main": [[ { "node": "merge-data", "type": "main", "index": 0 } ]]
     },
-    "callback": {
-      "main": [[ { "node": "respond", "type": "main", "index": 0 } ]]
+    "merge-data": {
+      "main": [
+        [ { "node": "callback", "type": "main", "index": 0 } ],
+        [ { "node": "respond", "type": "main", "index": 0 } ]
+      ]
     }
   },
   "active": true,
