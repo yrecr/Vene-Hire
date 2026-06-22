@@ -73,9 +73,15 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
 
     setInterviewRequests((prev) => [...prev, newRequest]);
 
+    const applicant = initialTalentProfiles.find((t) => t.id === data.applicant_id);
+    const employer = mockEmployerProfiles.find((e) => e.id === data.employer_id);
+
     createZoomMeeting({
       topic: data.role_title,
       start_time: data.requested_date,
+      interview_id: newRequest.id,
+      applicant_name: applicant?.display_name,
+      employer_name: employer?.company_name,
     }).then((meeting) => {
       setInterviewRequests((prev) =>
         prev.map((r) =>
@@ -84,8 +90,6 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
       );
     });
 
-    const applicant = initialTalentProfiles.find((t) => t.id === data.applicant_id);
-    const employer = mockEmployerProfiles.find((e) => e.id === data.employer_id);
     const userId = applicant?.user_id;
     if (userId) {
       const newNotif: Notification = {
@@ -206,9 +210,15 @@ export function MockDataProvider({ children }: { children: ReactNode }) {
     };
     setInterviewRequests((prev) => [...prev, techInterviewReq]);
 
+    const applicant = initialTalentProfiles.find((t) => t.id === process.applicant_id);
+    const employer = mockEmployerProfiles.find((e) => e.id === process.employer_id);
+
     createZoomMeeting({
       topic: techInterviewReq.role_title,
       start_time: date,
+      interview_id: techInterviewReq.id,
+      applicant_name: applicant?.display_name,
+      employer_name: employer?.company_name,
     }).then((meeting) => {
       setInterviewRequests((prev) =>
         prev.map((r) =>
