@@ -143,6 +143,20 @@ export default function ApplicantInterviewsPage() {
                   </div>
                 )}
 
+                {interview.meeting_url && interview.status !== 'accepted' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <a
+                      href={interview.meeting_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      <Video className="w-4 h-4" />
+                      Join Zoom Meeting
+                    </a>
+                  </div>
+                )}
+
                 {interview.status === 'declined' && (
                   <div className="pt-2 border-t border-gray-100">
                     <span className="text-sm font-medium text-red-600 flex items-center gap-1.5">
