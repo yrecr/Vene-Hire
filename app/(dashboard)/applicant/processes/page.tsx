@@ -122,18 +122,6 @@ export default function ApplicantProcessesPage() {
                   contractStatus={process.contract_status}
                 />
 
-                {process.meeting_url && (
-                  <a
-                    href={process.meeting_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 mt-3"
-                  >
-                    <Video className="w-4 h-4" />
-                    Join Zoom Meeting
-                  </a>
-                )}
-
                 {process.notes && (
                   <div className="mt-5 pt-4 border-t border-gray-100">
                     <p className="text-sm text-muted-foreground">
@@ -147,6 +135,17 @@ export default function ApplicantProcessesPage() {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
+                {process.meeting_url && (
+                  <a
+                    href={process.meeting_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    Join Zoom Meeting
+                  </a>
+                )}
               </div>
             );
           })}

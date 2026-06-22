@@ -104,9 +104,9 @@ export default function EmployerRequestsPage() {
                     href={interview.meeting_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 mt-2"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
                   >
-                    <Video className="w-4 h-4" />
+                    <Video className="w-3.5 h-3.5" />
                     Join Zoom Meeting
                   </a>
                 )}

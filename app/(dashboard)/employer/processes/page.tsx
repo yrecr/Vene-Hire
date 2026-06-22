@@ -169,23 +169,24 @@ export default function EmployerProcessesPage() {
                     <span className="font-medium text-foreground">Notes:</span> {process.notes}
                   </p>
                 )}
-                {process.meeting_url && (
-                  <a
-                    href={process.meeting_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 mb-2"
-                  >
-                    <Video className="w-4 h-4" />
-                    Join Zoom Meeting
-                  </a>
-                )}
                 <p className="text-xs text-muted-foreground">
+                  Started{' '}
                   Started{' '}
                   {new Date(process.created_at).toLocaleDateString('en-US', {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
+                {process.meeting_url && (
+                  <a
+                    href={process.meeting_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 mt-2"
+                  >
+                    <Video className="w-3.5 h-3.5" />
+                    Join Zoom Meeting
+                  </a>
+                )}
               </div>
             );
           })}
