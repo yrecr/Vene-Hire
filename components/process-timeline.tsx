@@ -92,6 +92,7 @@ export function ProcessTimeline({
   function renderIcon(index: number) {
     const stepState = getStepState(index);
     const clickable = isClickable(index);
+    const isContract = stages[index].key === 'contract_signing';
 
     if (stepState === 'completed') {
       return <CircleCheck className="w-8 h-8 text-emerald-500" />;
@@ -103,7 +104,6 @@ export function ProcessTimeline({
 
       const stepNumber = index + 1;
       const zoom = hasZoom(index);
-      const isContract = stages[index].key === 'contract_signing';
       return (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
@@ -125,12 +125,20 @@ export function ProcessTimeline({
     if (clickable) {
       return (
         <div className="w-8 h-8 rounded-full border-2 border-dashed border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5 flex items-center justify-center cursor-pointer hover:bg-[hsl(210,100%,45%)]/15 transition-colors group">
-          <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+          {isContract ? (
+            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+          ) : (
+            <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+          )}
         </div>
       );
     }
 
-    return <div className="w-8 h-8 rounded-full border-2 border-gray-300" />;
+    return (
+      <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center">
+        {isContract ? <FileText className="w-4 h-4 text-gray-300" /> : null}
+      </div>
+    );
   }
 
   function getLineColor(index: number): string {
