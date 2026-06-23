@@ -1,14 +1,16 @@
 'use client';
 
 import { useMemo } from 'react';
-import { MessageSquare, Calendar, Building2 } from 'lucide-react';
+import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
-import { mockTalentProfiles, mockEmployerProfiles, getInterviewsForApplicant, demoUsers } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
+import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 export default function ApplicantInterviewsPage() {
   const { currentUser } = useDemoAuth();
+  const { interviewRequests, respondToInterview } = useMockData();
   const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
 
   const talentProfile = useMemo(function () {
@@ -18,8 +20,8 @@ export default function ApplicantInterviewsPage() {
 
   const interviews = useMemo(function () {
     if (!talentProfile) return [];
-    return getInterviewsForApplicant(talentProfile.id);
-  }, [talentProfile]);
+    return interviewRequests.filter(function (r) { return r.applicant_id === talentProfile.id; });
+  }, [talentProfile, interviewRequests]);
 
   if (!user) {
     return (
@@ -64,7 +66,6 @@ export default function ApplicantInterviewsPage() {
                 key={interview.id}
                 className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow"
               >
-                {/* Header */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
@@ -75,14 +76,13 @@ export default function ApplicantInterviewsPage() {
                         {employer?.company_name || 'Unknown Company'}
                       </h4>
                       <p className="text-xs text-muted-foreground">
-                        {employer?.contact_name || ''}
+                        {interview.role_title}
                       </p>
                     </div>
                   </div>
                   <RoleBadge role={interview.status} />
                 </div>
 
-                {/* Date */}
                 {interview.requested_date && (
                   <div className="flex items-center gap-2 mb-3">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
@@ -99,27 +99,59 @@ export default function ApplicantInterviewsPage() {
                   </div>
                 )}
 
-                {/* Message */}
                 <p className="text-sm text-muted-foreground mb-4">{interview.message}</p>
 
-                {/* Actions */}
                 {isPending && (
                   <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                    <Button size="sm" className="gap-1.5">
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => respondToInterview(interview.id, 'accepted')}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
                       Accept
                     </Button>
-                    <Button variant="outline" size="sm" className="gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => respondToInterview(interview.id, 'declined')}
+                    >
+                      <XCircle className="w-4 h-4" />
                       Decline
                     </Button>
                   </div>
                 )}
 
-                {/* Created date */}
+                {interview.status === 'accepted' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className="text-sm font-medium text-emerald-600 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Accepted — A selection process has been created.
+                    </span>
+                  </div>
+                )}
+
+                {interview.status === 'declined' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className="text-sm font-medium text-red-600 flex items-center gap-1.5">
+                      <XCircle className="w-4 h-4" />
+                      Declined
+                    </span>
+                  </div>
+                )}
+
+                {!isPending && interview.status !== 'accepted' && interview.status !== 'declined' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className="text-sm font-medium text-muted-foreground capitalize">
+                      Status: {interview.status}
+                    </span>
+                  </div>
+                )}
+
                 <p className="text-xs text-muted-foreground mt-3">
                   Requested {new Date(interview.created_at).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
+                    month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
               </div>

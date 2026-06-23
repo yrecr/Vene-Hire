@@ -6,14 +6,12 @@ import { StatCard } from '@/components/stat-card';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockProfiles, mockAccessRequests, mockSelectionProcesses } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
+import { mockProfiles, mockAccessRequests } from '@/data/mock';
 import type { AccessRequest } from '@/types';
 
 const totalApplicants = mockProfiles.filter((p) => p.role === 'applicant').length;
 const totalEmployers = mockProfiles.filter((p) => p.role === 'employer').length;
-const pendingRequests = mockAccessRequests.filter((r) => r.status === 'pending').length;
-const activeProcesses = mockSelectionProcesses.filter((p) => p.status === 'active').length;
-const hiredCount = mockSelectionProcesses.filter((p) => p.status === 'hired').length;
 
 const columns: DataTableColumn<AccessRequest>[] = [
   {
@@ -52,9 +50,13 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
+  const { selectionProcesses } = useMockData();
+  const pendingRequests = mockAccessRequests.filter((r) => r.status === 'pending').length;
+  const activeProcesses = selectionProcesses.filter((p) => p.status === 'active').length;
+  const hiredCount = selectionProcesses.filter((p) => p.status === 'hired').length;
+
   return (
     <div className="space-y-8">
-      {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={Users} label="Total Applicants" value={totalApplicants} />
         <StatCard icon={Building2} label="Total Employers" value={totalEmployers} />

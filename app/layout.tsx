@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { DemoAuthProvider } from '@/lib/demo-auth';
+import { MockDataProvider } from '@/lib/data-context';
 import { RoleSwitcher } from '@/components/role-switcher';
 
 const inter = Inter({
@@ -24,8 +25,10 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <body className={inter.className}>
         <DemoAuthProvider>
-          {children}
-          <RoleSwitcher />
+          <MockDataProvider>
+            {children}
+            <RoleSwitcher />
+          </MockDataProvider>
         </DemoAuthProvider>
       </body>
     </html>

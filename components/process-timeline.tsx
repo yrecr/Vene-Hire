@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX, CirclePause } from 'lucide-react';
+import { CircleCheck, CircleX, CirclePause, CalendarPlus } from 'lucide-react';
 
 interface ProcessTimelineProps {
   currentStage: 'intro_interview' | 'technical_interview' | 'contract_signing';
@@ -6,6 +6,7 @@ interface ProcessTimelineProps {
   introDate?: string | null;
   technicalDate?: string | null;
   contractStatus?: 'pending' | 'under_review' | 'signed' | null;
+  onStageClick?: (stageKey: string) => void;
 }
 
 const stages = [
@@ -31,12 +32,28 @@ function formatDate(date: string | null | undefined): string | null {
   }
 }
 
+function formatTime(date: string | null | undefined): string | null {
+  if (!date) return null;
+  try {
+    const d = new Date(date);
+    const startH = d.getHours().toString().padStart(2, '0');
+    const startM = d.getMinutes().toString().padStart(2, '0');
+    const end = new Date(d.getTime() + 60 * 60 * 1000);
+    const endH = end.getHours().toString().padStart(2, '0');
+    const endM = end.getMinutes().toString().padStart(2, '0');
+    return `${startH}:${startM} - ${endH}:${endM}`;
+  } catch {
+    return null;
+  }
+}
+
 export function ProcessTimeline({
   currentStage,
   status,
   introDate,
   technicalDate,
   contractStatus,
+  onStageClick,
 }: ProcessTimelineProps) {
   const currentIndex = getStageIndex(currentStage);
 
@@ -54,6 +71,12 @@ export function ProcessTimeline({
     return null;
   }
 
+  function getStepTime(index: number): string | null {
+    if (index === 0) return formatTime(introDate);
+    if (index === 1) return formatTime(technicalDate);
+    return null;
+  }
+
   function getStepState(index: number): 'completed' | 'current' | 'future' {
     if (status === 'hired') return 'completed';
     if (index < currentIndex) return 'completed';
@@ -61,8 +84,16 @@ export function ProcessTimeline({
     return 'future';
   }
 
+  function isClickable(index: number): boolean {
+    if (!onStageClick) return false;
+    if (status !== 'active') return false;
+    if (getStepState(index) !== 'future') return false;
+    return true;
+  }
+
   function renderIcon(index: number) {
     const stepState = getStepState(index);
+    const clickable = isClickable(index);
     const stepNumber = index + 1;
 
     if (stepState === 'completed') {
@@ -81,6 +112,14 @@ export function ProcessTimeline({
       return (
         <div className="w-8 h-8 rounded-full bg-[hsl(210,100%,45%)] text-white flex items-center justify-center text-sm font-semibold">
           {stepNumber}
+        </div>
+      );
+    }
+
+    if (clickable) {
+      return (
+        <div className="w-8 h-8 rounded-full border-2 border-dashed border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5 flex items-center justify-center cursor-pointer hover:bg-[hsl(210,100%,45%)]/15 transition-colors group">
+          <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
         </div>
       );
     }
@@ -113,6 +152,7 @@ export function ProcessTimeline({
       if (status === 'on_hold') return 'text-amber-700';
       return 'text-[hsl(210,100%,45%)]';
     }
+    if (isClickable(index)) return 'text-[hsl(210,100%,45%)] cursor-pointer hover:underline';
     return 'text-gray-400';
   }
 
@@ -121,20 +161,31 @@ export function ProcessTimeline({
       <div className="flex items-center justify-between">
         {stages.map((stage, index) => (
           <div key={stage.key} className="flex items-center flex-1 last:flex-none">
-            {/* Step */}
-            <div className="flex flex-col items-center">
+            <div
+              className="flex flex-col items-center"
+              onClick={() => isClickable(index) && onStageClick?.(stage.key)}
+              role={isClickable(index) ? 'button' : undefined}
+              tabIndex={isClickable(index) ? 0 : undefined}
+              onKeyDown={(e) => e.key === 'Enter' && isClickable(index) && onStageClick?.(stage.key)}
+            >
               {renderIcon(index)}
               <span className={`mt-2 text-xs font-medium text-center ${getLabelColor(index)}`}>
                 {stage.label}
               </span>
               {getStepDate(index) && (
-                <span className="mt-0.5 text-[10px] text-muted-foreground">
-                  {getStepDate(index)}
-                </span>
+                <>
+                  <span className="mt-0.5 text-[10px] text-muted-foreground">
+                    {getStepDate(index)}
+                  </span>
+                  {getStepTime(index) && (
+                    <span className="text-[10px] text-muted-foreground">
+                      {getStepTime(index)}
+                    </span>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Connecting line */}
             {index < stages.length - 1 && (
               <div className={`flex-1 h-0.5 mx-3 mt-[-1.25rem] ${getLineColor(index)} rounded-full`} />
             )}

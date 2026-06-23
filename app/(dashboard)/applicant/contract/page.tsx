@@ -3,11 +3,13 @@
 import { useMemo } from 'react';
 import { Signature as FileSignature, Clock, CircleCheck as CheckCircle2, Eye } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
+import { useMockData } from '@/lib/data-context';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { mockTalentProfiles, mockEmployerProfiles, mockSelectionProcesses, demoUsers } from '@/data/mock';
+import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 export default function ApplicantContractPage() {
   const { currentUser } = useDemoAuth();
+  const { selectionProcesses } = useMockData();
   const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
 
   const talentProfile = useMemo(function () {
@@ -17,10 +19,10 @@ export default function ApplicantContractPage() {
 
   const contractProcesses = useMemo(function () {
     if (!talentProfile) return [];
-    return mockSelectionProcesses.filter(function (p) {
+    return selectionProcesses.filter(function (p) {
       return p.applicant_id === talentProfile.id && p.current_stage === 'contract_signing';
     });
-  }, [talentProfile]);
+  }, [talentProfile, selectionProcesses]);
 
   if (!user) {
     return (

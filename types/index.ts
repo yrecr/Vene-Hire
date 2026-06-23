@@ -80,6 +80,7 @@ export interface InterviewRequest {
   id: string;
   applicant_id: string;
   employer_id: string;
+  role_title: string;
   requested_date: string | null;
   status: 'pending' | 'accepted' | 'declined' | 'scheduled' | 'completed';
   message: string;
