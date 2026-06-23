@@ -1,0 +1,14 @@
+{
+  "name": "venehire-plugin",
+  "version": "1.0.0",
+  "description": "Harness for VeneHire dashboard development. Orchestrates MockDataGenerator and FrontendDev agents to build role-based dashboards on Next.js 13 with mock Supabase data.",
+  "agents": [
+    "agents/mock-data-generator/agent.json",
+    "agents/frontend-dev/agent.json"
+  ],
+  "skills": [
+    "skills/mock-data-generator/SKILL.md",
+    "skills/frontend-dev/SKILL.md",
+    "skills/venehire-orchestrator/SKILL.md"
+  ]
+}

@@ -24,7 +24,12 @@ export function RoleSwitcher() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  if (!currentUser) return null;
+  // ponytail: always visible — shows login panel when no session, switcher when logged in
+  const handleSelect = (user: (typeof demoUsers)[0]) => {
+    switchUser(user.id);
+    setOpen(false);
+    router.push(rolePaths[user.role]);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[100]">
@@ -33,12 +38,15 @@ export function RoleSwitcher() {
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Demo Mode</p>
-              <p className="text-sm font-medium text-foreground mt-0.5">{currentUser.full_name}</p>
+              <p className="text-sm font-medium text-foreground mt-0.5">
+                {currentUser ? currentUser.full_name : 'Not signed in'}
+              </p>
             </div>
             <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-gray-100">
               <X className="w-4 h-4" />
             </button>
           </div>
+
           <div className="p-2 max-h-[320px] overflow-y-auto">
             {(['admin', 'applicant', 'employer'] as const).map((role) => (
               <div key={role}>
@@ -48,13 +56,9 @@ export function RoleSwitcher() {
                 {demoUsers.filter((u) => u.role === role).map((user) => (
                   <button
                     key={user.id}
-                    onClick={() => {
-                      switchUser(user.id);
-                      setOpen(false);
-                      router.push(rolePaths[user.role]);
-                    }}
+                    onClick={() => handleSelect(user)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-colors ${
-                      currentUser.id === user.id ? 'bg-blue-50' : 'hover:bg-gray-50'
+                      currentUser?.id === user.id ? 'bg-blue-50' : 'hover:bg-gray-50'
                     }`}
                   >
                     <div className={`w-2 h-2 rounded-full ${roleColors[user.role]}`} />
@@ -62,7 +66,7 @@ export function RoleSwitcher() {
                       <p className="text-sm font-medium text-foreground truncate">{user.full_name}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
-                    {currentUser.id === user.id && (
+                    {currentUser?.id === user.id && (
                       <span className="text-[10px] font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
                     )}
                   </button>
@@ -70,15 +74,18 @@ export function RoleSwitcher() {
               </div>
             ))}
           </div>
-          <div className="p-2 border-t border-gray-100">
-            <button
-              onClick={() => { logout(); setOpen(false); router.push('/'); }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </div>
+
+          {currentUser && (
+            <div className="p-2 border-t border-gray-100">
+              <button
+                onClick={() => { logout(); setOpen(false); router.push('/'); }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -86,9 +93,18 @@ export function RoleSwitcher() {
         onClick={() => setOpen(!open)}
         className="rounded-full h-12 px-4 shadow-lg shadow-gray-300/50 bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white hover:shadow-xl transition-all"
       >
-        <div className={`w-2.5 h-2.5 rounded-full ${roleColors[currentUser.role]} mr-2`} />
-        <span className="text-sm font-medium mr-1">{currentUser.full_name.split(' ')[0]}</span>
-        <span className="text-xs opacity-75 capitalize mr-2">({currentUser.role})</span>
+        {currentUser ? (
+          <>
+            <div className={`w-2.5 h-2.5 rounded-full ${roleColors[currentUser.role]} mr-2`} />
+            <span className="text-sm font-medium mr-1">{currentUser.full_name.split(' ')[0]}</span>
+            <span className="text-xs opacity-75 capitalize mr-2">({currentUser.role})</span>
+          </>
+        ) : (
+          <>
+            <Users className="w-4 h-4 mr-2" />
+            <span className="text-sm font-medium mr-2">Demo Login</span>
+          </>
+        )}
         <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
       </Button>
     </div>

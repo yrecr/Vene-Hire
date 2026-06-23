@@ -1,49 +1,73 @@
 'use client';
 
 import { useMemo } from 'react';
-import { GitBranch, MessageSquare, TrendingUp, CalendarDays, Bell } from 'lucide-react';
+import {
+  GitBranch, MessageSquare, TrendingUp, CalendarDays,
+  Bell, Globe, Clock, Code2, CheckCircle2,
+} from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
 import { StatCard } from '@/components/stat-card';
 import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { RoleBadge } from '@/components/role-badge';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   mockTalentProfiles,
   mockEmployerProfiles,
   demoUsers,
 } from '@/data/mock';
 
+// --- English level color map ---
+const ENGLISH_COLORS: Record<string, string> = {
+  Basic: 'bg-gray-100 text-gray-700',
+  Intermediate: 'bg-blue-50 text-blue-700',
+  Advanced: 'bg-indigo-50 text-indigo-700',
+  Fluent: 'bg-purple-50 text-purple-700',
+  Native: 'bg-emerald-50 text-emerald-700',
+};
+
+// --- Availability color map ---
+const AVAILABILITY_COLORS: Record<string, string> = {
+  Available: 'bg-emerald-50 text-emerald-700',
+  Hired: 'bg-blue-50 text-blue-700',
+  'In Training': 'bg-amber-50 text-amber-700',
+  'On Hold': 'bg-gray-100 text-gray-600',
+};
+
 export default function ApplicantDashboardPage() {
   const { currentUser } = useDemoAuth();
-  const { interviewRequests, selectionProcesses, notifications, getNotificationsForUser } = useMockData();
+  const {
+    interviewRequests,
+    selectionProcesses,
+    getNotificationsForUser,
+    respondToInterview,
+  } = useMockData();
 
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  // ponytail: fall back to first demo applicant when no session
+  const user = currentUser ?? demoUsers.find((u) => u.role === 'applicant') ?? null;
 
-  const talentProfile = useMemo(function () {
+  const talentProfile = useMemo(() => {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+    return mockTalentProfiles.find((t) => t.id === user.talent_profile_id) ?? null;
   }, [user]);
 
-  const processes = useMemo(function () {
+  const myProcesses = useMemo(() => {
     if (!talentProfile) return [];
-    return selectionProcesses.filter(function (p) { return p.applicant_id === talentProfile.id; });
+    return selectionProcesses.filter((p) => p.applicant_id === talentProfile.id);
   }, [talentProfile, selectionProcesses]);
 
-  const interviews = useMemo(function () {
+  const myInterviews = useMemo(() => {
     if (!talentProfile) return [];
-    return interviewRequests.filter(function (r) { return r.applicant_id === talentProfile.id; });
+    return interviewRequests.filter((r) => r.applicant_id === talentProfile.id);
   }, [talentProfile, interviewRequests]);
 
-  const activeProcesses = processes.filter(function (p) { return p.status === 'active'; });
-  const pendingInterviews = interviews.filter(function (i) { return i.status === 'pending'; });
+  const activeProcesses = myProcesses.filter((p) => p.status === 'active');
+  const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
+  const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
 
-  const profileId = user?.profile_id || '';
-  const userNotifications = getNotificationsForUser(profileId);
-  const recentNotifications = userNotifications.slice(0, 3);
-
-  if (!user) {
+  if (!user || !talentProfile) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -54,67 +78,96 @@ export default function ApplicantDashboardPage() {
     );
   }
 
-  const applicant = talentProfile;
-  const completion = applicant?.profile_completion ?? 0;
-
+  const completion = talentProfile.profile_completion ?? 0;
   const completionItems = [
-    { label: 'Full Name', done: (applicant?.display_name?.length ?? 0) > 0 },
-    { label: 'Professional Title', done: (applicant?.title?.length ?? 0) > 0 },
-    { label: 'Summary', done: (applicant?.summary?.length ?? 0) > 2 },
-    { label: 'Bio', done: (applicant?.bio?.length ?? 0) > 10 },
-    { label: 'Tech Stack', done: (applicant?.tech_stack?.length ?? 0) > 0 },
-    { label: 'Skills Assessment', done: (applicant?.skills?.length ?? 0) > 0 },
+    { label: 'Full Name', done: talentProfile.display_name.length > 0 },
+    { label: 'Professional Title', done: talentProfile.title.length > 0 },
+    { label: 'Summary', done: (talentProfile.summary?.length ?? 0) > 2 },
+    { label: 'Bio', done: (talentProfile.bio?.length ?? 0) > 10 },
+    { label: 'Tech Stack', done: (talentProfile.tech_stack?.length ?? 0) > 0 },
+    { label: 'Skills Assessment', done: (talentProfile.skills?.length ?? 0) > 0 },
     { label: 'English Level', done: true },
-    { label: 'Resume', done: (applicant?.resume_url?.length ?? 0) > 0 },
-    { label: 'Video', done: (applicant?.video_url?.length ?? 0) > 0 },
+    { label: 'Resume', done: (talentProfile.resume_url?.length ?? 0) > 0 },
+    { label: 'Video', done: (talentProfile.video_url?.length ?? 0) > 0 },
     { label: 'Availability', done: true },
   ];
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">
-          Welcome back, {applicant?.display_name || user.full_name}
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Manage your profile, interviews, and track your selection processes.
-        </p>
+
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">
+            Welcome back, {talentProfile.display_name}
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            {talentProfile.title} · {talentProfile.timezone}
+          </p>
+        </div>
+
+        {/* Profile badges */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${ENGLISH_COLORS[talentProfile.english_level] ?? 'bg-gray-100 text-gray-700'}`}>
+            <Globe className="w-3 h-3" />
+            {talentProfile.english_level} English
+          </span>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${AVAILABILITY_COLORS[talentProfile.availability_status] ?? 'bg-gray-100 text-gray-700'}`}>
+            <Clock className="w-3 h-3" />
+            {talentProfile.availability_status}
+          </span>
+        </div>
       </div>
 
+      {/* ── KPI Stats ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={TrendingUp} label="Active Processes" value={activeProcesses.length} />
         <StatCard icon={MessageSquare} label="Pending Interviews" value={pendingInterviews.length} />
-        <StatCard icon={CalendarDays} label="Total Interviews" value={interviews.length} />
-        <StatCard icon={GitBranch} label="Total Processes" value={processes.length} />
+        <StatCard icon={CalendarDays} label="Total Interviews" value={myInterviews.length} />
+        <StatCard icon={GitBranch} label="Total Processes" value={myProcesses.length} />
       </div>
 
+      {/* ── Main grid ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* LEFT: processes + interviews */}
         <div className="lg:col-span-2 space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Active Processes
-            </h3>
+
+          {/* Active Processes */}
+          <section>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Active Processes</h3>
+
             {activeProcesses.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No active processes. When an employer accepts your interview request, a process will start.
+                  No active processes yet. Once an employer accepts your interview, it will appear here.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {activeProcesses.map(function (process) {
-                  const employer = mockEmployerProfiles.find(function (e) {
-                    return e.id === process.employer_id;
-                  });
+                {activeProcesses.map((process) => {
+                  const employer = mockEmployerProfiles.find((e) => e.id === process.employer_id);
                   return (
                     <div key={process.id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center justify-between mb-1">
                         <div>
                           <h4 className="font-semibold text-foreground">{process.role_title}</h4>
-                          <p className="text-sm text-muted-foreground">{employer?.company_name || 'Unknown Company'}</p>
+                          <p className="text-sm text-muted-foreground">{employer?.company_name ?? 'Unknown Company'}</p>
                         </div>
                         <ProcessStatusBadge status={process.status} />
                       </div>
+
+                      {/* Current stage callout */}
+                      <p className="text-xs text-muted-foreground mb-4 mt-2">
+                        Current stage:{' '}
+                        <span className="font-medium text-foreground capitalize">
+                          {process.current_stage.replace(/_/g, ' ')}
+                        </span>
+                        {process.current_stage === 'contract_signing' && process.contract_status && (
+                          <span className="ml-2 text-amber-600">· Contract {process.contract_status.replace(/_/g, ' ')}</span>
+                        )}
+                      </p>
+
                       <ProcessTimeline
                         currentStage={process.current_stage}
                         status={process.status}
@@ -127,70 +180,140 @@ export default function ApplicantDashboardPage() {
                 })}
               </div>
             )}
-          </div>
+          </section>
 
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Upcoming Interviews
-            </h3>
+          {/* Pending Interview Requests */}
+          <section>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Interview Requests</h3>
+
             {pendingInterviews.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No upcoming interviews. When an employer sends a request, it will appear here.
+                  No pending interview requests. Employers can contact you after viewing your profile.
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                {pendingInterviews.map(function (interview) {
-                  const employer = mockEmployerProfiles.find(function (e) {
-                    return e.id === interview.employer_id;
-                  });
+                {pendingInterviews.map((interview) => {
+                  const employer = mockEmployerProfiles.find((e) => e.id === interview.employer_id);
+                  const dateStr = interview.requested_date
+                    ? new Date(interview.requested_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : 'TBD';
+
                   return (
-                    <div key={interview.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)]" />
-                        <div>
-                          <p className="font-medium text-foreground">{employer?.company_name || 'Unknown Company'}</p>
-                          <p className="text-sm text-muted-foreground">{interview.message}</p>
+                    <div key={interview.id} className="bg-white rounded-2xl border border-gray-100 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)] flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground">{employer?.company_name ?? 'Unknown Company'}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-1">{interview.message}</p>
+                            <p className="text-xs text-muted-foreground mt-1">Proposed: {dateStr}</p>
+                          </div>
+                        </div>
+                        {/* ponytail: accept/decline actions inline — no modal needed for basic response */}
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-7"
+                            onClick={() => respondToInterview(interview.id, 'declined')}
+                          >
+                            Decline
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="text-xs h-7 bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]"
+                            onClick={() => respondToInterview(interview.id, 'accepted')}
+                          >
+                            Accept
+                          </Button>
                         </div>
                       </div>
-                      <RoleBadge role={interview.status} />
                     </div>
                   );
                 })}
               </div>
             )}
-          </div>
+          </section>
+
+          {/* Tech Stack */}
+          <section>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Tech Stack</h3>
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Code2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{talentProfile.years_experience} year{talentProfile.years_experience !== 1 ? 's' : ''} of experience</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {talentProfile.tech_stack.map((tech) => (
+                  <Badge key={tech} variant="secondary" className="text-xs">
+                    {tech}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
 
+        {/* RIGHT: sidebar */}
         <div className="space-y-6">
+
+          {/* Profile Completion */}
           <ProfileCompletionCard completion={completion} items={completionItems} />
 
+          {/* Notifications */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-foreground flex items-center gap-2">
-                <Bell className="w-4 h-4" />
-                Notifications
-              </h3>
-            </div>
-            {recentNotifications.length === 0 ? (
+            <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+              <Bell className="w-4 h-4" />
+              Notifications
+              {notifications.filter((n) => !n.read).length > 0 && (
+                <span className="ml-auto text-xs bg-[hsl(210,100%,45%)] text-white rounded-full px-2 py-0.5">
+                  {notifications.filter((n) => !n.read).length}
+                </span>
+              )}
+            </h3>
+
+            {notifications.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No notifications.</p>
             ) : (
               <div className="space-y-3">
-                {recentNotifications.map(function (notif) {
+                {notifications.map((notif) => (
+                  <div key={notif.id} className="flex items-start gap-2">
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-gray-300' : 'bg-[hsl(210,100%,45%)]'}`} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">{notif.title}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{notif.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* All Processes (historical) */}
+          {myProcesses.filter((p) => p.status !== 'active').length > 0 && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+              <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                Past Processes
+              </h3>
+              <div className="space-y-2">
+                {myProcesses.filter((p) => p.status !== 'active').map((p) => {
+                  const employer = mockEmployerProfiles.find((e) => e.id === p.employer_id);
                   return (
-                    <div key={notif.id} className="flex items-start gap-2">
-                      <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-gray-300' : 'bg-[hsl(210,100%,45%)]'}`} />
+                    <div key={p.id} className="flex items-center justify-between">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">{notif.title}</p>
-                        <p className="text-xs text-muted-foreground line-clamp-1">{notif.message}</p>
+                        <p className="text-sm font-medium text-foreground truncate">{p.role_title}</p>
+                        <p className="text-xs text-muted-foreground">{employer?.company_name}</p>
                       </div>
+                      <ProcessStatusBadge status={p.status} />
                     </div>
                   );
                 })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
