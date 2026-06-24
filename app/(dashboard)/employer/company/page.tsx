@@ -5,14 +5,12 @@ import { Building2, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDemoAuth } from '@/lib/demo-auth';
-import { mockEmployerProfiles } from '@/data/mock';
+import { getEmployerById, loadEmployerProfiles } from '@/lib/employer-profiles';
 
 export default function EmployerCompanyPage() {
   const { currentUser } = useDemoAuth();
 
-  const employerProfile = currentUser?.employer_profile_id
-    ? mockEmployerProfiles.find((e) => e.id === currentUser.employer_profile_id)
-    : mockEmployerProfiles[0];
+  const employerProfile = getEmployerById(currentUser?.employer_profile_id) ?? loadEmployerProfiles()[0];
 
   const [isEditing, setIsEditing] = useState(false);
   const [companyName, setCompanyName] = useState(

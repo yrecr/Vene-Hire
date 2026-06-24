@@ -5,14 +5,8 @@ import { StatCard } from '@/components/stat-card';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockEnrollments, mockBootcamps, mockResources } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { TrendingUp, CircleCheck as CheckCircle2, FolderOpen, Clock, FileText, ArrowRight } from 'lucide-react';
-
-const enrollment = mockEnrollments[0];
-const bootcamp = mockBootcamps[0];
-const studentResources = mockResources.filter(
-  (r) => r.visibility === 'student' || r.visibility === 'all'
-).slice(0, 2);
 
 const upcomingAssignments = [
   { title: 'Build REST API', dueDate: 'Apr 15', status: 'In Progress' },
@@ -21,6 +15,12 @@ const upcomingAssignments = [
 ];
 
 export default function StudentDashboardPage() {
+  const { enrollments, bootcamps, resources } = useMockData();
+  const enrollment = enrollments[0];
+  const bootcamp = bootcamps[0];
+  const studentResources = resources.filter(
+    (r) => r.visibility === 'student' || r.visibility === 'all'
+  ).slice(0, 2);
   return (
     <div className="space-y-8">
       {/* Welcome */}

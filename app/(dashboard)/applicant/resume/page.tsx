@@ -4,16 +4,17 @@ import { useMemo } from 'react';
 import { FileText, Upload, File, CircleCheck as CheckCircle2, RefreshCw } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { Button } from '@/components/ui/button';
-import { mockTalentProfiles, demoUsers } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 
 export default function ApplicantResumePage() {
   const { currentUser } = useDemoAuth();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { talentProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+  }, [user, talentProfiles]);
 
   if (!user) {
     return (

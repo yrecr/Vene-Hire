@@ -5,9 +5,8 @@ import { Search, Star, MessageSquare, ExternalLink, StarOff } from 'lucide-react
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { mockTalentProfiles } from '@/data/mock';
-import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
+import { useDemoAuth } from '@/lib/demo-auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { EmptyState } from '@/components/empty-state';
 import Link from 'next/link';
@@ -25,7 +24,7 @@ const experienceLevels = ['All', '1-2 years', '3-4 years', '5+ years'];
 export default function EmployerApplicantsPage() {
   const { currentUser } = useDemoAuth();
   const mockData = useMockData();
-  const { isShortlisted, toggleShortlist } = mockData;
+  const { isShortlisted, toggleShortlist, talentProfiles } = mockData;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [englishFilter, setEnglishFilter] = useState('All');
@@ -38,7 +37,7 @@ export default function EmployerApplicantsPage() {
     ? mockData.getEmployerById(currentUser.employer_profile_id)
     : undefined;
 
-  const employerId = employerProfile?.id || 'ep-acme';
+  const employerId = employerProfile?.id ?? '';
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -47,7 +46,7 @@ export default function EmployerApplicantsPage() {
   };
 
   const filteredApplicants = useMemo(() => {
-    return mockTalentProfiles
+    return talentProfiles
       .filter((t) => t.public_visible)
       .filter((t) => {
         if (!searchQuery) return true;

@@ -1,30 +1,55 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { GitBranch } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { GitBranch, Hourglass } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function ApplicantProcessesPage() {
   const { currentUser } = useDemoAuth();
-  const { selectionProcesses } = useMockData();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { selectionProcesses, interviewRequests, talentProfiles, employerProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('vh-talent-profiles');
+          if (raw) {
+            const persisted = JSON.parse(raw);
+            const tp = persisted.find(function (t: { user_id?: string; id?: string }) {
+              return t.user_id === user.profile_id || t.id === user.talent_profile_id;
+            });
+            if (tp) return tp;
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    return null;
+  }, [user, talentProfiles]);
 
   const processes = useMemo(function () {
     if (!talentProfile) return [];
     return selectionProcesses.filter(function (p) { return p.applicant_id === talentProfile.id; });
   }, [talentProfile, selectionProcesses]);
+
+  const hasPendingForProcess = useCallback(
+    (employerId: string) => interviewRequests.some(
+      function (r) { return r.applicant_id === talentProfile?.id && r.employer_id === employerId && r.status === 'pending'; }
+    ),
+    [talentProfile, interviewRequests]
+  );
 
   const [filter, setFilter] = useState<FilterType>('all');
 
@@ -95,7 +120,7 @@ export default function ApplicantProcessesPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {filteredProcesses.map(function (process) {
-            var employer = mockEmployerProfiles.find(function (e) {
+            var employer = employerProfiles.find(function (e) {
               return e.id === process.employer_id;
             });
 
@@ -104,14 +129,22 @@ export default function ApplicantProcessesPage() {
                 key={process.id}
                 className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center justify-between mb-5">
                   <div>
                     <h4 className="font-semibold text-foreground text-lg">{process.role_title}</h4>
                     <p className="text-sm text-muted-foreground">
                       {employer?.company_name || 'Unknown Company'}
                     </p>
                   </div>
-                  <ProcessStatusBadge status={process.status} />
+                  <div className="flex items-center gap-2">
+                    {hasPendingForProcess(process.employer_id) && (
+                      <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full" title="Awaiting your response">
+                        <Hourglass className="w-3.5 h-3.5" />
+                        Pending
+                      </span>
+                    )}
+                    <ProcessStatusBadge status={process.status} />
+                  </div>
                 </div>
 
                 <ProcessTimeline

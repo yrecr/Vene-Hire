@@ -1,11 +1,11 @@
 'use client';
 
-import { mockAccessRequests } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 
 export default function ClientRequestsPage() {
-  const myRequests = mockAccessRequests.slice(0, 2);
+  const { accessRequests: myRequests } = useMockData();
 
   return (
     <div className="space-y-6">

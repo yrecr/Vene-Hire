@@ -2,7 +2,7 @@
 
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockBootcamps } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { Plus, Calendar, Users } from 'lucide-react';
 
 const studentCounts: Record<string, number> = {
@@ -12,6 +12,7 @@ const studentCounts: Record<string, number> = {
 };
 
 export default function BootcampsPage() {
+  const { bootcamps } = useMockData();
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -25,7 +26,7 @@ export default function BootcampsPage() {
 
       {/* Bootcamp Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockBootcamps.map((bootcamp) => (
+        {bootcamps.map((bootcamp) => (
           <div
             key={bootcamp.id}
             className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col"

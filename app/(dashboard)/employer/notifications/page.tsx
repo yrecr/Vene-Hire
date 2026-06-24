@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/empty-state';
 import { useDemoAuth } from '@/lib/demo-auth';
-import { getNotificationsForUser } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import type { LucideIcon } from 'lucide-react';
 
 function getNotificationIcon(type: string): LucideIcon {
@@ -47,6 +47,7 @@ function getNotificationIconColor(type: string): string {
 
 export default function EmployerNotificationsPage() {
   const { currentUser } = useDemoAuth();
+  const { getNotificationsForUser } = useMockData();
   const profileId = currentUser?.profile_id || 'p-acme';
   const notifications = getNotificationsForUser(profileId);
 

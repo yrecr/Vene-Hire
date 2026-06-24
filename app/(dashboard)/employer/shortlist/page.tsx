@@ -4,9 +4,8 @@ import { useState } from 'react';
 import { Star, ExternalLink, MessageSquare, Trash2, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { mockTalentProfiles } from '@/data/mock';
-import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
+import { useDemoAuth } from '@/lib/demo-auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { EmptyState } from '@/components/empty-state';
 import Link from 'next/link';
@@ -15,17 +14,17 @@ import type { TalentProfile } from '@/types';
 export default function EmployerShortlistPage() {
   const { currentUser } = useDemoAuth();
   const mockData = useMockData();
-  const { shortlistedIds, toggleShortlist } = mockData;
+  const { shortlistedIds, toggleShortlist, talentProfiles } = mockData;
 
   const employerProfile = currentUser?.employer_profile_id
     ? mockData.getEmployerById(currentUser.employer_profile_id)
     : undefined;
 
-  const employerId = employerProfile?.id || 'ep-acme';
+  const employerId = employerProfile?.id ?? '';
   const [selectedApplicant, setSelectedApplicant] = useState<TalentProfile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const shortlistedApplicants = mockTalentProfiles.filter((t) =>
+  const shortlistedApplicants = talentProfiles.filter((t) =>
     shortlistedIds.includes(t.id)
   );
 

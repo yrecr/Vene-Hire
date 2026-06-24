@@ -1,11 +1,8 @@
 'use client';
 
 import { RoleBadge } from '@/components/role-badge';
-import { mockBootcamps, mockEnrollments } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { CircleCheck as CheckCircle2, Lock, BookOpen, Calendar, Clock, Activity } from 'lucide-react';
-
-const bootcamp = mockBootcamps[0];
-const enrollment = mockEnrollments[0];
 
 const modules = [
   { title: 'Module 1: Fundamentals', status: 'completed' },
@@ -29,6 +26,9 @@ function getModuleStatusStyles(status: string) {
 }
 
 export default function BootcampPage() {
+  const { bootcamps, enrollments } = useMockData();
+  const bootcamp = bootcamps[0];
+  const enrollment = enrollments[0];
   const startDate = new Date(bootcamp.start_date || '');
   const endDate = new Date(bootcamp.end_date || '');
   const durationWeeks = Math.round(

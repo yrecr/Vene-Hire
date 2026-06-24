@@ -6,22 +6,20 @@ import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
-import { mockTalentProfiles, mockEmployerProfiles } from '@/data/mock';
+import { getEmployerById, loadEmployerProfiles } from '@/lib/employer-profiles';
 import Link from 'next/link';
 
 export default function EmployerDashboard() {
   const { currentUser } = useDemoAuth();
-  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser } = useMockData();
+  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser, talentProfiles } = useMockData();
 
-  const employerProfile = currentUser?.employer_profile_id
-    ? mockEmployerProfiles.find((e) => e.id === currentUser.employer_profile_id)
-    : mockEmployerProfiles[0];
+  const employerProfile = getEmployerById(currentUser?.employer_profile_id) ?? loadEmployerProfiles()[0];
 
   const employerId = employerProfile?.id || 'ep-acme';
   const profileId = currentUser?.profile_id || 'p-acme';
   const companyName = employerProfile?.company_name || 'Your Company';
 
-  const availableCount = mockTalentProfiles.filter(
+  const availableCount = talentProfiles.filter(
     (t) => t.availability_status === 'Available'
   ).length;
 

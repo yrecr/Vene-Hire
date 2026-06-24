@@ -7,11 +7,7 @@ import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { useMockData } from '@/lib/data-context';
-import { mockProfiles, mockAccessRequests } from '@/data/mock';
 import type { AccessRequest } from '@/types';
-
-const totalApplicants = mockProfiles.filter((p) => p.role === 'applicant').length;
-const totalEmployers = mockProfiles.filter((p) => p.role === 'employer').length;
 
 const columns: DataTableColumn<AccessRequest>[] = [
   {
@@ -50,8 +46,10 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
-  const { selectionProcesses } = useMockData();
-  const pendingRequests = mockAccessRequests.filter((r) => r.status === 'pending').length;
+  const { selectionProcesses, accessRequests, profiles } = useMockData();
+  const totalApplicants = profiles.filter((p) => p.role === 'applicant').length;
+  const totalEmployers = profiles.filter((p) => p.role === 'employer').length;
+  const pendingRequests = accessRequests.filter((r) => r.status === 'pending').length;
   const activeProcesses = selectionProcesses.filter((p) => p.status === 'active').length;
   const hiredCount = selectionProcesses.filter((p) => p.status === 'hired').length;
 
@@ -75,7 +73,7 @@ export default function AdminDashboardPage() {
             </Button>
           </Link>
         </div>
-        <DataTable columns={columns} data={mockAccessRequests.slice(0, 3)} />
+        <DataTable columns={columns} data={accessRequests.slice(0, 3)} />
       </div>
 
       {/* Quick Actions */}

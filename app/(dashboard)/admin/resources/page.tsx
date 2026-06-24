@@ -3,7 +3,7 @@
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockResources } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { Plus } from 'lucide-react';
 import type { Resource } from '@/types';
 
@@ -78,6 +78,7 @@ const columns: DataTableColumn<Resource>[] = [
 ];
 
 export default function ResourcesPage() {
+  const { resources } = useMockData();
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -90,7 +91,7 @@ export default function ResourcesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={mockResources} />
+      <DataTable columns={columns} data={resources} />
     </div>
   );
 }

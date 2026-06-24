@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Calendar } from '@/components/ui/calendar';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
-import { mockEmployerProfiles } from '@/data/mock';
+import { getEmployerById } from '@/lib/employer-profiles';
 import type { SelectionProcess } from '@/types';
 import { format } from 'date-fns';
 
@@ -28,7 +28,7 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useDemoAuth();
-  const { selectionProcesses, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract } = useMockData();
+  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract } = useMockData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -47,11 +47,9 @@ export default function EmployerProcessesPage() {
     return schedulingSlots.filter((s) => (s.day_of_week % 7) === dayOfWeek);
   }, [selectedDate, schedulingSlots]);
 
-  const employerProfile = currentUser?.employer_profile_id
-    ? mockEmployerProfiles.find((e) => e.id === currentUser.employer_profile_id)
-    : mockEmployerProfiles[0];
+  const employerProfile = currentUser?.employer_profile_id ? getEmployerById(currentUser.employer_profile_id) : undefined;
 
-  const employerId = employerProfile?.id || 'ep-acme';
+  const employerId = employerProfile?.id ?? '';
 
   const processes = useMemo(
     () => selectionProcesses.filter((p) => p.employer_id === employerId),
@@ -64,7 +62,18 @@ export default function EmployerProcessesPage() {
     return processes.filter((p) => p.status === statusFilter);
   }, [processes, activeTab]);
 
+  const hasPendingForEmployer = useCallback(
+    (applicantId: string) => interviewRequests.some(
+      (r) => r.applicant_id === applicantId && r.employer_id === employerId && r.status === 'pending'
+    ),
+    [interviewRequests, employerId]
+  );
+
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
+    const hasPending = interviewRequests.some(
+      (r) => r.applicant_id === process.applicant_id && r.employer_id === process.employer_id && r.status === 'pending'
+    );
+    if (hasPending) return;
     if (stageKey === 'contract_signing') {
       setContractProcess(process);
     } else {
@@ -72,7 +81,7 @@ export default function EmployerProcessesPage() {
       setSelectedDate(undefined);
       setSelectedTimeSlot('');
     }
-  }, []);
+  }, [interviewRequests]);
 
   const handleInitiateContract = useCallback(() => {
     if (!contractProcess) return;
@@ -152,6 +161,13 @@ export default function EmployerProcessesPage() {
                   </div>
                   <ProcessStatusBadge status={process.status} />
                 </div>
+
+                {applicant && hasPendingForEmployer(applicant.id) && (
+                  <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
+                    <Hourglass className="w-3.5 h-3.5" />
+                    Awaiting candidate response
+                  </div>
+                )}
 
                 <div className="mb-4">
                   <ProcessTimeline

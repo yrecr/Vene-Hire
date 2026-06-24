@@ -5,7 +5,7 @@ import { StatCard } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
-import { mockTalentProfiles } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import Link from 'next/link';
 
 const recentRequests = [
@@ -24,7 +24,8 @@ const recentRequests = [
 ];
 
 export default function ClientDashboard() {
-  const recommendedTalent = mockTalentProfiles
+  const { talentProfiles } = useMockData();
+  const recommendedTalent = talentProfiles
     .filter((t) => t.availability_status === 'Available')
     .slice(0, 3);
 

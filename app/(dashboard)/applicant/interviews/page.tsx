@@ -6,17 +6,35 @@ import { useDemoAuth } from '@/lib/demo-auth';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
 import { useMockData } from '@/lib/data-context';
-import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 export default function ApplicantInterviewsPage() {
   const { currentUser } = useDemoAuth();
-  const { interviewRequests, respondToInterview } = useMockData();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { interviewRequests, respondToInterview, talentProfiles, employerProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('vh-talent-profiles');
+          if (raw) {
+            const persisted = JSON.parse(raw);
+            const tp = persisted.find(function (t: { user_id?: string; id?: string }) {
+              return t.user_id === user.profile_id || t.id === user.talent_profile_id;
+            });
+            if (tp) return tp;
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    return null;
+  }, [user, talentProfiles]);
 
   const interviews = useMemo(function () {
     if (!talentProfile) return [];
@@ -56,7 +74,7 @@ export default function ApplicantInterviewsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {interviews.map(function (interview) {
-            var employer = mockEmployerProfiles.find(function (e) {
+            var employer = employerProfiles.find(function (e) {
               return e.id === interview.employer_id;
             });
             var isPending = interview.status === 'pending';

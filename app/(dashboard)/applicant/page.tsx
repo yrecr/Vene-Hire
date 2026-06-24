@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   GitBranch, MessageSquare, TrendingUp, CalendarDays,
   Bell, Globe, Clock, Code2, CheckCircle2,
+  FileText, Video, Plus, Trash2, Upload,
 } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
@@ -13,11 +14,7 @@ import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  mockTalentProfiles,
-  mockEmployerProfiles,
-  demoUsers,
-} from '@/data/mock';
+import { loadEmployerProfiles } from '@/lib/employer-profiles';
 
 // --- English level color map ---
 const ENGLISH_COLORS: Record<string, string> = {
@@ -42,16 +39,18 @@ export default function ApplicantDashboardPage() {
     interviewRequests,
     selectionProcesses,
     getNotificationsForUser,
+    getAvailabilityForApplicant,
+    updateAvailabilitySlots,
     respondToInterview,
+    talentProfiles,
   } = useMockData();
 
-  // ponytail: fall back to first demo applicant when no session
-  const user = currentUser ?? demoUsers.find((u) => u.role === 'applicant') ?? null;
+  const user = currentUser;
 
   const talentProfile = useMemo(() => {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find((t) => t.id === user.talent_profile_id) ?? null;
-  }, [user]);
+    return talentProfiles.find((t) => t.id === user.talent_profile_id) ?? null;
+  }, [user, talentProfiles]);
 
   const myProcesses = useMemo(() => {
     if (!talentProfile) return [];
@@ -66,6 +65,42 @@ export default function ApplicantDashboardPage() {
   const activeProcesses = myProcesses.filter((p) => p.status === 'active');
   const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
   const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
+
+  // ponytail: mock uploads stored in local state, not persisted
+  const [mockResumeUrl, setMockResumeUrl] = useState<string | null>(null);
+  const [mockVideoUrl, setMockVideoUrl] = useState<string | null>(null);
+
+  const [newSlotDay, setNewSlotDay] = useState('1');
+  const [newSlotStart, setNewSlotStart] = useState('09:00');
+  const [newSlotEnd, setNewSlotEnd] = useState('10:00');
+
+  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const resumeUrl = mockResumeUrl ?? talentProfile?.resume_url;
+  const videoUrl = mockVideoUrl ?? talentProfile?.video_url;
+
+  const slots = useMemo(
+    () => talentProfile ? getAvailabilityForApplicant(talentProfile.id) : [],
+    [talentProfile, getAvailabilityForApplicant]
+  );
+
+  const addSlot = useCallback(() => {
+    if (!talentProfile) return;
+    const slot = {
+      id: `as-mock-${Date.now()}`,
+      applicant_id: talentProfile.id,
+      day_of_week: parseInt(newSlotDay),
+      start_time: newSlotStart,
+      end_time: newSlotEnd,
+      timezone: talentProfile.timezone,
+    };
+    updateAvailabilitySlots(talentProfile.id, [...slots, slot]);
+  }, [talentProfile, newSlotDay, newSlotStart, newSlotEnd, slots, updateAvailabilitySlots]);
+
+  const removeSlot = useCallback((slotId: string) => {
+    if (!talentProfile) return;
+    updateAvailabilitySlots(talentProfile.id, slots.filter((s) => s.id !== slotId));
+  }, [talentProfile, slots, updateAvailabilitySlots]);
 
   if (!user || !talentProfile) {
     return (
@@ -146,7 +181,7 @@ export default function ApplicantDashboardPage() {
             ) : (
               <div className="space-y-4">
                 {activeProcesses.map((process) => {
-                  const employer = mockEmployerProfiles.find((e) => e.id === process.employer_id);
+                  const employer = loadEmployerProfiles().find((e) => e.id === process.employer_id);
                   return (
                     <div key={process.id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-1">
@@ -195,7 +230,7 @@ export default function ApplicantDashboardPage() {
             ) : (
               <div className="space-y-3">
                 {pendingInterviews.map((interview) => {
-                  const employer = mockEmployerProfiles.find((e) => e.id === interview.employer_id);
+                  const employer = loadEmployerProfiles().find((e) => e.id === interview.employer_id);
                   const dateStr = interview.requested_date
                     ? new Date(interview.requested_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                     : 'TBD';
@@ -291,6 +326,126 @@ export default function ApplicantDashboardPage() {
             )}
           </div>
 
+          {/* Multimedia */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              Multimedia
+            </h3>
+
+            {/* Resume */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Resume</p>
+              {resumeUrl ? (
+                <a
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  View Resume
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMockResumeUrl('/resumes/mock-upload.pdf')}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload Resume
+                </button>
+              )}
+            </div>
+
+            {/* Video */}
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Presentation Video</p>
+              {videoUrl ? (
+                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+                  <iframe
+                    src={videoUrl}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Presentation video"
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setMockVideoUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')}
+                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  Upload Video
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Availability */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
+              <Clock className="w-4 h-4" />
+              Availability
+            </h3>
+
+            {slots.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-2">No availability set.</p>
+            ) : (
+              <div className="space-y-2 mb-4">
+                {slots.map((s) => (
+                  <div key={s.id} className="flex items-center justify-between text-sm">
+                    <span className="text-foreground font-medium">{DAY_NAMES[s.day_of_week]}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{s.start_time}–{s.end_time}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeSlot(s.id)}
+                        className="text-muted-foreground hover:text-red-500"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              <select
+                value={newSlotDay}
+                onChange={(e) => setNewSlotDay(e.target.value)}
+                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
+              >
+                {DAY_NAMES.map((name, i) => (
+                  <option key={i} value={i}>{name}</option>
+                ))}
+              </select>
+              <input
+                type="time"
+                value={newSlotStart}
+                onChange={(e) => setNewSlotStart(e.target.value)}
+                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white w-16"
+              />
+              <span className="text-xs text-muted-foreground">–</span>
+              <input
+                type="time"
+                value={newSlotEnd}
+                onChange={(e) => setNewSlotEnd(e.target.value)}
+                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white w-16"
+              />
+              <button
+                type="button"
+                onClick={addSlot}
+                className="ml-auto text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,38%)]"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
           {/* All Processes (historical) */}
           {myProcesses.filter((p) => p.status !== 'active').length > 0 && (
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
@@ -300,7 +455,7 @@ export default function ApplicantDashboardPage() {
               </h3>
               <div className="space-y-2">
                 {myProcesses.filter((p) => p.status !== 'active').map((p) => {
-                  const employer = mockEmployerProfiles.find((e) => e.id === p.employer_id);
+                  const employer = loadEmployerProfiles().find((e) => e.id === p.employer_id);
                   return (
                     <div key={p.id} className="flex items-center justify-between">
                       <div className="min-w-0">

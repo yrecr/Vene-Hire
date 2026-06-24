@@ -6,7 +6,7 @@ import { RoleBadge } from '@/components/role-badge';
 import { EmptyState } from '@/components/empty-state';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
-import { mockEmployerProfiles } from '@/data/mock';
+import { getEmployerById } from '@/lib/employer-profiles';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pending',
@@ -20,11 +20,9 @@ export default function EmployerRequestsPage() {
   const { currentUser } = useDemoAuth();
   const { interviewRequests, getApplicantById } = useMockData();
 
-  const employerProfile = currentUser?.employer_profile_id
-    ? mockEmployerProfiles.find((e) => e.id === currentUser.employer_profile_id)
-    : mockEmployerProfiles[0];
+  const employerProfile = currentUser?.employer_profile_id ? getEmployerById(currentUser.employer_profile_id) : undefined;
 
-  const employerId = employerProfile?.id || 'ep-acme';
+  const employerId = employerProfile?.id ?? '';
 
   const interviews = useMemo(
     () => interviewRequests.filter((r) => r.employer_id === employerId),

@@ -1,12 +1,13 @@
 'use client';
 
-import { mockTalentProfiles } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function ClientTalentPage() {
-  const availableTalent = mockTalentProfiles.filter(
+  const { talentProfiles } = useMockData();
+  const availableTalent = talentProfiles.filter(
     (t) => t.availability_status === 'Available'
   );
 

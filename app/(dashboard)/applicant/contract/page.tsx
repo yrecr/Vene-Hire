@@ -5,17 +5,35 @@ import { Signature as FileSignature, Clock, CircleCheck as CheckCircle2, Eye } f
 import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { mockTalentProfiles, mockEmployerProfiles, demoUsers } from '@/data/mock';
 
 export default function ApplicantContractPage() {
   const { currentUser } = useDemoAuth();
-  const { selectionProcesses } = useMockData();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { selectionProcesses, talentProfiles, employerProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+      if (typeof window !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('vh-talent-profiles');
+          if (raw) {
+            const persisted = JSON.parse(raw);
+            const tp = persisted.find(function (t: { user_id?: string; id?: string }) {
+              return t.user_id === user.profile_id || t.id === user.talent_profile_id;
+            });
+            if (tp) return tp;
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    return null;
+  }, [user, talentProfiles]);
 
   const contractProcesses = useMemo(function () {
     if (!talentProfile) return [];
@@ -77,7 +95,7 @@ export default function ApplicantContractPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {contractProcesses.map(function (process) {
-            var employer = mockEmployerProfiles.find(function (e) {
+            var employer = employerProfiles.find(function (e) {
               return e.id === process.employer_id;
             });
 

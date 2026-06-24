@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockTalentProfiles } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
 import { Eye, Check, Minus } from 'lucide-react';
 
@@ -14,11 +14,12 @@ const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
 export default function ApplicantManagementPage() {
+  const { talentProfiles } = useMockData();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
 
   const filteredProfiles = useMemo(() => {
-    let result: TalentWithSkills[] = mockTalentProfiles;
+    let result: TalentWithSkills[] = talentProfiles;
 
     if (visibilityFilter === 'Visible') {
       result = result.filter((p) => p.public_visible);
@@ -142,7 +143,7 @@ export default function ApplicantManagementPage() {
       <div className="flex items-center gap-3">
         <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
         <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
-          {mockTalentProfiles.length}
+          {talentProfiles.length}
         </span>
       </div>
 

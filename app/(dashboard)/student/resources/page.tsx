@@ -1,14 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { mockResources } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { FileText, Download } from 'lucide-react';
 
-const studentResources = mockResources.filter(
-  (r) => r.visibility === 'student' || r.visibility === 'all'
-);
-
 export default function ResourcesPage() {
+  const { resources } = useMockData();
+  const studentResources = resources.filter(
+    (r) => r.visibility === 'student' || r.visibility === 'all'
+  );
   return (
     <div className="space-y-8">
       {/* Header */}

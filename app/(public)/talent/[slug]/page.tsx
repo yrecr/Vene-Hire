@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { mockTalentProfiles, mockEmployerProfiles } from '@/data/mock';
-import { useDemoAuth } from '@/lib/demo-auth';
 import { useMockData } from '@/lib/data-context';
+import { useDemoAuth } from '@/lib/demo-auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
@@ -23,10 +22,10 @@ export default function TalentProfilePage() {
   const params = useParams();
   const slug = params.slug as string;
   const { currentUser } = useDemoAuth();
-  const { getEmployerById } = useMockData();
+  const { getEmployerById, talentProfiles } = useMockData();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const talent = mockTalentProfiles.find((t) => t.slug === slug);
+  const talent = talentProfiles.find((t) => t.slug === slug);
 
   const isEmployer = currentUser?.role === 'employer';
   const employerId = isEmployer && currentUser?.employer_profile_id

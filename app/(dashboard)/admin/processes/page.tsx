@@ -5,7 +5,6 @@ import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
 import { useMockData } from '@/lib/data-context';
-import { getApplicantById, getEmployerById } from '@/data/mock';
 import type { SelectionProcess } from '@/types';
 import { Eye, Upload } from 'lucide-react';
 
@@ -19,7 +18,7 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
-  const { selectionProcesses, uploadContract } = useMockData();
+  const { selectionProcesses, uploadContract, getApplicantById, getEmployerById } = useMockData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {

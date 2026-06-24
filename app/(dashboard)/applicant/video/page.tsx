@@ -6,16 +6,17 @@ import { useDemoAuth } from '@/lib/demo-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { mockTalentProfiles, demoUsers } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 
 export default function ApplicantVideoPage() {
   const { currentUser } = useDemoAuth();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { talentProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+  }, [user, talentProfiles]);
 
   const [videoUrl, setVideoUrl] = useState(talentProfile?.video_url || '');
   const [saved, setSaved] = useState(false);

@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockTalentProfiles, demoUsers } from '@/data/mock';
 import type { AvailabilitySlot } from '@/types';
 
 const timezones = [
@@ -50,13 +49,13 @@ const timeSlots = [
 
 export default function ApplicantAvailabilityPage() {
   const { currentUser } = useDemoAuth();
-  const { getAvailabilityForApplicant, updateAvailabilitySlots } = useMockData();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { talentProfiles, getAvailabilityForApplicant, updateAvailabilitySlots } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+  }, [user, talentProfiles]);
 
   const initialSlots = useMemo(function () {
     if (!talentProfile) return [];

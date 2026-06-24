@@ -6,7 +6,7 @@ import { SectionHeader } from '@/components/section-header';
 import { TalentCard } from '@/components/talent-card';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { ValueCard } from '@/components/value-card';
-import { mockTalentProfiles } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import { ArrowRight, Zap, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
 
 const trustItems = [
@@ -41,9 +41,9 @@ const bootcampFeatures = [
   { icon: Award, title: 'Job-Readiness Focus', description: 'Technical interviews, English communication, and professional soft skills training included.' },
 ];
 
-const featuredTalent = mockTalentProfiles.filter((t) => t.featured);
-
 export default function HomePage() {
+  const { talentProfiles } = useMockData();
+  const featuredTalent = talentProfiles.filter((t) => t.featured);
   return (
     <>
       {/* Hero */}
@@ -106,7 +106,7 @@ export default function HomePage() {
                     </div>
                   ))}
                   <div className="pt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Showing 3 of {mockTalentProfiles.length} engineers</span>
+                    <span>Showing 3 of {talentProfiles.length} engineers</span>
                     <span className="text-[hsl(210,100%,45%)] font-medium">View all</span>
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export default function HomePage() {
             description="Browse through our growing pool of trained and evaluated software engineers."
           />
         </div>
-        <TalentCarousel talents={mockTalentProfiles} />
+        <TalentCarousel talents={talentProfiles} />
       </section>
 
       {/* Final CTA */}

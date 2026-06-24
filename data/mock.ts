@@ -1,21 +1,10 @@
 import type {
   TalentProfile, TalentSkill, AccessRequest, Bootcamp, Enrollment, Resource,
   Profile, EmployerProfile, AvailabilitySlot, SelectionProcess,
-  InterviewRequest, Notification, DemoUser,
+  InterviewRequest, Notification,
 } from '@/types';
 
-// ─── Demo Users ──────────────────────────────────────────
-export const demoUsers: DemoUser[] = [
-  { id: 'u-admin1', email: 'admin@demo.com', password: 'Demo123!', full_name: 'Admin User', role: 'admin', profile_id: 'p-admin1' },
-  { id: 'u-admin2', email: 'admin2@demo.com', password: 'Demo123!', full_name: 'Operations Admin', role: 'admin', profile_id: 'p-admin2' },
-  { id: 'u-sofia', email: 'sofia.backend@demo.com', password: 'Demo123!', full_name: 'Sofia Ramirez', role: 'applicant', profile_id: 'p-sofia', talent_profile_id: 'tp-sofia' },
-  { id: 'u-daniel', email: 'daniel.ai@demo.com', password: 'Demo123!', full_name: 'Daniel Torres', role: 'applicant', profile_id: 'p-daniel', talent_profile_id: 'tp-daniel' },
-  { id: 'u-camila', email: 'camila.csharp@demo.com', password: 'Demo123!', full_name: 'Camila Vega', role: 'applicant', profile_id: 'p-camila', talent_profile_id: 'tp-camila' },
-  { id: 'u-juan', email: 'juan.fullstack@demo.com', password: 'Demo123!', full_name: 'Juan Herrera', role: 'applicant', profile_id: 'p-juan', talent_profile_id: 'tp-juan' },
-  { id: 'u-acme', email: 'talent@acme.com', password: 'Demo123!', full_name: 'ACME Hiring Team', role: 'employer', profile_id: 'p-acme', employer_profile_id: 'ep-acme' },
-  { id: 'u-innova', email: 'hr@innovasoft.com', password: 'Demo123!', full_name: 'InnovaSoft Recruiting', role: 'employer', profile_id: 'p-innova', employer_profile_id: 'ep-innova' },
-  { id: 'u-next', email: 'hiring@nextlayer.com', password: 'Demo123!', full_name: 'NextLayer Talent Team', role: 'employer', profile_id: 'p-next', employer_profile_id: 'ep-next' },
-];
+// ponytail: demo users removed — auth is Supabase-only now
 
 // ─── Profiles ────────────────────────────────────────────
 export const mockProfiles: Profile[] = [

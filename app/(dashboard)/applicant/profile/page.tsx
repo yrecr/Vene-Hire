@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Save } from 'lucide-react';
+import { Save, FileText, Video, Upload, Camera } from 'lucide-react';
 import { useDemoAuth } from '@/lib/demo-auth';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { mockTalentProfiles, demoUsers } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 
 const timezones = [
   'America/New_York',
@@ -39,12 +39,13 @@ const availabilityStatuses = ['Available', 'Hired', 'In Training', 'On Hold'];
 
 export default function ApplicantProfilePage() {
   const { currentUser } = useDemoAuth();
-  const user = currentUser ?? demoUsers.find(function (u) { return u.role === 'applicant'; }) ?? null;
+  const { talentProfiles } = useMockData();
+  const user = currentUser;
 
   const talentProfile = useMemo(function () {
     if (!user?.talent_profile_id) return null;
-    return mockTalentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
-  }, [user]);
+    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+  }, [user, talentProfiles]);
 
   const [displayName, setDisplayName] = useState(talentProfile?.display_name || '');
   const [title, setTitle] = useState(talentProfile?.title || '');
@@ -97,6 +98,31 @@ export default function ApplicantProfilePage() {
 
       {/* Form */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
+        {/* Profile Image */}
+        {talentProfile && (
+          <div className="flex items-center gap-4 pb-4 border-b border-gray-100">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+              {talentProfile.profile_image_url ? (
+                <img
+                  src={talentProfile.profile_image_url}
+                  alt={talentProfile.display_name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <Camera className="w-6 h-6" />
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Profile Photo</p>
+              <p className="text-xs text-muted-foreground">
+                {talentProfile.profile_image_url ? 'Photo uploaded' : 'No photo uploaded'}
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="displayName">Display Name</Label>
@@ -236,6 +262,47 @@ export default function ApplicantProfilePage() {
                 <SkillBar key={skill.id} name={skill.skill_name} score={skill.score} />
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Resume & Video */}
+      {talentProfile && (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
+          <h3 className="text-base font-semibold text-foreground">Multimedia</h3>
+
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Resume</p>
+            {talentProfile.resume_url ? (
+              <a
+                href={talentProfile.resume_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
+              >
+                <FileText className="w-4 h-4" />
+                View Resume
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">No resume uploaded.</p>
+            )}
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Presentation Video</p>
+            {talentProfile.video_url ? (
+              <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 max-w-lg">
+                <iframe
+                  src={talentProfile.video_url}
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Presentation video"
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No video uploaded.</p>
+            )}
           </div>
         </div>
       )}

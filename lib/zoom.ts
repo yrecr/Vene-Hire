@@ -1,5 +1,10 @@
-const N8N_WEBHOOK_URL = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || '';
+import { ensureWorkflow } from './n8n';
 let mockId = 567891011;
+let webhookPromise: Promise<string> | null = null;
+const webhookUrl = () => {
+  if (!webhookPromise) webhookPromise = ensureWorkflow();
+  return webhookPromise;
+};
 
 export interface ZoomMeeting {
   id: number;
@@ -24,9 +29,10 @@ export async function createZoomMeeting(params: {
   applicant_email?: string;
 }): Promise<ZoomMeeting> {
   // n8n configured → try it first
-  if (N8N_WEBHOOK_URL) {
+  const url = await webhookUrl();
+  if (url) {
     try {
-      const res = await fetch(N8N_WEBHOOK_URL, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -64,7 +64,7 @@
       "typeVersion": 4,
       "position": [1000, 100],
       "parameters": {
-        "url": "={{ $env.VENE_HIRE_CALLBACK_URL || 'http://localhost:3000/api/n8n-webhook' }}",
+        "url": "http://localhost:3000/api/n8n-webhook",
         "method": "POST",
         "sendBody": true,
         "bodyContentType": "json",

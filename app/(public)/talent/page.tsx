@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { mockTalentProfiles } from '@/data/mock';
+import { useMockData } from '@/lib/data-context';
 import type { TalentProfile } from '@/types';
 import { TalentCard } from '@/components/talent-card';
 import { SectionHeader } from '@/components/section-header';
@@ -16,6 +16,7 @@ import {
 import { Search, Users, SlidersHorizontal } from 'lucide-react';
 
 export default function TalentPage() {
+  const { talentProfiles } = useMockData();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [techFilter, setTechFilter] = useState('all');
@@ -23,27 +24,27 @@ export default function TalentPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState('all');
 
   const uniqueRoles = useMemo(
-    () => Array.from(new Set(mockTalentProfiles.map((t) => t.title))).sort(),
-    []
+    () => Array.from(new Set(talentProfiles.map((t) => t.title))).sort(),
+    [talentProfiles]
   );
 
   const uniqueTech = useMemo(
-    () => Array.from(new Set(mockTalentProfiles.flatMap((t) => t.tech_stack))).sort(),
-    []
+    () => Array.from(new Set(talentProfiles.flatMap((t) => t.tech_stack))).sort(),
+    [talentProfiles]
   );
 
   const uniqueEnglishLevels = useMemo(
-    () => Array.from(new Set(mockTalentProfiles.map((t) => t.english_level))),
-    []
+    () => Array.from(new Set(talentProfiles.map((t) => t.english_level))),
+    [talentProfiles]
   );
 
   const uniqueAvailability = useMemo(
-    () => Array.from(new Set(mockTalentProfiles.map((t) => t.availability_status))),
-    []
+    () => Array.from(new Set(talentProfiles.map((t) => t.availability_status))),
+    [talentProfiles]
   );
 
   const filteredProfiles = useMemo(() => {
-    return mockTalentProfiles.filter((profile) => {
+    return talentProfiles.filter((profile) => {
       const search = searchTerm.toLowerCase();
       const matchesSearch =
         !search ||
