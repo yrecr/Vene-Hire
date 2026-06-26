@@ -1,6 +1,6 @@
 ---
 name: frontend-dev
-description: "VeneHire dashboard UI development skill. Use when: building or improving pages in app/(dashboard)/, implementing role-specific views (applicant, employer, admin, student, client), consuming mock data states from useMockData() context, adding ProcessTimeline, StatCard, or other existing components to a page, or fixing dashboard layout/display issues. Also triggers on: 'build dashboard', 'design view', 'add section to dashboard', 'fix UI', re-run or update any dashboard page."
+description: "VeneHire dashboard UI development skill. Use when: building or improving pages in app/(dashboard)/, implementing role-specific views (applicant, employer, admin, student, client), consuming mock data states from useData() context, adding ProcessTimeline, StatCard, or other existing components to a page, or fixing dashboard layout/display issues. Also triggers on: 'build dashboard', 'design view', 'add section to dashboard', 'fix UI', re-run or update any dashboard page."
 ---
 
 # FrontendDev Skill — VeneHire
@@ -37,13 +37,13 @@ All `shadcn/ui` primitives are in `components/ui/`.
 ```tsx
 'use client'; // only if using hooks
 
-import { useMockData } from '@/lib/data-context';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/demo-auth';
 // Import only what is used
 
 export default function DashboardPage() {
-  const { currentUser } = useDemoAuth();
-  const { selectionProcesses, interviewRequests } = useMockData();
+  const { currentUser } = useAuth();
+  const { selectionProcesses, interviewRequests } = useData();
 
   // Derive data — ponytail: useMemo only when filtering large arrays
   const myProcesses = selectionProcesses.filter(p => p.applicant_id === talentProfileId);

@@ -5,27 +5,39 @@ import { StatCard } from '@/components/stat-card';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
 import { TrendingUp, CircleCheck as CheckCircle2, FolderOpen, Clock, FileText, ArrowRight } from 'lucide-react';
 
-const upcomingAssignments = [
-  { title: 'Build REST API', dueDate: 'Apr 15', status: 'In Progress' },
-  { title: 'React Dashboard', dueDate: 'Apr 22', status: 'Not Started' },
-  { title: 'System Design Doc', dueDate: 'Apr 29', status: 'Not Started' },
-];
-
 export default function StudentDashboardPage() {
-  const { enrollments, bootcamps, resources } = useMockData();
+  const { enrollments, bootcamps, resources } = useData();
+  const { currentUser } = useAuth();
   const enrollment = enrollments[0];
   const bootcamp = bootcamps[0];
   const studentResources = resources.filter(
     (r) => r.visibility === 'student' || r.visibility === 'all'
   ).slice(0, 2);
+  const progressPct = enrollment?.progress ?? 0;
+  const resourcesAvailable = resources.length;
+  const daysRemaining = (() => {
+    if (!bootcamp?.end_date) return 0;
+    return Math.ceil((new Date(bootcamp.end_date).getTime() - Date.now()) / 86400000);
+  })();
+  if (!enrollment || !bootcamp) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Welcome back, {currentUser?.full_name || 'Student'}</h2>
+          <p className="text-muted-foreground mt-1">No bootcamp enrollment found.</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Welcome back, Maria</h2>
+        <h2 className="text-2xl font-bold text-foreground">Welcome back, {currentUser?.full_name || 'Student'}</h2>
         <p className="text-muted-foreground mt-1">
           Track your progress, manage assignments, and access learning resources.
         </p>
@@ -33,10 +45,10 @@ export default function StudentDashboardPage() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={TrendingUp} label="Bootcamp Progress" value="65%" trend="+5%" trendUp />
-        <StatCard icon={CheckCircle2} label="Assignments Completed" value="8/12" trend="+2" trendUp />
-        <StatCard icon={FolderOpen} label="Resources Available" value={4} />
-        <StatCard icon={Clock} label="Days Remaining" value={42} />
+        <StatCard icon={TrendingUp} label="Bootcamp Progress" value={`${progressPct}%`} />
+        <StatCard icon={CheckCircle2} label="Assignments Completed" value="—" />
+        <StatCard icon={FolderOpen} label="Resources Available" value={resourcesAvailable} />
+        <StatCard icon={Clock} label="Days Remaining" value={daysRemaining} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -44,28 +56,28 @@ export default function StudentDashboardPage() {
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-foreground">Current Bootcamp</h3>
-            <RoleBadge role={enrollment.status} />
+            <RoleBadge role={enrollment?.status ?? 'enrolled'} />
           </div>
-          <p className="text-base font-medium text-foreground mb-1">{bootcamp.title}</p>
-          <p className="text-sm text-muted-foreground mb-4">{bootcamp.description}</p>
+          <p className="text-base font-medium text-foreground mb-1">{bootcamp?.title}</p>
+          <p className="text-sm text-muted-foreground mb-4">{bootcamp?.description}</p>
 
           {/* Progress Bar */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-sm font-medium text-foreground">Progress</span>
-              <span className="text-sm font-semibold text-[hsl(210,100%,45%)]">{enrollment.progress}%</span>
+              <span className="text-sm font-semibold text-[hsl(210,100%,45%)]">{progressPct}%</span>
             </div>
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] rounded-full transition-all duration-700"
-                style={{ width: `${enrollment.progress}%` }}
+                style={{ width: `${progressPct}%` }}
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>Start: {bootcamp.start_date}</span>
-            <span>End: {bootcamp.end_date}</span>
+            <span>Start: {bootcamp?.start_date ?? '—'}</span>
+            <span>End: {bootcamp?.end_date ?? '—'}</span>
           </div>
 
           <Link href="/student/bootcamp">
@@ -86,27 +98,7 @@ export default function StudentDashboardPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {upcomingAssignments.map((assignment) => (
-              <div
-                key={assignment.title}
-                className="flex items-center justify-between p-3 rounded-xl border border-gray-100 hover:bg-gray-50/50 transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground">{assignment.title}</p>
-                  <p className="text-xs text-muted-foreground">Due {assignment.dueDate}</p>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className={
-                    assignment.status === 'In Progress'
-                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                      : 'bg-gray-100 text-gray-600 border border-gray-200'
-                  }
-                >
-                  {assignment.status}
-                </Badge>
-              </div>
-            ))}
+            <p className="text-sm text-muted-foreground text-center py-8">No upcoming assignments. Check back later.</p>
           </div>
         </div>
       </div>

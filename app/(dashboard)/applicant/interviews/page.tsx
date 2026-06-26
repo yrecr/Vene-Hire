@@ -2,14 +2,14 @@
 
 import { useMemo } from 'react';
 import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 
 export default function ApplicantInterviewsPage() {
-  const { currentUser } = useDemoAuth();
-  const { interviewRequests, respondToInterview, talentProfiles, employerProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { interviewRequests, respondToInterview, talentProfiles, employerProfiles, isHydrated } = useData();
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
@@ -20,18 +20,6 @@ export default function ApplicantInterviewsPage() {
     if (user?.profile_id) {
       const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
       if (found) return found;
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem('vh-talent-profiles');
-          if (raw) {
-            const persisted = JSON.parse(raw);
-            const tp = persisted.find(function (t: { user_id?: string; id?: string }) {
-              return t.user_id === user.profile_id || t.id === user.talent_profile_id;
-            });
-            if (tp) return tp;
-          }
-        } catch { /* ignore */ }
-      }
     }
     return null;
   }, [user, talentProfiles]);
@@ -47,6 +35,30 @@ export default function ApplicantInterviewsPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
           <p className="text-muted-foreground">Sign in with an applicant account to view your interviews.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isHydrated && !talentProfile) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Interview Requests</h2>
+          <p className="text-muted-foreground mt-1">View and manage interview requests from employers.</p>
+        </div>
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <p className="text-muted-foreground">Could not find your talent profile. Contact support if this persists.</p>
         </div>
       </div>
     );

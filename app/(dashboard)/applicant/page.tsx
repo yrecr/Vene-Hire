@@ -1,20 +1,21 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import {
   GitBranch, MessageSquare, TrendingUp, CalendarDays,
   Bell, Globe, Clock, Code2, CheckCircle2,
   FileText, Video, Plus, Trash2, Upload,
 } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
+import { uploadResume } from '@/lib/supabase-service';
 import { StatCard } from '@/components/stat-card';
 import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { loadEmployerProfiles } from '@/lib/employer-profiles';
+
 
 // --- English level color map ---
 const ENGLISH_COLORS: Record<string, string> = {
@@ -34,7 +35,7 @@ const AVAILABILITY_COLORS: Record<string, string> = {
 };
 
 export default function ApplicantDashboardPage() {
-  const { currentUser } = useDemoAuth();
+  const { currentUser } = useAuth();
   const {
     interviewRequests,
     selectionProcesses,
@@ -43,7 +44,9 @@ export default function ApplicantDashboardPage() {
     updateAvailabilitySlots,
     respondToInterview,
     talentProfiles,
-  } = useMockData();
+    getEmployerById,
+    updateTalentProfile,
+  } = useData();
 
   const user = currentUser;
 
@@ -66,9 +69,8 @@ export default function ApplicantDashboardPage() {
   const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
   const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
 
-  // ponytail: mock uploads stored in local state, not persisted
-  const [mockResumeUrl, setMockResumeUrl] = useState<string | null>(null);
-  const [mockVideoUrl, setMockVideoUrl] = useState<string | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   const [newSlotDay, setNewSlotDay] = useState('1');
   const [newSlotStart, setNewSlotStart] = useState('09:00');
@@ -76,8 +78,8 @@ export default function ApplicantDashboardPage() {
 
   const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  const resumeUrl = mockResumeUrl ?? talentProfile?.resume_url;
-  const videoUrl = mockVideoUrl ?? talentProfile?.video_url;
+  const resumeUrl = talentProfile?.resume_url;
+  const videoUrl = talentProfile?.video_url;
 
   const slots = useMemo(
     () => talentProfile ? getAvailabilityForApplicant(talentProfile.id) : [],
@@ -97,6 +99,15 @@ export default function ApplicantDashboardPage() {
     updateAvailabilitySlots(talentProfile.id, [...slots, slot]);
   }, [talentProfile, newSlotDay, newSlotStart, newSlotEnd, slots, updateAvailabilitySlots]);
 
+  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !talentProfile) return;
+    setUploading(true);
+    const result = await uploadResume(talentProfile.id, file);
+    if (result.url) updateTalentProfile({ ...talentProfile, resume_url: result.url });
+    setUploading(false);
+  }
+
   const removeSlot = useCallback((slotId: string) => {
     if (!talentProfile) return;
     updateAvailabilitySlots(talentProfile.id, slots.filter((s) => s.id !== slotId));
@@ -113,19 +124,19 @@ export default function ApplicantDashboardPage() {
     );
   }
 
-  const completion = talentProfile.profile_completion ?? 0;
   const completionItems = [
     { label: 'Full Name', done: talentProfile.display_name.length > 0 },
     { label: 'Professional Title', done: talentProfile.title.length > 0 },
     { label: 'Summary', done: (talentProfile.summary?.length ?? 0) > 2 },
-    { label: 'Bio', done: (talentProfile.bio?.length ?? 0) > 10 },
+    { label: 'Bio', done: (talentProfile.bio?.length ?? 0) > 0 },
     { label: 'Tech Stack', done: (talentProfile.tech_stack?.length ?? 0) > 0 },
-    { label: 'Skills Assessment', done: (talentProfile.skills?.length ?? 0) > 0 },
-    { label: 'English Level', done: true },
+    { label: 'Skills Assessment', done: (talentProfile.tech_stack?.length ?? 0) > 0 },
+    { label: 'English Level', done: talentProfile.english_level !== 'Basic' },
     { label: 'Resume', done: (talentProfile.resume_url?.length ?? 0) > 0 },
     { label: 'Video', done: (talentProfile.video_url?.length ?? 0) > 0 },
-    { label: 'Availability', done: true },
+    { label: 'Availability', done: talentProfile.availability_status !== 'In Training' },
   ];
+  const completion = Math.round((completionItems.filter((i) => i.done).length / completionItems.length) * 100);
 
   return (
     <div className="space-y-8">
@@ -181,7 +192,7 @@ export default function ApplicantDashboardPage() {
             ) : (
               <div className="space-y-4">
                 {activeProcesses.map((process) => {
-                  const employer = loadEmployerProfiles().find((e) => e.id === process.employer_id);
+                  const employer = getEmployerById(process.employer_id);
                   return (
                     <div key={process.id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-1">
@@ -230,7 +241,7 @@ export default function ApplicantDashboardPage() {
             ) : (
               <div className="space-y-3">
                 {pendingInterviews.map((interview) => {
-                  const employer = loadEmployerProfiles().find((e) => e.id === interview.employer_id);
+                  const employer = getEmployerById(interview.employer_id);
                   const dateStr = interview.requested_date
                     ? new Date(interview.requested_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                     : 'TBD';
@@ -319,6 +330,17 @@ export default function ApplicantDashboardPage() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{notif.title}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2">{notif.message}</p>
+                      {notif.metadata?.join_url && (
+                        <a
+                          href={notif.metadata.join_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
+                        >
+                          <Video className="w-3 h-3" />
+                          Join Meeting
+                        </a>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -347,14 +369,24 @@ export default function ApplicantDashboardPage() {
                   View Resume
                 </a>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => setMockResumeUrl('/resumes/mock-upload.pdf')}
-                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  Upload Resume
-                </button>
+                <>
+                  <input
+                    ref={resumeInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    className="hidden"
+                    onChange={handleResumeUpload}
+                  />
+                  <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => resumeInputRef.current?.click()}
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    {uploading ? 'Uploading...' : 'Upload Resume'}
+                  </button>
+                </>
               )}
             </div>
 
@@ -374,7 +406,7 @@ export default function ApplicantDashboardPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setMockVideoUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')}
+                  onClick={() => updateTalentProfile({ ...talentProfile, video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' })}
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Upload className="w-3.5 h-3.5" />
@@ -455,7 +487,7 @@ export default function ApplicantDashboardPage() {
               </h3>
               <div className="space-y-2">
                 {myProcesses.filter((p) => p.status !== 'active').map((p) => {
-                  const employer = loadEmployerProfiles().find((e) => e.id === p.employer_id);
+                  const employer = getEmployerById(p.employer_id);
                   return (
                     <div key={p.id} className="flex items-center justify-between">
                       <div className="min-w-0">

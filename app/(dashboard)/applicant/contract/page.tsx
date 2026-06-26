@@ -2,13 +2,13 @@
 
 import { useMemo } from 'react';
 import { Signature as FileSignature, Clock, CircleCheck as CheckCircle2, Eye } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 
 export default function ApplicantContractPage() {
-  const { currentUser } = useDemoAuth();
-  const { selectionProcesses, talentProfiles, employerProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { selectionProcesses, talentProfiles, employerProfiles } = useData();
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
@@ -19,18 +19,6 @@ export default function ApplicantContractPage() {
     if (user?.profile_id) {
       const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
       if (found) return found;
-      if (typeof window !== 'undefined') {
-        try {
-          const raw = localStorage.getItem('vh-talent-profiles');
-          if (raw) {
-            const persisted = JSON.parse(raw);
-            const tp = persisted.find(function (t: { user_id?: string; id?: string }) {
-              return t.user_id === user.profile_id || t.id === user.talent_profile_id;
-            });
-            if (tp) return tp;
-          }
-        } catch { /* ignore */ }
-      }
     }
     return null;
   }, [user, talentProfiles]);

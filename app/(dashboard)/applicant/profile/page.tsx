@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Save, FileText, Video, Upload, Camera } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useAuth } from '@/lib/auth';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
+import type { TalentProfile, TalentSkill } from '@/types';
 
 const timezones = [
   'America/New_York',
@@ -38,8 +39,8 @@ const englishLevels = ['Basic', 'Intermediate', 'Advanced', 'Fluent', 'Native'];
 const availabilityStatuses = ['Available', 'Hired', 'In Training', 'On Hold'];
 
 export default function ApplicantProfilePage() {
-  const { currentUser } = useDemoAuth();
-  const { talentProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { talentProfiles, updateTalentProfile } = useData();
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
@@ -64,6 +65,19 @@ export default function ApplicantProfilePage() {
   );
   const [saved, setSaved] = useState(false);
 
+  useEffect(function () {
+    if (!talentProfile) return;
+    setDisplayName(talentProfile.display_name || '');
+    setTitle(talentProfile.title || '');
+    setSummary(talentProfile.summary || '');
+    setBio(talentProfile.bio || '');
+    setTechStack(talentProfile.tech_stack ? talentProfile.tech_stack.join(', ') : '');
+    setEnglishLevel(talentProfile.english_level || 'Intermediate');
+    setYearsExperience(talentProfile.years_experience?.toString() || '0');
+    setTimezone(talentProfile.timezone || 'America/Bogota');
+    setAvailabilityStatus(talentProfile.availability_status || 'Available');
+  }, [talentProfile]);
+
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -76,6 +90,19 @@ export default function ApplicantProfilePage() {
   }
 
   function handleSave() {
+    if (!talentProfile) return;
+    updateTalentProfile({
+      ...talentProfile,
+      display_name: displayName,
+      title,
+      summary,
+      bio,
+      tech_stack: techStack.split(',').map((s) => s.trim()).filter(Boolean),
+      english_level: englishLevel as TalentProfile['english_level'],
+      years_experience: parseInt(yearsExperience) || 0,
+      timezone,
+      availability_status: availabilityStatus as TalentProfile['availability_status'],
+    });
     setSaved(true);
     setTimeout(function () { setSaved(false); }, 3000);
   }
@@ -92,7 +119,7 @@ export default function ApplicantProfilePage() {
       {/* Save feedback */}
       {saved && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-          Profile saved successfully! (Demo mode - changes are not persisted)
+          Profile saved successfully!
         </div>
       )}
 

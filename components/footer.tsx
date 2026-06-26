@@ -4,7 +4,7 @@ import { Zap } from 'lucide-react';
 const footerLinks = {
   platform: [
     { href: '/talent', label: 'Browse Talent' },
-    { href: '/request-demo', label: 'Request a Demo' },
+    { href: '/request-sign-up', label: 'Request Access' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
   ],

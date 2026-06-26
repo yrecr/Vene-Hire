@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Building2, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { getEmployerById, loadEmployerProfiles } from '@/lib/employer-profiles';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 
 export default function EmployerCompanyPage() {
-  const { currentUser } = useDemoAuth();
+  const { currentUser } = useAuth();
+  const { employerProfiles } = useData();
+  const [saving, setSaving] = useState(false);
 
-  const employerProfile = getEmployerById(currentUser?.employer_profile_id) ?? loadEmployerProfiles()[0];
+  const employerProfile = employerProfiles.find((e) => e.id === currentUser?.employer_profile_id);
 
   const [isEditing, setIsEditing] = useState(false);
   const [companyName, setCompanyName] = useState(
@@ -24,8 +27,20 @@ export default function EmployerCompanyPage() {
     employerProfile?.hiring_needs || ''
   );
 
-  const handleSave = () => {
-    alert('Company profile saved! (Demo mode - changes are not persisted)');
+  const handleSave = async () => {
+    if (!employerProfile) return;
+    setSaving(true);
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    await supabase.from('employer_profiles').update({
+      company_name: companyName,
+      contact_name: contactName,
+      summary,
+      hiring_needs: hiringNeeds,
+    }).eq('id', employerProfile.id);
+    setSaving(false);
     setIsEditing(false);
   };
 

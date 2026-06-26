@@ -1,33 +1,27 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import type { Profile } from '@/types';
 import { Plus, Search, Pencil, Trash2, X, Save } from 'lucide-react';
-
-const PROFILES_KEY = 'vh-profiles';
-const EMPLOYERS_KEY = 'vh-employers';
-
-function loadProfiles(): Profile[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(PROFILES_KEY);
-    return raw ? (JSON.parse(raw) as Profile[]) : [];
-  } catch { return []; }
-}
+import { useData } from '@/lib/data-context';
+import * as api from '@/lib/supabase-service';
 
 export default function UserManagementPage() {
-  const [profiles, setProfiles] = useState(loadProfiles);
+  const { profiles: contextProfiles, setProfiles } = useData();
+  const [profiles, setLocalProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Profile>>({});
 
-  function save(list: Profile[]) {
+  useEffect(() => { setLocalProfiles(contextProfiles); }, [contextProfiles]);
+
+  function sync(list: Profile[]) {
+    setLocalProfiles(list);
     setProfiles(list);
-    try { localStorage.setItem(PROFILES_KEY, JSON.stringify(list)); } catch { /* quota */ }
   }
 
   const filtered = useMemo(() => {
@@ -48,24 +42,18 @@ export default function UserManagementPage() {
   }, []);
 
   const saveEdit = useCallback(() => {
-    save(profiles.map((p) => p.id === editId ? { ...p, ...editData } as Profile : p));
+    const updated = profiles.find((p) => p.id === editId);
+    if (!updated) return;
+    const merged = { ...updated, ...editData } as Profile;
+    sync(profiles.map((p) => p.id === editId ? merged : p));
+    api.upsertProfile(merged).catch(() => {});
     setEditId(null);
     setEditData({});
   }, [editId, editData, profiles]);
 
   const deleteUser = useCallback((id: string) => {
-    const target = profiles.find((p) => p.id === id);
-    if (!target) return;
-    save(profiles.filter((p) => p.id !== id));
-    try {
-      if (target.role === 'employer' && target.company_name) {
-        const empRaw = localStorage.getItem(EMPLOYERS_KEY);
-        if (empRaw) {
-          const list = JSON.parse(empRaw).filter((e: { user_id: string }) => e.user_id !== target.id);
-          localStorage.setItem(EMPLOYERS_KEY, JSON.stringify(list));
-        }
-      }
-    } catch { /* quota */ }
+    sync(profiles.filter((p) => p.id !== id));
+    api.deleteProfile(id).catch(() => {});
   }, [profiles]);
 
   const columns: DataTableColumn<Profile>[] = [
@@ -175,7 +163,7 @@ export default function UserManagementPage() {
       </div>
 
       {showCreate && (
-        <CreateUserForm onSave={(p) => { save([...profiles, p]); setShowCreate(false); }} onCancel={() => setShowCreate(false)} />
+        <CreateUserForm onSave={(p) => { sync([...profiles, p]); setShowCreate(false); }} onCancel={() => setShowCreate(false)} />
       )}
 
       <div className="relative">
@@ -195,13 +183,58 @@ export default function UserManagementPage() {
 }
 
 function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; onCancel: () => void }) {
-  const [data, setData] = useState({ full_name: '', email: '', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
+  const [data, setData] = useState({ full_name: '', email: '', password: 'Demo123!', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+
+  const handleCreate = async () => {
+    if (!data.full_name.trim() || !data.email.trim() || !data.password.trim()) return;
+    setCreating(true);
+    setCreateError('');
+
+    const profile: Profile = {
+      id: crypto.randomUUID(),
+      auth_user_id: crypto.randomUUID(),
+      full_name: data.full_name,
+      email: data.email,
+      role: data.role,
+      company_name: data.company_name || null,
+      status: data.status,
+      created_at: new Date().toISOString(),
+    };
+
+    const res = await fetch('/api/approve-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: data.email,
+        full_name: data.full_name,
+        company: data.company_name,
+        request_type: data.role === 'employer' ? 'employer' : 'applicant',
+        password: data.password,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      setCreateError(err.error || 'Failed to create user');
+      setCreating(false);
+      return;
+    }
+
+    onSave(profile);
+    setCreating(false);
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold text-foreground">Create New User</h3>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onCancel}><X className="w-4 h-4" /></Button>
       </div>
+      {createError && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-2">{createError}</div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
@@ -213,6 +246,12 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
           <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
           <input type="email" placeholder="Enter email address" value={data.email}
             onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+          <input type="text" placeholder="Leave as Demo123! for default" value={data.password}
+            onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
@@ -243,21 +282,8 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
         )}
       </div>
       <div className="flex items-center gap-3 pt-2">
-        <Button className="gap-2" onClick={() => {
-          if (!data.full_name.trim() || !data.email.trim()) return;
-          onSave({
-            id: `p-${Date.now()}`,
-            auth_user_id: `auth-${Date.now()}`,
-            full_name: data.full_name,
-            email: data.email,
-            role: data.role,
-            company_name: data.company_name || null,
-            status: data.status,
-            created_at: new Date().toISOString(),
-          });
-        }}>
-          <Plus className="w-4 h-4" />
-          Create
+        <Button className="gap-2" disabled={creating} onClick={handleCreate}>
+          {creating ? 'Creating...' : <><Plus className="w-4 h-4" /> Create</>}
         </Button>
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
       </div>

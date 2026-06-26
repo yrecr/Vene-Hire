@@ -6,7 +6,7 @@ import { StatCard } from '@/components/stat-card';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { AccessRequest } from '@/types';
 
 const columns: DataTableColumn<AccessRequest>[] = [
@@ -46,7 +46,7 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
-  const { selectionProcesses, accessRequests, profiles } = useMockData();
+  const { selectionProcesses, accessRequests, profiles } = useData();
   const totalApplicants = profiles.filter((p) => p.role === 'applicant').length;
   const totalEmployers = profiles.filter((p) => p.role === 'employer').length;
   const pendingRequests = accessRequests.filter((r) => r.status === 'pending').length;

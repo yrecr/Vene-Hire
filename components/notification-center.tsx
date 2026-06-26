@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bell, MessageSquare, GitBranch, FileText, Inbox, Info } from 'lucide-react';
 import type { Notification } from '@/types';
+import * as api from '@/lib/supabase-service';
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -67,7 +68,9 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
   }, [isOpen]);
 
   function handleMarkAllRead() {
+    const ids = notifications.filter((n) => !n.read).map((n) => n.id);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    ids.forEach((id) => api.markNotificationRead(id).catch(() => {}));
   }
 
   return (

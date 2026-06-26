@@ -263,7 +263,7 @@ export default function AboutPage() {
             hire production-ready engineers faster and with less risk.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/request-demo">
+            <Link href="/request-sign-up">
               <Button
                 size="lg"
                 className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12"

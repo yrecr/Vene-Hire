@@ -1,11 +1,11 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import { FileText, Download } from 'lucide-react';
 
 export default function ResourcesPage() {
-  const { resources } = useMockData();
+  const { resources } = useData();
   const studentResources = resources.filter(
     (r) => r.visibility === 'student' || r.visibility === 'all'
   );

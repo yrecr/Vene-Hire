@@ -5,8 +5,8 @@ import { Search, Star, MessageSquare, ExternalLink, StarOff } from 'lucide-react
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useMockData } from '@/lib/data-context';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { EmptyState } from '@/components/empty-state';
 import Link from 'next/link';
@@ -22,8 +22,8 @@ const availabilityOptions = ['All', 'Available', 'In Training', 'On Hold'];
 const experienceLevels = ['All', '1-2 years', '3-4 years', '5+ years'];
 
 export default function EmployerApplicantsPage() {
-  const { currentUser } = useDemoAuth();
-  const mockData = useMockData();
+  const { currentUser } = useAuth();
+  const mockData = useData();
   const { isShortlisted, toggleShortlist, talentProfiles } = mockData;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -239,6 +239,8 @@ export default function EmployerApplicantsPage() {
                     variant="outline"
                     size="sm"
                     className="gap-1.5"
+                    disabled={!employerId}
+                    title={!employerId ? 'Employer profile not loaded yet' : 'Request Interview'}
                     onClick={() => handleRequestInterview(applicant)}
                   >
                     <MessageSquare className="w-3.5 h-3.5" />

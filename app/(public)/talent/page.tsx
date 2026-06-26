@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { TalentProfile } from '@/types';
 import { TalentCard } from '@/components/talent-card';
 import { SectionHeader } from '@/components/section-header';
@@ -16,7 +16,7 @@ import {
 import { Search, Users, SlidersHorizontal } from 'lucide-react';
 
 export default function TalentPage() {
-  const { talentProfiles } = useMockData();
+  const { talentProfiles } = useData();
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [techFilter, setTechFilter] = useState('all');

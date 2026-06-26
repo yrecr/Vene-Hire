@@ -20,6 +20,12 @@
       "type": "n8n-nodes-base.zoom",
       "typeVersion": 1,
       "position": [500, 300],
+      "credentials": {
+        "zoomOAuth2Api": {
+          "id": "zoom_oauth",
+          "name": "Zoom OAuth2"
+        }
+      },
       "parameters": {
         "resource": "meeting",
         "operation": "create",
@@ -28,33 +34,94 @@
         "startTime": "={{ $json.start_time }}",
         "duration": "={{ $json.duration || 60 }}",
         "timezone": "={{ $json.timezone || 'America/Bogota' }}",
-        "settings": {
-          "joinBeforeHost": true,
-          "waitingRoom": false,
-          "hostVideo": true,
-          "participantVideo": true,
-          "muteUponEntry": true
+        "additionalFields": {
+          "settings": {
+            "joinBeforeHost": true,
+            "waitingRoom": false,
+            "hostVideo": true,
+            "participantVideo": true,
+            "muteUponEntry": true
+          }
         },
-        "authentication": "oAuth2",
-        "oauthAccountId": "zoom_oauth"
+        "authentication": "oAuth2"
       }
     },
     {
       "id": "merge-data",
       "name": "Merge Interview ID",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 2,
-      "position": [750, 200],
+      "typeVersion": 3,
+      "position": [750, 300],
       "parameters": {
-        "values": {
-          "string": [
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
             {
+              "id": "field-interview-id",
               "name": "interview_id",
-              "value": "={{ $node['Webhook'].json.interview_id }}"
+              "value": "={{ $('Webhook').item.json.interview_id }}",
+              "type": "string"
+            },
+            {
+              "id": "field-employer-id",
+              "name": "employer_id",
+              "value": "={{ $('Webhook').item.json.employer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "field-applicant-id",
+              "name": "applicant_id",
+              "value": "={{ $('Webhook').item.json.applicant_id }}",
+              "type": "string"
+            },
+            {
+              "id": "field-join-url",
+              "name": "join_url",
+              "value": "={{ $json.join_url }}",
+              "type": "string"
+            },
+            {
+              "id": "field-start-url",
+              "name": "start_url",
+              "value": "={{ $json.start_url }}",
+              "type": "string"
+            },
+            {
+              "id": "field-meeting-id",
+              "name": "zoom_meeting_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "field-topic",
+              "name": "topic",
+              "value": "={{ $json.topic }}",
+              "type": "string"
+            },
+            {
+              "id": "field-start-time",
+              "name": "start_time",
+              "value": "={{ $json.start_time }}",
+              "type": "string"
+            },
+            {
+              "id": "field-duration",
+              "name": "duration",
+              "value": "={{ $json.duration }}",
+              "type": "number"
+            },
+            {
+              "id": "field-password",
+              "name": "password",
+              "value": "={{ $json.password }}",
+              "type": "string"
             }
           ]
         },
-        "options": {}
+        "options": {
+          "includeOtherFields": true
+        }
       }
     },
     {
@@ -62,24 +129,13 @@
       "name": "Callback to VeneHire",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
-      "position": [1000, 100],
+      "position": [1000, 150],
       "parameters": {
-        "url": "http://localhost:3000/api/n8n-webhook",
+        "url": "={{ ($('Webhook').first().headers['x-app-url'] || 'http://localhost:3000') + '/api/n8n-webhook' }}",
         "method": "POST",
         "sendBody": true,
-        "bodyContentType": "json",
-        "bodyParameters": {
-          "parameters": [
-            { "name": "interview_id", "value": "={{ $json.interview_id }}" },
-            { "name": "zoom_meeting_id", "value": "={{ $json.id }}" },
-            { "name": "join_url", "value": "={{ $json.join_url }}" },
-            { "name": "start_url", "value": "={{ $json.start_url }}" },
-            { "name": "topic", "value": "={{ $json.topic }}" },
-            { "name": "start_time", "value": "={{ $json.start_time }}" },
-            { "name": "duration", "value": "={{ $json.duration }}" },
-            { "name": "password", "value": "={{ $json.password }}" }
-          ]
-        },
+        "contentType": "json",
+        "body": "={{ JSON.stringify({ interview_id: $json.interview_id, zoom_meeting_id: $json.zoom_meeting_id, join_url: $json.join_url, start_url: $json.start_url, topic: $json.topic, start_time: $json.start_time, duration: $json.duration, password: $json.password, employer_id: $json.employer_id, applicant_id: $json.applicant_id }) }}",
         "options": {
           "timeout": 10000,
           "allowUnauthorizedCerts": true
@@ -91,30 +147,41 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1000, 400],
+      "position": [1000, 450],
       "parameters": {
-        "operation": "respondToWebhook",
-        "responseCode": 200,
-        "responseBody": "={{ $json }}"
+        "respondWith": "json",
+        "responseBody": "={{ { id: $('Merge Interview ID').item.json.zoom_meeting_id, topic: $('Merge Interview ID').item.json.topic, join_url: $('Merge Interview ID').item.json.join_url, start_url: $('Merge Interview ID').item.json.start_url, start_time: $('Merge Interview ID').item.json.start_time, duration: $('Merge Interview ID').item.json.duration, password: $('Merge Interview ID').item.json.password } }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              { "name": "Content-Type", "value": "application/json" }
+            ]
+          }
+        }
       }
     }
   ],
   "connections": {
-    "webhook-entry": {
-      "main": [[ { "node": "zoom-create", "type": "main", "index": 0 } ]]
+    "Webhook": {
+      "main": [[ { "node": "Create Zoom Meeting", "type": "main", "index": 0 } ]]
     },
-    "zoom-create": {
-      "main": [[ { "node": "merge-data", "type": "main", "index": 0 } ]]
+    "Create Zoom Meeting": {
+      "main": [[ { "node": "Merge Interview ID", "type": "main", "index": 0 } ]]
     },
-    "merge-data": {
+    "Merge Interview ID": {
       "main": [
-        [ { "node": "callback", "type": "main", "index": 0 } ],
-        [ { "node": "respond", "type": "main", "index": 0 } ]
+        [
+          { "node": "Callback to VeneHire", "type": "main", "index": 0 },
+          { "node": "Respond to Webhook", "type": "main", "index": 0 }
+        ]
       ]
     }
   },
   "active": true,
-  "settings": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
   "staticData": null,
   "tags": []
 }

@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Zap, Mail, Lock, ArrowRight, CircleAlert as AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabase';
+import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 
 const rolePath: Record<string, string> = {
   admin: '/admin',
@@ -16,7 +15,6 @@ const rolePath: Record<string, string> = {
 };
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,6 +26,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -35,23 +37,14 @@ export default function LoginPage() {
 
       if (authError || !data.session) {
         setError(authError?.message ?? 'Login failed');
+        setLoading(false);
         return;
       }
 
-      const userEmail = data.session.user.email;
-      if (userEmail) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('email', userEmail)
-          .single();
-        router.push(rolePath[profile?.role ?? ''] ?? '/');
-      } else {
-        router.push('/');
-      }
+      const role = (data.session.user.user_metadata?.role as string) || '';
+      window.location.href = rolePath[role] || '/';
     } catch {
-      setError('An unexpected error occurred. Please try again.');
-    } finally {
+      setError('Network error');
       setLoading(false);
     }
   };

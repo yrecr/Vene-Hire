@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { EmployerProfile } from '@/types';
 import { Eye } from 'lucide-react';
 
@@ -60,7 +60,7 @@ const columns: DataTableColumn<EmployerProfile>[] = [
 ];
 
 export default function EmployerManagementPage() {
-  const { employerProfiles } = useMockData();
+  const { employerProfiles } = useData();
   return (
     <div className="space-y-6">
       {/* Header */}

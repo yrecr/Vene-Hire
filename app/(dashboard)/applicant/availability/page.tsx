@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Clock, Plus, Trash2, Save } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { AvailabilitySlot } from '@/types';
+import type { AvailabilitySlot, TalentProfile } from '@/types';
 
 const timezones = [
   'America/New_York',
@@ -48,8 +48,8 @@ const timeSlots = [
 ];
 
 export default function ApplicantAvailabilityPage() {
-  const { currentUser } = useDemoAuth();
-  const { talentProfiles, getAvailabilityForApplicant, updateAvailabilitySlots } = useMockData();
+  const { currentUser } = useAuth();
+  const { talentProfiles, getAvailabilityForApplicant, updateAvailabilitySlots, updateTalentProfile } = useData();
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
@@ -62,9 +62,25 @@ export default function ApplicantAvailabilityPage() {
     return getAvailabilityForApplicant(talentProfile.id);
   }, [talentProfile, getAvailabilityForApplicant]);
 
+  function generalAvailFromStatus(status: string): string {
+    return status === 'Available' ? 'Available Immediately' : 'Not Available';
+  }
+
+  function statusFromGeneralAvail(ga: string): string {
+    return ga === 'Not Available' ? 'On Hold' : 'Available';
+  }
+
   const [timezone, setTimezone] = useState(talentProfile?.timezone || 'America/Bogota');
-  const [generalAvailability, setGeneralAvailability] = useState('Available Immediately');
+  const [generalAvailability, setGeneralAvailability] = useState(
+    generalAvailFromStatus(talentProfile?.availability_status || '')
+  );
   const [slots, setSlots] = useState<AvailabilitySlot[]>(initialSlots);
+  useEffect(() => { setSlots(initialSlots); }, [initialSlots]);
+  useEffect(function () {
+    if (!talentProfile) return;
+    setTimezone(talentProfile.timezone || 'America/Bogota');
+    setGeneralAvailability(generalAvailFromStatus(talentProfile.availability_status));
+  }, [talentProfile]);
   const [newDay, setNewDay] = useState('1');
   const [newStart, setNewStart] = useState('09:00');
   const [newEnd, setNewEnd] = useState('12:00');
@@ -83,9 +99,9 @@ export default function ApplicantAvailabilityPage() {
 
   function handleAddSlot() {
     var newSlot: AvailabilitySlot = {
-      id: 'as-new-' + Date.now(),
+      id: crypto.randomUUID(),
       applicant_id: talentProfile?.id || '',
-      day_of_week: parseInt(newDay, 10),
+      day_of_week: parseInt(newDay, 10) % 7,
       start_time: newStart,
       end_time: newEnd,
       timezone: timezone,
@@ -100,6 +116,11 @@ export default function ApplicantAvailabilityPage() {
   function handleSave() {
     if (!talentProfile) return;
     updateAvailabilitySlots(talentProfile.id, slots);
+    updateTalentProfile({
+      ...talentProfile,
+      timezone,
+      availability_status: statusFromGeneralAvail(generalAvailability) as TalentProfile['availability_status'],
+    });
     setSaved(true);
     setTimeout(function () { setSaved(false); }, 3000);
   }
@@ -116,7 +137,7 @@ export default function ApplicantAvailabilityPage() {
       {/* Save feedback */}
       {saved && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-          Availability saved successfully! (Demo mode - changes are not persisted)
+          Availability saved successfully!
         </div>
       )}
 
@@ -188,7 +209,7 @@ export default function ApplicantAvailabilityPage() {
         {/* Schedule Grid */}
         <div className="space-y-3 mb-6">
           {dayNames.map(function (dayName, index) {
-            var dayNum = index + 1;
+            var dayNum = (index + 1) % 7;
             var daySlots = slots.filter(function (s) { return s.day_of_week === dayNum; });
             return (
               <div key={dayName} className="flex items-start gap-4 py-2">

@@ -1,0 +1,86 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+export async function POST(req: NextRequest) {
+  try {
+    const { process_id, employer_id, applicant_id } = await req.json();
+    if (!process_id || !employer_id || !applicant_id) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { data, error } = await supabase
+      .from('contract_approval_requests')
+      .insert({ process_id, employer_id, applicant_id, status: 'pending' })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[contract-approval] POST error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json(data);
+  } catch (err) {
+    console.error('[contract-approval] POST unexpected:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const { requestId, status } = await req.json();
+    if (!requestId || !['approved', 'rejected'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { data: request, error: fetchError } = await supabase
+      .from('contract_approval_requests')
+      .select('*')
+      .eq('id', requestId)
+      .single();
+
+    if (fetchError || !request) {
+      return NextResponse.json({ error: 'Request not found' }, { status: 404 });
+    }
+
+    const { error: updateError } = await supabase
+      .from('contract_approval_requests')
+      .update({ status, reviewed_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    if (updateError) {
+      console.error('[contract-approval] PATCH error:', updateError);
+      return NextResponse.json({ error: updateError.message }, { status: 500 });
+    }
+
+    if (status === 'approved') {
+      const { error: processError } = await supabase
+        .from('selection_processes')
+        .update({ current_stage: 'contract_signing', contract_status: 'pending' })
+        .eq('id', request.process_id);
+
+      if (processError) {
+        console.error('[contract-approval] process update error:', processError);
+        return NextResponse.json({ error: processError.message }, { status: 500 });
+      }
+    }
+
+    return NextResponse.json({ ok: true, status });
+  } catch (err) {
+    console.error('[contract-approval] PATCH unexpected:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

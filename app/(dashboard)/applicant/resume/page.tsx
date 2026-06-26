@@ -1,15 +1,18 @@
 'use client';
 
-import { useMemo } from 'react';
-import { FileText, Upload, File, CircleCheck as CheckCircle2, RefreshCw } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useState, useMemo, useRef } from 'react';
+import { FileText, Upload, File, CircleCheck as CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 
 export default function ApplicantResumePage() {
-  const { currentUser } = useDemoAuth();
-  const { talentProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { talentProfiles, updateTalentProfile } = useData();
   const user = currentUser;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   const talentProfile = useMemo(function () {
     if (!user?.talent_profile_id) return null;
@@ -29,6 +32,27 @@ export default function ApplicantResumePage() {
 
   const hasResume = !!talentProfile?.resume_url;
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !talentProfile) return;
+    setUploadError('');
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/api/resume/upload', { method: 'POST', body: formData });
+    const result = await res.json();
+
+    if (result.url) {
+      updateTalentProfile({ ...talentProfile, resume_url: result.url });
+    } else {
+      setUploadError('Upload failed: ' + (result.error || 'unknown error'));
+    }
+    e.target.value = '';
+    setUploading(false);
+  }
+
   return (
     <div className="space-y-8 max-w-2xl">
       <div>
@@ -37,6 +61,13 @@ export default function ApplicantResumePage() {
           Upload your resume so employers can review your experience.
         </p>
       </div>
+
+      {/* Upload error */}
+      {uploadError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+          {uploadError}
+        </div>
+      )}
 
       {/* Current resume status */}
       {hasResume && (
@@ -50,26 +81,41 @@ export default function ApplicantResumePage() {
               <File className="w-6 h-6 text-[hsl(210,100%,45%)]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <a
+                href={talentProfile!.resume_url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-foreground truncate hover:text-[hsl(210,100%,45%)] flex items-center gap-1"
+              >
                 {talentProfile?.display_name?.toLowerCase().replace(/\s+/g, '-')}-resume.pdf
-              </p>
+                <ExternalLink className="w-3 h-3 shrink-0" />
+              </a>
               <div className="flex items-center gap-3 mt-1">
                 <span className="text-xs text-muted-foreground">PDF Document</span>
-                <span className="text-xs text-muted-foreground">245 KB</span>
-                <span className="text-xs text-muted-foreground">
-                  Uploaded {new Date(talentProfile?.created_at || '').toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <Button variant="outline" size="sm" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Replace Resume
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              asChild
+            >
+              <a href={talentProfile!.resume_url!} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="w-4 h-4" />
+                View Resume
+              </a>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled={uploading}
+              onClick={function () { inputRef.current?.click(); }}
+            >
+              <Upload className="w-4 h-4" />
+              Replace
             </Button>
           </div>
         </div>
@@ -80,17 +126,33 @@ export default function ApplicantResumePage() {
         <h3 className="text-base font-semibold text-foreground mb-4">
           {hasResume ? 'Upload a New Resume' : 'Upload Your Resume'}
         </h3>
-        <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-[hsl(210,100%,45%)]/40 transition-colors cursor-pointer">
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={function () { inputRef.current?.click(); }}
+          className="w-full border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-[hsl(210,100%,45%)]/40 transition-colors cursor-pointer disabled:opacity-50"
+        >
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
-            <Upload className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+            {uploading ? (
+              <Loader2 className="w-7 h-7 text-[hsl(210,100%,45%)] animate-spin" />
+            ) : (
+              <Upload className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+            )}
           </div>
           <p className="text-sm font-medium text-foreground mb-1">
-            Drop your resume here or click to browse
+            {uploading ? 'Uploading...' : 'Drop your resume here or click to browse'}
           </p>
           <p className="text-xs text-muted-foreground">
             Supports PDF, DOC, DOCX (max 10MB)
           </p>
-        </div>
+        </button>
       </div>
 
       {/* Tips */}

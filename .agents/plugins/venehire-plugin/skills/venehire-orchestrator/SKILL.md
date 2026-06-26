@@ -65,7 +65,7 @@ Write audit report to _workspace/01_mock-data-generator_audit.md.
 Read _workspace/01_mock-data-generator_audit.md to know available data states.
 Read app/(dashboard)/{role}/page.tsx (current state).
 Read components/ directory listing.
-Build the dashboard page consuming useMockData() and useDemoAuth().
+Build the dashboard page consuming useData() and useAuth().
 Target: show active SelectionProcesses with ProcessTimeline, 
         pending InterviewRequests, profile details (english_level, 
         availability_status, tech_stack), KPI stat cards, and notifications.

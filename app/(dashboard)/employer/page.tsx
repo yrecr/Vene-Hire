@@ -1,22 +1,20 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Users, GitBranch, MessageSquare, Star, ArrowRight } from 'lucide-react';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
-import { getEmployerById, loadEmployerProfiles } from '@/lib/employer-profiles';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 import Link from 'next/link';
 
 export default function EmployerDashboard() {
-  const { currentUser } = useDemoAuth();
-  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser, talentProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser, talentProfiles, employerProfiles } = useData();
 
-  const employerProfile = getEmployerById(currentUser?.employer_profile_id) ?? loadEmployerProfiles()[0];
-
-  const employerId = employerProfile?.id || 'ep-acme';
-  const profileId = currentUser?.profile_id || 'p-acme';
+  const employerProfile = employerProfiles.find((e) => e.id === currentUser?.employer_profile_id);
+  const employerId = employerProfile?.id ?? '';
+  const profileId = currentUser?.profile_id;
   const companyName = employerProfile?.company_name || 'Your Company';
 
   const availableCount = talentProfiles.filter(
@@ -33,7 +31,7 @@ export default function EmployerDashboard() {
     [interviewRequests, employerId]
   );
 
-  const userNotifications = getNotificationsForUser(profileId);
+  const userNotifications = getNotificationsForUser(profileId ?? '');
   const recentNotifications = userNotifications.slice(0, 3);
 
   return (

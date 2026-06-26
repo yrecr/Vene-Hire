@@ -1,0 +1,44 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import type { Notification } from '@/types';
+
+/**
+ * Server-side endpoint to insert notifications using the service role key,
+ * bypassing RLS restrictions that prevent regular users (employers, applicants)
+ * from inserting notifications for other users.
+ *
+ * POST /api/notifications/create
+ * Body: Notification | Notification[]
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const notifications: Notification[] = Array.isArray(body) ? body : [body];
+
+    if (!notifications.length) {
+      return NextResponse.json({ error: 'No notifications provided' }, { status: 400 });
+    }
+
+    // Use service role key to bypass RLS for notification creation
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+
+    const { error } = await supabase
+      .from('notifications')
+      .upsert(notifications, { onConflict: 'id' });
+
+    if (error) {
+      console.error('[notifications/create] Supabase error:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true, count: notifications.length });
+  } catch (err) {
+    console.error('[notifications/create] Unexpected error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

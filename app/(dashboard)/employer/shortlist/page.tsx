@@ -4,16 +4,16 @@ import { useState } from 'react';
 import { Star, ExternalLink, MessageSquare, Trash2, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { EmptyState } from '@/components/empty-state';
 import Link from 'next/link';
 import type { TalentProfile } from '@/types';
 
 export default function EmployerShortlistPage() {
-  const { currentUser } = useDemoAuth();
-  const mockData = useMockData();
+  const { currentUser } = useAuth();
+  const mockData = useData();
   const { shortlistedIds, toggleShortlist, talentProfiles } = mockData;
 
   const employerProfile = currentUser?.employer_profile_id

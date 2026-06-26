@@ -6,7 +6,7 @@ import { SectionHeader } from '@/components/section-header';
 import { TalentCard } from '@/components/talent-card';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { ValueCard } from '@/components/value-card';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import { ArrowRight, Zap, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
 
 const trustItems = [
@@ -42,7 +42,7 @@ const bootcampFeatures = [
 ];
 
 export default function HomePage() {
-  const { talentProfiles } = useMockData();
+  const { talentProfiles } = useData();
   const featuredTalent = talentProfiles.filter((t) => t.featured);
   return (
     <>
@@ -66,7 +66,7 @@ export default function HomePage() {
                 Access pre-trained, pre-evaluated software engineers ready to integrate into your team from day one.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link href="/request-demo">
+                <Link href="/request-sign-up">
                   <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
                     Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -259,7 +259,7 @@ export default function HomePage() {
             Stop spending months on sourcing and screening. Our pre-trained engineers are ready to deliver from day one.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/request-demo">
+            <Link href="/request-sign-up">
               <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
                 Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import {
   mockProfiles, mockTalentProfiles, mockEmployerProfiles,
-  mockBootcamps, mockResources,
+  mockBootcamps, mockResources, mockAccessRequests,
+  mockNotifications,
 } from '@/data/mock';
 
 const SEED_USERS = [
@@ -116,6 +117,18 @@ export async function POST() {
     mockResources.map((r) => ({ id: uuid(), title: r.title, description: r.description, file_path: r.file_path, visibility: r.visibility, bootcamp_id: bcUuid[r.bootcamp_id ?? ''] ?? null, created_at: r.created_at })),
   );
   if (rErr) out.errors.push(`resources: ${rErr.message}`);
+
+  // Access requests
+  const { error: arErr } = await supabaseAdmin.from('access_requests').insert(
+    mockAccessRequests.map((r) => ({ id: uuid(), request_type: r.request_type, full_name: r.full_name, company: r.company, email: r.email, country: r.country, hiring_need: r.hiring_need, candidate_slug: r.candidate_slug, message: r.message, status: r.status, created_at: r.created_at, reviewed_by: r.reviewed_by })),
+  );
+  if (arErr) out.errors.push(`access_requests: ${arErr.message}`);
+
+  // Notifications
+  const { error: nErr } = await supabaseAdmin.from('notifications').insert(
+    mockNotifications.map((n) => ({ id: uuid(), user_id: profileUuid[n.user_id] ?? n.user_id, title: n.title, message: n.message, type: n.type, read: n.read, created_at: n.created_at })),
+  );
+  if (nErr) out.errors.push(`notifications: ${nErr.message}`);
 
   return NextResponse.json(out, { status: out.errors.length ? 207 : 200 });
 }

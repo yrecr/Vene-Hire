@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { TalentProfile } from '@/types';
 import { Calendar as CalendarIcon, Clock, Globe } from 'lucide-react';
 import { format } from 'date-fns';
@@ -33,12 +34,14 @@ export function InterviewRequestModal({
   open,
   onOpenChange,
 }: InterviewRequestModalProps) {
-  const { createInterviewRequest, getAvailabilityForApplicant } = useMockData();
+  const { createInterviewRequest, getAvailabilityForApplicant } = useData();
+  const router = useRouter();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [timeSlot, setTimeSlot] = useState<string>('');
   const [roleTitle, setRoleTitle] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const availabilitySlots = useMemo(
     () => getAvailabilityForApplicant(applicant.id),
@@ -53,27 +56,37 @@ export function InterviewRequestModal({
     return availabilitySlots.filter((s) => (s.day_of_week % 7) === dayOfWeek);
   }, [date, availabilitySlots]);
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!date || !timeSlot || !roleTitle.trim()) return;
     const [startTime] = timeSlot.split(' - ');
-    const dateTimeStr = `${format(date, 'yyyy-MM-dd')}T${startTime}:00`;
-    createInterviewRequest({
-      applicant_id: applicant.id,
-      employer_id: employerId,
-      role_title: roleTitle.trim(),
-      requested_date: dateTimeStr,
-      message: message.trim() || `Interview request for ${roleTitle.trim()} position.`,
-    });
-    setSubmitted(true);
+    const timePart = startTime.split(':').length === 2 ? `${startTime}:00` : startTime;
+    const dateTimeStr = `${format(date, 'yyyy-MM-dd')}T${timePart}`;
+    try {
+      await createInterviewRequest({
+        applicant_id: applicant.id,
+        employer_id: employerId,
+        role_title: roleTitle.trim(),
+        requested_date: dateTimeStr,
+        message: message.trim() || `Interview request for ${roleTitle.trim()} position.`,
+      });
+      setSubmitted(true);
+    } catch {
+      setSubmitError('Failed to send request. Please try again.');
+    }
   }
 
   function handleClose() {
+    const wasSubmitted = submitted;
     setSubmitted(false);
+    setSubmitError(null);
     setDate(undefined);
     setTimeSlot('');
     setRoleTitle('');
     setMessage('');
     onOpenChange(false);
+    if (wasSubmitted) {
+      router.push('/employer/requests');
+    }
   }
 
   function handleCalendarSelect(day: Date | undefined) {
@@ -206,6 +219,12 @@ export function InterviewRequestModal({
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+              {submitError}
             </div>
           )}
 

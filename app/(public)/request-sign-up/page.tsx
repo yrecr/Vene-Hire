@@ -15,9 +15,8 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabase';
+import { useData } from '@/lib/data-context';
 import { Send, CircleCheck as CheckCircle2, ArrowLeft, Building2, ShieldCheck, Clock, Users, Loader as Loader2, CircleAlert as AlertCircle } from 'lucide-react';
-
-const LS_KEY = 'vh-access-requests';
 
 const countries = [
   'United States',
@@ -71,6 +70,7 @@ interface FormData {
 }
 
 function RequestDemoForm() {
+  const { setAccessRequests } = useData();
   const searchParams = useSearchParams();
   const candidateParam = searchParams.get('candidate') || '';
 
@@ -93,7 +93,7 @@ function RequestDemoForm() {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -110,8 +110,9 @@ function RequestDemoForm() {
 
     setIsSubmitting(true);
 
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const entry = {
-      id: `ar-${Date.now()}`,
+      id,
       request_type: 'employer' as const,
       full_name: formData.fullName,
       company: formData.company,
@@ -125,18 +126,14 @@ function RequestDemoForm() {
       reviewed_by: null,
     };
 
-    try {
-      await supabase.from('access_requests').insert(entry);
-    } catch {
-      // ponytail: Supabase unavailable — save locally
-    }
+    supabase.from('access_requests').insert({
+      request_type: entry.request_type, full_name: entry.full_name,
+      company: entry.company, email: entry.email, country: entry.country,
+      hiring_need: entry.hiring_need, candidate_slug: entry.candidate_slug,
+      message: entry.message, status: entry.status, created_at: entry.created_at,
+    }).then(() => {}, () => {});
 
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      const list = raw ? JSON.parse(raw) : [];
-      list.unshift(entry);
-      localStorage.setItem(LS_KEY, JSON.stringify(list));
-    } catch { /* quota */ }
+    setAccessRequests((prev) => [entry, ...prev]);
 
     setIsSubmitting(false);
     setIsSubmitted(true);

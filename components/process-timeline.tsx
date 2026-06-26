@@ -8,7 +8,10 @@ interface ProcessTimelineProps {
   technicalDate?: string | null;
   contractStatus?: 'pending' | 'under_review' | 'signed' | null;
   meetingUrl?: string | null;
+  introMeetingUrl?: string | null;
   onStageClick?: (stageKey: string) => void;
+  onCreateIntroMeet?: () => void;
+  isCreatingMeet?: boolean;
 }
 
 const stages = [
@@ -50,10 +53,14 @@ export function ProcessTimeline({
   technicalDate,
   contractStatus,
   meetingUrl,
+  introMeetingUrl,
   onStageClick,
+  onCreateIntroMeet,
+  isCreatingMeet,
 }: ProcessTimelineProps) {
   const currentIndex = getStageIndex(currentStage);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
+  const [introJoinUrl, setIntroJoinUrl] = useState<string | null>(null);
 
   function getStepDate(index: number): string | null {
     if (index === 0) return formatDate(introDate);
@@ -81,12 +88,26 @@ export function ProcessTimeline({
   function isClickable(index: number): boolean {
     if (!onStageClick) return false;
     if (status !== 'active') return false;
-    if (getStepState(index) !== 'future') return false;
+    const stepState = getStepState(index);
+    const stageKey = stages[index].key;
+    // Intro interview current stage is clickable when there's no meeting yet
+    if (stageKey === 'intro_interview' && stepState === 'current' && !introMeetingUrl) {
+      return !!onCreateIntroMeet;
+    }
+    const isContractStage = stageKey === 'contract_signing';
+    if (isContractStage && stepState === 'current') {
+      return !contractStatus || contractStatus === null;
+    }
+    if (stepState !== 'future') return false;
     return true;
   }
 
   function hasZoom(index: number): boolean {
-    return !!meetingUrl && index === currentIndex && status === 'active' && stages[index].key !== 'contract_signing';
+    const stageKey = stages[index].key;
+    if (stageKey === 'intro_interview' && currentIndex === 0 && status === 'active') {
+      return !!introMeetingUrl;
+    }
+    return !!meetingUrl && index === currentIndex && status === 'active' && stageKey !== 'contract_signing';
   }
 
   function renderIcon(index: number) {
@@ -104,11 +125,35 @@ export function ProcessTimeline({
 
       const stepNumber = index + 1;
       const zoom = hasZoom(index);
+      const isIntro = stages[index].key === 'intro_interview';
+
+      // Intro with no meeting yet — clickable CalendarPlus to create meet
+      if (isIntro && !introMeetingUrl && onCreateIntroMeet) {
+        return (
+          <div
+            className="w-8 h-8 rounded-full border-2 border-dashed border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5 flex items-center justify-center cursor-pointer hover:bg-[hsl(210,100%,45%)]/15 transition-colors group"
+            onClick={(e) => { e.stopPropagation(); if (!isCreatingMeet) onCreateIntroMeet(); }}
+          >
+            {isCreatingMeet ? (
+              <span className="w-3 h-3 border-2 border-[hsl(210,100%,45%)] border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+            )}
+          </div>
+        );
+      }
+
       return (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
             ${zoom ? 'bg-blue-500 cursor-pointer hover:bg-blue-600 group relative' : 'bg-[hsl(210,100%,45%)]'}`}
-          onClick={zoom ? (e) => { e.stopPropagation(); setJoinUrl(meetingUrl ?? null); } : undefined}
+          onClick={zoom
+            ? (e) => {
+                e.stopPropagation();
+                if (isIntro) setIntroJoinUrl(introMeetingUrl ?? null);
+                else setJoinUrl(meetingUrl ?? null);
+              }
+            : undefined}
         >
           {zoom ? (
             <>
@@ -172,7 +217,14 @@ export function ProcessTimeline({
           <div key={stage.key} className="flex items-center flex-1 last:flex-none">
             <div
               className="flex flex-col items-center"
-              onClick={() => isClickable(index) && onStageClick?.(stage.key)}
+              onClick={() => {
+                const stageKey = stage.key;
+                if (stageKey === 'intro_interview' && getStepState(index) === 'current' && !introMeetingUrl && onCreateIntroMeet) {
+                  if (!isCreatingMeet) onCreateIntroMeet();
+                  return;
+                }
+                isClickable(index) && onStageClick?.(stage.key);
+              }}
               role={isClickable(index) ? 'button' : undefined}
               tabIndex={isClickable(index) ? 0 : undefined}
               onKeyDown={(e) => e.key === 'Enter' && isClickable(index) && onStageClick?.(stage.key)}
@@ -219,6 +271,37 @@ export function ProcessTimeline({
               </button>
               <button
                 onClick={() => { window.open(joinUrl, '_blank'); setJoinUrl(null); }}
+                className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Join Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {introJoinUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20" onClick={() => setIntroJoinUrl(null)}>
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 p-5 w-72" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Video className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm text-foreground">Join Intro Interview</h3>
+                <p className="text-xs text-muted-foreground">The meeting is ready</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">Do you want to join the intro interview meeting now?</p>
+            <div className="flex items-center gap-2 justify-end">
+              <button
+                onClick={() => setIntroJoinUrl(null)}
+                className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { window.open(introJoinUrl, '_blank'); setIntroJoinUrl(null); }}
                 className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Join Now

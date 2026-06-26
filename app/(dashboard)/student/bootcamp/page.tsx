@@ -1,7 +1,7 @@
 'use client';
 
 import { RoleBadge } from '@/components/role-badge';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import { CircleCheck as CheckCircle2, Lock, BookOpen, Calendar, Clock, Activity } from 'lucide-react';
 
 const modules = [
@@ -26,14 +26,23 @@ function getModuleStatusStyles(status: string) {
 }
 
 export default function BootcampPage() {
-  const { bootcamps, enrollments } = useMockData();
+  const { bootcamps, enrollments } = useData();
   const bootcamp = bootcamps[0];
   const enrollment = enrollments[0];
-  const startDate = new Date(bootcamp.start_date || '');
-  const endDate = new Date(bootcamp.end_date || '');
-  const durationWeeks = Math.round(
-    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7)
-  );
+  const startDate = bootcamp?.start_date ? new Date(bootcamp.start_date) : null;
+  const endDate = bootcamp?.end_date ? new Date(bootcamp.end_date) : null;
+  const durationWeeks = startDate && endDate
+    ? Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 7))
+    : 0;
+
+  if (!bootcamp || !enrollment) {
+    return (
+      <div className="space-y-8">
+        <h2 className="text-2xl font-bold text-foreground">Bootcamp</h2>
+        <p className="text-muted-foreground">No bootcamp enrollment found.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -69,7 +78,7 @@ export default function BootcampPage() {
             </div>
             <span className="text-sm text-muted-foreground">Start Date</span>
           </div>
-          <p className="text-base font-semibold text-foreground">{bootcamp.start_date}</p>
+          <p className="text-base font-semibold text-foreground">{bootcamp.start_date ?? '—'}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
@@ -78,7 +87,7 @@ export default function BootcampPage() {
             </div>
             <span className="text-sm text-muted-foreground">End Date</span>
           </div>
-          <p className="text-base font-semibold text-foreground">{bootcamp.end_date}</p>
+          <p className="text-base font-semibold text-foreground">{bootcamp.end_date ?? '—'}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
@@ -87,7 +96,7 @@ export default function BootcampPage() {
             </div>
             <span className="text-sm text-muted-foreground">Status</span>
           </div>
-          <RoleBadge role={bootcamp.status} />
+          <RoleBadge role={bootcamp.status ?? 'active'} />
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">

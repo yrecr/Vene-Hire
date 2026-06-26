@@ -114,6 +114,9 @@ export interface Notification {
   type: 'info' | 'interview' | 'process' | 'contract' | 'request';
   read: boolean;
   created_at: string;
+  metadata?: {
+    join_url?: string;
+  };
 }
 
 export interface Bootcamp {
@@ -144,6 +147,17 @@ export interface Resource {
   visibility: 'all' | 'admin' | 'client' | 'student';
   bootcamp_id: string | null;
   created_at: string;
+}
+
+export interface ContractApprovalRequest {
+  id: string;
+  process_id: string;
+  employer_id: string;
+  applicant_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes: string | null;
+  created_at: string;
+  reviewed_at: string | null;
 }
 
 export interface DemoUser {

@@ -2,6 +2,8 @@
 
 import { Menu, Bell, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 interface DashboardHeaderProps {
   title: string;
@@ -9,6 +11,8 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
+  const { logout } = useAuth();
+  const router = useRouter();
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-30">
       <div className="flex items-center gap-3">
@@ -25,7 +29,7 @@ export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
           <Bell className="w-[18px] h-[18px]" />
           <span className="absolute top-2 right-2 w-2 h-2 bg-[hsl(210,100%,45%)] rounded-full" />
         </Button>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" onClick={() => { logout(); router.push('/'); }}>
           <LogOut className="w-[18px] h-[18px]" />
         </Button>
       </div>

@@ -4,9 +4,8 @@ import { useMemo } from 'react';
 import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { RoleBadge } from '@/components/role-badge';
 import { EmptyState } from '@/components/empty-state';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
-import { getEmployerById } from '@/lib/employer-profiles';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 
 const statusLabels: Record<string, string> = {
   pending: 'Pending',
@@ -17,10 +16,10 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function EmployerRequestsPage() {
-  const { currentUser } = useDemoAuth();
-  const { interviewRequests, getApplicantById } = useMockData();
+  const { currentUser } = useAuth();
+  const { interviewRequests, getApplicantById, employerProfiles } = useData();
 
-  const employerProfile = currentUser?.employer_profile_id ? getEmployerById(currentUser.employer_profile_id) : undefined;
+  const employerProfile = currentUser?.employer_profile_id ? employerProfiles.find((e) => e.id === currentUser.employer_profile_id) : undefined;
 
   const employerId = employerProfile?.id ?? '';
 

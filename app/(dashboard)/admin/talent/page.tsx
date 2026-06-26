@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import { Plus, Pencil, Eye, Check, Minus } from 'lucide-react';
 import type { TalentProfile, TalentSkill } from '@/types';
 
@@ -115,7 +115,7 @@ const columns: DataTableColumn<TalentWithSkills>[] = [
 ];
 
 export default function TalentProfilesPage() {
-  const { talentProfiles } = useMockData();
+  const { talentProfiles } = useData();
   return (
     <div className="space-y-6">
       {/* Header */}

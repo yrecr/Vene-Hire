@@ -5,44 +5,32 @@ import { StatCard } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
 import Link from 'next/link';
 
-const recentRequests = [
-  {
-    id: '1',
-    candidate: 'Maria Gonzalez',
-    status: 'pending',
-    date: '2024-03-20',
-  },
-  {
-    id: '2',
-    candidate: 'General Inquiry',
-    status: 'contacted',
-    date: '2024-03-18',
-  },
-];
-
 export default function ClientDashboard() {
-  const { talentProfiles } = useMockData();
-  const recommendedTalent = talentProfiles
-    .filter((t) => t.availability_status === 'Available')
-    .slice(0, 3);
+  const { talentProfiles, accessRequests, resources } = useData();
+  const { currentUser } = useAuth();
+  const availableCount = talentProfiles.filter((t) => t.availability_status === 'Available').length;
+  const recommendedTalent = talentProfiles.filter((t) => t.availability_status === 'Available').slice(0, 3);
+  const activeRequests = accessRequests.filter((r) => r.status === 'pending').length;
+  const resourcesAvailable = resources.length;
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Welcome back, TechCorp</h2>
+        <h2 className="text-2xl font-bold text-foreground">Welcome back, {currentUser?.full_name || 'Client'}</h2>
         <p className="text-muted-foreground mt-1">
           Browse available talent and manage your hiring requests.
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={Users} label="Available Talent" value={6} trend="+3" trendUp />
-        <StatCard icon={MessageSquare} label="Active Requests" value={2} />
-        <StatCard icon={CalendarCheck} label="Interviews Scheduled" value={1} />
-        <StatCard icon={FolderOpen} label="Resources Available" value={2} />
+        <StatCard icon={Users} label="Available Talent" value={availableCount} />
+        <StatCard icon={MessageSquare} label="Active Requests" value={activeRequests} />
+        <StatCard icon={CalendarCheck} label="Interviews Scheduled" value={0} />
+        <StatCard icon={FolderOpen} label="Resources Available" value={resourcesAvailable} />
       </div>
 
       <div>
@@ -107,7 +95,7 @@ export default function ClientDashboard() {
           </Link>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-100">
-          {recentRequests.map((req) => (
+          {accessRequests.slice(0, 5).map((req) => (
             <div
               key={req.id}
               className="flex items-center justify-between px-5 py-4"
@@ -115,9 +103,9 @@ export default function ClientDashboard() {
               <div className="flex items-center gap-4">
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {req.candidate}
+                    {req.full_name || 'Request'}
                   </p>
-                  <p className="text-xs text-muted-foreground">{req.date}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(req.created_at).toLocaleDateString()}</p>
                 </div>
               </div>
               <RoleBadge role={req.status} />

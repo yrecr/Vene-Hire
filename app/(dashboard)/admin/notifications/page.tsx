@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import {
   Bell,
   MessageSquare,
@@ -21,7 +21,7 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 export default function AdminNotificationsPage() {
-  const { getNotificationsForUser } = useMockData();
+  const { getNotificationsForUser } = useData();
   const initialNotifications = getNotificationsForUser('p-admin1');
   const [notifications, setNotifications] = useState(initialNotifications);
 

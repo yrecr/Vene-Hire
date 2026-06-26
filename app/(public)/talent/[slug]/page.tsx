@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useMockData } from '@/lib/data-context';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useData } from '@/lib/data-context';
+import { useAuth } from '@/lib/auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
@@ -21,8 +21,8 @@ const availabilityConfig: Record<string, { label: string; className: string }> =
 export default function TalentProfilePage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { currentUser } = useDemoAuth();
-  const { getEmployerById, talentProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { getEmployerById, talentProfiles } = useData();
   const [modalOpen, setModalOpen] = useState(false);
 
   const talent = talentProfiles.find((t) => t.slug === slug);
@@ -155,7 +155,7 @@ export default function TalentProfilePage() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 sticky top-28">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Skills</h2>
               <div className="space-y-5">
-                {talent.skills.map((skill) => (
+                {talent.skills?.map((skill) => (
                   <SkillBar key={skill.id} name={skill.skill_name} score={skill.score} />
                 ))}
               </div>
@@ -183,7 +183,7 @@ export default function TalentProfilePage() {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             ) : (
-              <Link href={`/request-demo?candidate=${talent.slug}`}>
+              <Link href={`/request-sign-up?candidate=${talent.slug}`}>
                 <Button
                   size="lg"
                   className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
@@ -193,7 +193,7 @@ export default function TalentProfilePage() {
                 </Button>
               </Link>
             )}
-            <Link href="/request-demo">
+            <Link href="/request-sign-up">
               <Button
                 size="lg"
                 variant="outline"

@@ -59,7 +59,7 @@ export function Navbar() {
                 Sign In
               </Button>
             </Link>
-            <Link href="/request-demo">
+            <Link href="/request-sign-up">
               <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
                 Request a Demo
               </Button>
@@ -94,7 +94,7 @@ export function Navbar() {
                   Sign In
                 </Button>
               </Link>
-              <Link href="/request-demo" onClick={() => setMobileOpen(false)}>
+              <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
                 <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
                   Request a Demo
                 </Button>

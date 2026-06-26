@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Video } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -9,9 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { useMockData } from '@/lib/data-context';
-import { getEmployerById } from '@/lib/employer-profiles';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 import type { SelectionProcess } from '@/types';
 import { format } from 'date-fns';
 
@@ -27,13 +26,15 @@ function tabToStatus(tab: FilterTab): string | null {
 }
 
 export default function EmployerProcessesPage() {
-  const { currentUser } = useDemoAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract } = useMockData();
+  const { currentUser } = useAuth();
+  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, createIntroMeeting } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
+  const [introMeetProcess, setIntroMeetProcess] = useState<SelectionProcess | null>(null);
+  const [isCreatingMeet, setIsCreatingMeet] = useState(false);
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -47,7 +48,9 @@ export default function EmployerProcessesPage() {
     return schedulingSlots.filter((s) => (s.day_of_week % 7) === dayOfWeek);
   }, [selectedDate, schedulingSlots]);
 
-  const employerProfile = currentUser?.employer_profile_id ? getEmployerById(currentUser.employer_profile_id) : undefined;
+  const employerProfile = currentUser?.employer_profile_id
+    ? employerProfiles.find((e) => e.id === currentUser.employer_profile_id)
+    : undefined;
 
   const employerId = employerProfile?.id ?? '';
 
@@ -62,18 +65,28 @@ export default function EmployerProcessesPage() {
     return processes.filter((p) => p.status === statusFilter);
   }, [processes, activeTab]);
 
-  const hasPendingForEmployer = useCallback(
-    (applicantId: string) => interviewRequests.some(
-      (r) => r.applicant_id === applicantId && r.employer_id === employerId && r.status === 'pending'
+  const hasApprovalPending = useCallback(
+    (process: SelectionProcess) => contractApprovalRequests.some(
+      (r) => r.process_id === process.id && r.status === 'pending'
     ),
-    [interviewRequests, employerId]
+    [contractApprovalRequests]
+  );
+
+  const hasPendingForProcess = useCallback(
+    (process: SelectionProcess) => interviewRequests.some(
+      (r) =>
+        r.applicant_id === process.applicant_id &&
+        r.employer_id === process.employer_id &&
+        r.status === 'pending' &&
+        r.role_title === `Technical Interview - ${process.role_title}`
+    ),
+    [interviewRequests]
   );
 
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
-    const hasPending = interviewRequests.some(
-      (r) => r.applicant_id === process.applicant_id && r.employer_id === process.employer_id && r.status === 'pending'
-    );
-    if (hasPending) return;
+    if (stageKey === 'technical_interview' && interviewRequests.some(
+      (r) => r.applicant_id === process.applicant_id && r.employer_id === process.employer_id && r.status === 'pending' && r.role_title === `Technical Interview - ${process.role_title}`
+    )) return;
     if (stageKey === 'contract_signing') {
       setContractProcess(process);
     } else {
@@ -83,11 +96,26 @@ export default function EmployerProcessesPage() {
     }
   }, [interviewRequests]);
 
+  const handleCreateIntroMeet = useCallback((process: SelectionProcess) => {
+    setIntroMeetProcess(process);
+  }, []);
+
+  const handleConfirmIntroMeet = useCallback(async () => {
+    if (!introMeetProcess) return;
+    setIsCreatingMeet(true);
+    try {
+      await createIntroMeeting(introMeetProcess.id);
+    } finally {
+      setIsCreatingMeet(false);
+      setIntroMeetProcess(null);
+    }
+  }, [introMeetProcess, createIntroMeeting]);
+
   const handleInitiateContract = useCallback(() => {
     if (!contractProcess) return;
-    initiateContract(contractProcess.id);
+    requestContractApproval(contractProcess.id);
     setContractProcess(null);
-  }, [contractProcess, initiateContract]);
+  }, [contractProcess, requestContractApproval]);
 
   const handleSchedule = useCallback(() => {
     if (!schedulingProcess || !selectedDate || !selectedTimeSlot) return;
@@ -162,7 +190,14 @@ export default function EmployerProcessesPage() {
                   <ProcessStatusBadge status={process.status} />
                 </div>
 
-                {applicant && hasPendingForEmployer(applicant.id) && (
+                {hasApprovalPending(process) && (
+                  <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
+                    <Hourglass className="w-3.5 h-3.5" />
+                    Awaiting Admin Approval
+                  </div>
+                )}
+
+                {hasPendingForProcess(process) && (
                   <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
                     <Hourglass className="w-3.5 h-3.5" />
                     Awaiting candidate response
@@ -177,7 +212,10 @@ export default function EmployerProcessesPage() {
                     technicalDate={process.technical_interview_date}
                     contractStatus={process.contract_status as 'pending' | 'under_review' | 'signed' | null}
                     meetingUrl={process.meeting_url}
+                    introMeetingUrl={process.current_stage === 'intro_interview' ? (process.meeting_url ?? null) : null}
                     onStageClick={(stageKey) => handleStageClick(process, stageKey)}
+                    onCreateIntroMeet={process.current_stage === 'intro_interview' && !process.meeting_url ? () => handleCreateIntroMeet(process) : undefined}
+                    isCreatingMeet={isCreatingMeet && introMeetProcess?.id === process.id}
                   />
                 </div>
 
@@ -304,14 +342,14 @@ export default function EmployerProcessesPage() {
             <DialogTitle>Initiate Contract Signing</DialogTitle>
             <DialogDescription>
               {contractProcess && (
-                <>Proceed with contract signing for {getApplicantById(contractProcess.applicant_id)?.display_name || 'the candidate'} for {contractProcess.role_title}? The candidate will be notified and the admin will be prompted to upload the contract.</>
+                <>An approval request will be sent to the administrator to initiate contract signing for {getApplicantById(contractProcess.applicant_id)?.display_name || 'the candidate'} for {contractProcess.role_title}.</>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
             <FileSignature className="w-8 h-8 text-blue-600" />
             <p className="text-sm text-blue-800">
-              This will advance the process to the Contract Signing stage. The candidate will receive a notification to review the contract.
+              A request for approval will be sent to the admin. The process will advance only after admin approval.
             </p>
           </div>
           <DialogFooter className="gap-2">
@@ -320,7 +358,39 @@ export default function EmployerProcessesPage() {
             </DialogClose>
             <Button onClick={handleInitiateContract} className="gap-2">
               <FileSignature className="w-4 h-4" />
-              Initiate Contract
+              Send Approval Request
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!introMeetProcess} onOpenChange={(open) => { if (!open && !isCreatingMeet) setIntroMeetProcess(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Intro Interview Meeting</DialogTitle>
+            <DialogDescription>
+              {introMeetProcess && (
+                <>A Zoom/Meet link will be generated via n8n for the intro interview with {getApplicantById(introMeetProcess.applicant_id)?.display_name || 'the candidate'} for {introMeetProcess.role_title}. Both you and the candidate will receive the link.</>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
+            <Video className="w-8 h-8 text-blue-600" />
+            <p className="text-sm text-blue-800">
+              The meeting link will be sent to both the employer and applicant via notifications and will appear as a join button on the timeline.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <DialogClose asChild>
+              <Button variant="outline" disabled={isCreatingMeet}>Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleConfirmIntroMeet} disabled={isCreatingMeet} className="gap-2">
+              {isCreatingMeet ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Video className="w-4 h-4" />
+              )}
+              {isCreatingMeet ? 'Creating...' : 'Create Meeting'}
             </Button>
           </DialogFooter>
         </DialogContent>

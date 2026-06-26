@@ -1,16 +1,43 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Video, Upload, Link2, Save } from 'lucide-react';
-import { useDemoAuth } from '@/lib/demo-auth';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
+
+/**
+ * Converts any YouTube or Vimeo URL to its proper embed URL.
+ * Returns the original URL unchanged if it is already an embed URL or unrecognized.
+ */
+function toEmbedUrl(url: string): string {
+  if (!url) return url;
+
+  // Already an embed URL — return as-is
+  if (url.includes('youtube.com/embed/') || url.includes('player.vimeo.com/video/')) {
+    return url;
+  }
+
+  // YouTube: https://www.youtube.com/watch?v=VIDEO_ID
+  const ytWatch = url.match(/(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/);
+  if (ytWatch) return `https://www.youtube.com/embed/${ytWatch[1]}`;
+
+  // YouTube short: https://youtu.be/VIDEO_ID
+  const ytShort = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+
+  // Vimeo: https://vimeo.com/VIDEO_ID
+  const vimeo = url.match(/vimeo\.com\/([0-9]+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+
+  return url;
+}
 
 export default function ApplicantVideoPage() {
-  const { currentUser } = useDemoAuth();
-  const { talentProfiles } = useMockData();
+  const { currentUser } = useAuth();
+  const { talentProfiles, updateTalentProfile } = useData();
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
@@ -20,6 +47,13 @@ export default function ApplicantVideoPage() {
 
   const [videoUrl, setVideoUrl] = useState(talentProfile?.video_url || '');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(function () {
+    if (!talentProfile) return;
+    setVideoUrl(talentProfile.video_url || '');
+  }, [talentProfile]);
 
   if (!user) {
     return (
@@ -32,9 +66,20 @@ export default function ApplicantVideoPage() {
     );
   }
 
-  function handleSave() {
-    setSaved(true);
-    setTimeout(function () { setSaved(false); }, 3000);
+  async function handleSave() {
+    if (!talentProfile) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await updateTalentProfile({ ...talentProfile, video_url: videoUrl || '' });
+      setSaved(true);
+      setTimeout(function () { setSaved(false); }, 3000);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al guardar el video. Intenta de nuevo.';
+      setSaveError(message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   const hasVideo = !!talentProfile?.video_url;
@@ -51,7 +96,14 @@ export default function ApplicantVideoPage() {
       {/* Save feedback */}
       {saved && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-          Video URL saved successfully! (Demo mode - changes are not persisted)
+          Video URL saved successfully!
+        </div>
+      )}
+
+      {/* Error feedback */}
+      {saveError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
+          {saveError}
         </div>
       )}
 
@@ -61,7 +113,7 @@ export default function ApplicantVideoPage() {
           <h3 className="text-base font-semibold text-foreground mb-4">Current Video</h3>
           <div className="aspect-video rounded-xl overflow-hidden bg-gray-900">
             <iframe
-              src={talentProfile!.video_url!}
+              src={toEmbedUrl(talentProfile!.video_url!)}
               className="w-full h-full"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -90,9 +142,9 @@ export default function ApplicantVideoPage() {
               placeholder="https://www.youtube.com/embed/..."
             />
           </div>
-          <Button onClick={handleSave} className="gap-2">
+          <Button onClick={handleSave} className="gap-2" disabled={saving}>
             <Save className="w-4 h-4" />
-            Save URL
+            {saving ? 'Saving...' : 'Save URL'}
           </Button>
         </div>
       </div>

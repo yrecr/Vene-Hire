@@ -4,9 +4,9 @@ import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { SelectionProcess } from '@/types';
-import { Eye, Upload } from 'lucide-react';
+import { Eye, Upload, Check, X } from 'lucide-react';
 
 const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
 
@@ -18,7 +18,7 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
-  const { selectionProcesses, uploadContract, getApplicantById, getEmployerById } = useMockData();
+  const { selectionProcesses, uploadContract, getApplicantById, getEmployerById, contractApprovalRequests, approveContractRequest, rejectContractRequest } = useData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {
@@ -70,28 +70,46 @@ export default function ProcessesPage() {
     {
       key: 'contract',
       header: 'Contract',
-      render: (item) => (
-        <span className={`text-xs font-medium ${item.contract_status === 'signed' ? 'text-emerald-600' : item.contract_status === 'pending' ? 'text-amber-600' : 'text-gray-400'}`}>
-          {item.contract_status ? item.contract_status.replace('_', ' ') : '—'}
-        </span>
-      ),
+      render: (item) => {
+        const pendingReq = contractApprovalRequests.find((r) => r.process_id === item.id && r.status === 'pending');
+        if (pendingReq) return <span className="text-xs font-medium text-amber-600">Pending Approval</span>;
+        return (
+          <span className={`text-xs font-medium ${item.contract_status === 'signed' ? 'text-emerald-600' : item.contract_status === 'pending' ? 'text-amber-600' : 'text-gray-400'}`}>
+            {item.contract_status ? item.contract_status.replace('_', ' ') : '—'}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (item) => (
-        <div className="flex gap-1">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Eye className="w-4 h-4" />
-          </Button>
-          {item.contract_status === 'pending' && (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => uploadContract(item.id)}>
-              <Upload className="w-3.5 h-3.5" />
-              Upload
+      render: (item) => {
+        const pendingReq = contractApprovalRequests.find((r) => r.process_id === item.id && r.status === 'pending');
+        return (
+          <div className="flex gap-1">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Eye className="w-4 h-4" />
             </Button>
-          )}
-        </div>
-      ),
+            {pendingReq ? (
+              <>
+                <Button variant="outline" size="sm" className="h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => approveContractRequest(pendingReq.id, item.id)}>
+                  <Check className="w-3.5 h-3.5" />
+                  Approve
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 gap-1 text-red-600 border-red-200 hover:bg-red-50" onClick={() => rejectContractRequest(pendingReq.id, item.id)}>
+                  <X className="w-3.5 h-3.5" />
+                  Reject
+                </Button>
+              </>
+            ) : item.contract_status === 'pending' ? (
+              <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => uploadContract(item.id)}>
+                <Upload className="w-3.5 h-3.5" />
+                Upload
+              </Button>
+            ) : null}
+          </div>
+        );
+      },
     },
   ];
 

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
 import { Eye, Check, Minus } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
 export default function ApplicantManagementPage() {
-  const { talentProfiles } = useMockData();
+  const { talentProfiles } = useData();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
 

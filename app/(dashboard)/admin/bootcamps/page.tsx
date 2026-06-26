@@ -2,7 +2,7 @@
 
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { useMockData } from '@/lib/data-context';
+import { useData } from '@/lib/data-context';
 import { Plus, Calendar, Users } from 'lucide-react';
 
 const studentCounts: Record<string, number> = {
@@ -12,7 +12,7 @@ const studentCounts: Record<string, number> = {
 };
 
 export default function BootcampsPage() {
-  const { bootcamps } = useMockData();
+  const { bootcamps } = useData();
   return (
     <div className="space-y-6">
       {/* Header */}
