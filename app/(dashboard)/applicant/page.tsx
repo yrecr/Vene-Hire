@@ -51,8 +51,15 @@ export default function ApplicantDashboardPage() {
   const user = currentUser;
 
   const talentProfile = useMemo(() => {
-    if (!user?.talent_profile_id) return null;
-    return talentProfiles.find((t) => t.id === user.talent_profile_id) ?? null;
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find((t) => t.id === user.talent_profile_id);
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find((t) => t.user_id === user.profile_id);
+      if (found) return found;
+    }
+    return null;
   }, [user, talentProfiles]);
 
   const myProcesses = useMemo(() => {

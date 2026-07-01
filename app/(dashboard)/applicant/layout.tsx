@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { DashboardSidebar, type SidebarLink } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
-import { LayoutDashboard, User, FileText, Video, Calendar, MessageSquare, GitBranch, Signature as FileSignature } from 'lucide-react';
+import { LayoutDashboard, User, FileText, Video, Calendar, MessageSquare, GitBranch, FileSignature } from 'lucide-react';
 
 const applicantLinks: SidebarLink[] = [
   { href: '/applicant', label: 'Dashboard', icon: LayoutDashboard },

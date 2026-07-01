@@ -1,123 +1,49 @@
-# Technical Interview → Check al solicitar contrato
+## 0. Alcance del Requerimiento (Scope)
+* **IMPORTANTE:** Este sistema tendrá múltiples módulos a futuro (Candidatos globales, Entrevistas, Analytics, Configuración), pero **este prompt es EXCLUSIVAMENTE para construir la vista y la lógica del módulo "Vacantes"**.
+* Ignora la navegación global o el enrutamiento general por ahora. Concéntrate únicamente en la estructura, base de datos y UI de la pantalla de Vacantes y el detalle/modal de sus postulantes con IA.
 
-## Descripción del problema
+# PROMPT: Creación de Vista de Reclutamiento ATS con Integración de IA
 
-En `/employer/processes`, el pipeline tiene tres etapas: **Intro Interview → Technical Interview → Contract Signing**.
+## 1. Contexto del Proyecto
+Estoy desarrollando un Sistema de Gestión de Candidatos (ATS) inteligente. El objetivo es que el sistema procese los CVs de los postulantes con un LLM (en este caso, `deepseek-chat`), extraiga su información, les asigne un score de coincidencia (0-100) respecto a la vacante, y permita a los reclutadores gestionar el flujo.
 
-Actualmente, la etapa **Technical Interview** muestra su ícono en estado `current` (número azul) incluso después de que el empleador haya solicitado el contrato. El check verde (`CircleCheck`) solo aparece si `currentStage` avanza más allá del índice de `technical_interview`.
+## 2. Stack Tecnológico Sugerido
+* **Backend / API:** [Inserta tu backend, ej: Laravel / Node.js / Supabase]
+* **Frontend:** [Inserta tu frontend, ej: React / Blade / Next.js] con Tailwind CSS (Tema Oscuro / Dark Mode).
+* **Procesamiento IA:** Integración en segundo plano que guarda un JSON estructurado por cada candidato.
 
-**Objetivo:** Cuando el empleador hace clic en "Send Approval Request" (solicita el contrato), la etapa `technical_interview` debe mostrarse con check verde (completada), reflejando que esa fase ya finalizó y se está avanzando al siguiente paso.
+## 3. Estructura de Datos Relevante (Modelos/Tablas)
+Necesito que consideres las siguientes entidades y relaciones:
+* **Vacante (Vacancy):** `id`, `titulo`, `departamento`, `ubicacion`, `tipo_jornada`, `modalidad`, `estado` (Abierta/Cerrada), `fecha_publicacion`.
+* **Candidato (Candidate):** `id`, `nombre`, `iniciales`, `vacante_id`, `score` (entero, 0-100), `estado_manual` (Oferta, Entrevista, Recibido), `estado_ia` (Avanzar, Hold, Rechazar), `fecha_aplicacion`.
+* **PerfilIA (AI_Profile):** Relación 1:1 con Candidato (o campo JSON). Debe contener:
+    * `resumen_perfil` (string)
+    * `razonamiento_modelo` (string)
+    * `fortalezas` (array de strings)
+    * `areas_mejora` (array de strings)
+    * `metadatos` (`modelo_usado`, `tiempo_respuesta`, `tokens_totales`).
 
----
+## 4. Requerimientos de la Vista (Frontend)
+Necesito crear un flujo de dos niveles (o vistas anidadas mediante modales/rutas):
 
-## Análisis del estado actual
+### Nivel 1: Dashboard General de Vacantes
+* **Kpi Cards (Métricas):** Tres tarjetas superiores:
+    1. Total de Vacantes Activas (`COUNT` de vacantes abiertas).
+    2. Total de Candidatos (`COUNT` global).
+    3. Promedio de candidatos por vacante (Candidatos / Vacantes Activas).
+* **Grid de Vacantes:** Renderizar tarjetas para cada vacante mostrando su título, badges de metadatos (Ubicación, Jornada, Modalidad), un contador de aplicantes específicos de esa vacante, y un botón "Ver candidatos →".
 
-### `getStepState(index)` en [`process-timeline.tsx`](file:///c:/Users/Luismer/Desktop/Vene-Hire/Vene-Hire-main/components/process-timeline.tsx#L74-L79)
+### Nivel 2: Lista de Candidatos & Perfil IA (Modal o Vista Filtrada)
+Al hacer clic en "Ver candidatos", se debe desplegar la lista de postulantes para esa vacante con las siguientes reglas:
+* **Ordenamiento:** Ordenados estrictamente de mayor a menor score (`ORDER BY score DESC`).
+* **Gamificación:** Los top 3 candidatos deben mostrar un badge visual de medalla (Oro para el 1º, Plata para el 2º, Bronce para el 3º).
+* **Fila del Candidato:** Mostrar iniciales, nombre, badge de `estado_ia`, un selector (`select/dropdown`) para cambiar el `estado_manual` en tiempo real, y un botón expandible llamado "Perfil IA v".
+* **Componente Expandible (Sección IA):** Al expandirse, debe mostrar:
+    * El bloque de "Resumen de Perfil" y "Razonamiento del modelo".
+    * Dos columnas: una verde para "Fortalezas" y otra roja para "Áreas de mejora" iterando los arrays de strings.
+    * Un footer interno con los metadatos de auditoría: modelo utilizado (`deepseek-chat`), tokens y tiempo de respuesta.
 
-```typescript
-function getStepState(index: number): 'completed' | 'current' | 'future' {
-  if (status === 'hired') return 'completed';
-  if (index < currentIndex) return 'completed';   // ← solo si el stage ya pasó
-  if (index === currentIndex) return 'current';
-  return 'future';
-}
-```
-
-El `currentIndex` se calcula con `getStageIndex(currentStage)`.  
-- `technical_interview` → index **1**  
-- `contract_signing` → index **2**
-
-Mientras `currentStage` sea `technical_interview`, el index 1 es `current` y el index 2 es `future`.
-
-### `handleInitiateContract` en [`page.tsx`](file:///c:/Users/Luismer/Desktop/Vene-Hire/Vene-Hire-main/app/%28dashboard%29/employer/processes/page.tsx#L97-L101)
-
-```typescript
-const handleInitiateContract = useCallback(() => {
-  if (!contractProcess) return;
-  requestContractApproval(contractProcess.id);  // ← solo crea la solicitud
-  setContractProcess(null);
-}, [contractProcess, requestContractApproval]);
-```
-
-`requestContractApproval` crea el `ContractApprovalRequest` pero **no cambia `current_stage`** del proceso, por lo que la timeline no refleja el avance.
-
-### Flujo actual vs. deseado
-
-| Paso | Estado actual | Estado deseado |
-|---|---|---|
-| Employer programa entrevista técnica | `technical_interview` = current | igual |
-| Employer solicita contrato | `technical_interview` = current ❌ | `technical_interview` = **completado ✅** |
-| `contract_signing` muestra ícono FileText | `contract_signing` = current (FileText) | igual |
-
----
-
-## Cambios propuestos
-
-### Opción A (Recomendada) — Avanzar `current_stage` al solicitar contrato
-
-Al llamar `requestContractApproval`, también actualizar `current_stage` a `contract_signing` en el proceso. Esto es semánticamente correcto: la entrevista técnica terminó y se pasa a la etapa de contrato.
-
----
-
-### Componente: `lib/data-context.tsx`
-
-#### [MODIFY] [data-context.tsx](file:///c:/Users/Luismer/Desktop/Vene-Hire/Vene-Hire-main/lib/data-context.tsx)
-
-Dentro de `requestContractApprovalFn` (línea ~329), después de crear el `ContractApprovalRequest`, actualizar `current_stage` del proceso a `contract_signing`:
-
-```diff
-  const requestContractApprovalFn = useCallback(async (processId: string) => {
-    const process = selectionProcesses.find((p) => p.id === processId);
-    if (!process) return;
-    // ...
-    if (req) setContractApprovalRequests((prev) => [...prev, req]);
-+
-+   // Avanzar el proceso a la etapa de contract_signing
-+   const updatedProcess = { ...process, current_stage: 'contract_signing' as const };
-+   setSelectionProcesses((prev) =>
-+     prev.map((p) => p.id === processId ? updatedProcess : p)
-+   );
-+   api.upsertSelectionProcess(updatedProcess).catch(() => {});
-+
-    const n: Notification = { ... };
-```
-
-> [!IMPORTANT]
-> Esto permite que `getStepState(1)` (technical_interview) retorne `'completed'` porque `currentIndex` pasará a ser 2, haciendo que `index(1) < currentIndex(2)`.
-
----
-
-### Componente: `components/process-timeline.tsx` *(sin cambios necesarios)*
-
-La lógica de `getStepState` ya maneja correctamente el check: cuando `index < currentIndex` retorna `'completed'`. Solo necesita que el `currentStage` del proceso sea `'contract_signing'`.
-
----
-
-## Verificación del plan
-
-### Flujo completo esperado tras el cambio
-
-```
-1. Proceso comienza en current_stage = 'intro_interview'
-   → Timeline: [✅ Intro] [2 Technical] [FileText Contract]
-
-2. Empleador programa Technical Interview
-   → setProcessStage() cambia current_stage = 'technical_interview'
-   → Timeline: [✅ Intro] [2 Technical (current)] [FileText Contract]
-
-3. Empleador solicita Contract Signing
-   → requestContractApproval() ahora también actualiza current_stage = 'contract_signing'
-   → Timeline: [✅ Intro] [✅ Technical] [FileText Contract (current)] ✅
-```
-
-### Verificación manual
-- En `/employer/processes`, con un proceso en etapa `technical_interview`, hacer clic en el ícono de Contract Signing → confirmar en el diálogo → verificar que `technical_interview` muestra check verde ✅ y `contract_signing` aparece como etapa actual.
-- Verificar que la burbuja "Awaiting Admin Approval" sigue apareciendo (`hasApprovalPending` no se ve afectado).
-- Verificar que no hay regresión en la lógica `isClickable` de `process-timeline.tsx`.
-
----
-
-## Open Questions
-
-> [!NOTE]
-> ¿Debe el `contract_signing` pasar a `current` visualmente con el ícono de FileText en azul, o solo mostrar el ícono inactivo con el banner "Awaiting Admin Approval"? El comportamiento actual del componente ya muestra el FileText en azul cuando es `current`, lo cual parece correcto.
+## 5. ¿Qué necesito que hagas?
+Genera el código limpio y modular para:
+1. El diseño de la base de datos / migraciones necesarias.
+2. Los componentes del frontend utilizando Tailwind CSS para lograr una interfaz moderna en modo oscuro, asegurando que la sección "Perfil IA" maneje correctamente el estado de apertura/cierre de forma independiente para cada candidato.

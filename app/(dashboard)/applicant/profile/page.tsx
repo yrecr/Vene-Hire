@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
-import { Save, FileText, Video, Upload, Camera } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Save, FileText, Video, Upload, Camera, Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
+
+function toEmbedUrl(url: string): string {
+  if (!url) return url;
+  if (url.includes('youtube.com/embed/') || url.includes('player.vimeo.com/video/')) return url;
+  const yt = url.match(/(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const ytShort = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+  const vimeo = url.match(/vimeo\.com\/([0-9]+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return url;
+}
 
 const timezones = [
   'America/New_York',
@@ -44,8 +61,15 @@ export default function ApplicantProfilePage() {
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+    }
+    return null;
   }, [user, talentProfiles]);
 
   const [displayName, setDisplayName] = useState(talentProfile?.display_name || '');
@@ -64,6 +88,13 @@ export default function ApplicantProfilePage() {
     talentProfile?.availability_status || 'Available'
   );
   const [saved, setSaved] = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState('');
+  const [analysisTriggered, setAnalysisTriggered] = useState(false);
 
   useEffect(function () {
     if (!talentProfile) return;
@@ -87,6 +118,39 @@ export default function ApplicantProfilePage() {
         </div>
       </div>
     );
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !talentProfile) return;
+    setPhotoUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/photo/upload', { method: 'POST', body: formData });
+    if (res.ok) {
+      const { url } = await res.json();
+      updateTalentProfile({ ...talentProfile, profile_image_url: url });
+    }
+    setPhotoUploading(false);
+  }
+
+  async function handleAnalyzeResume() {
+    if (!talentProfile?.resume_url) return;
+    setAnalyzing(true);
+    setAnalyzeError('');
+    setAnalysisTriggered(false);
+    try {
+      const r = await fetch('/api/resume/analyze', { method: 'POST' });
+      if (r.ok) {
+        setAnalysisTriggered(true);
+      } else {
+        const data = await r.json();
+        setAnalyzeError(data.detail || data.error || 'Analysis failed');
+      }
+    } catch {
+      setAnalyzeError('Network error');
+    }
+    setAnalyzing(false);
   }
 
   function handleSave() {
@@ -141,12 +205,32 @@ export default function ApplicantProfilePage() {
                 </div>
               )}
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-medium text-foreground">Profile Photo</p>
               <p className="text-xs text-muted-foreground">
                 {talentProfile.profile_image_url ? 'Photo uploaded' : 'No photo uploaded'}
               </p>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={photoUploading}
+            >
+              {photoUploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              {photoUploading ? 'Uploading...' : 'Update Photo'}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
           </div>
         )}
 
@@ -301,26 +385,60 @@ export default function ApplicantProfilePage() {
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-2">Resume</p>
             {talentProfile.resume_url ? (
-              <a
-                href={talentProfile.resume_url}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
                 className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
               >
                 <FileText className="w-4 h-4" />
                 View Resume
-              </a>
+              </button>
             ) : (
               <p className="text-sm text-muted-foreground">No resume uploaded.</p>
             )}
+            {talentProfile.resume_url && (
+              <div className="mt-3 space-y-2">
+                {analysisTriggered ? (
+                  <p className="text-xs text-emerald-600">Analysis started — results will appear shortly. Refresh to see updated skills.</p>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={handleAnalyzeResume}
+                    disabled={analyzing}
+                  >
+                    {analyzing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    {analyzing ? 'Starting...' : 'Analyze CV with AI'}
+                  </Button>
+                )}
+                {analyzeError && (
+                  <p className="text-xs text-red-600">{analyzeError}</p>
+                )}
+              </div>
+            )}
           </div>
+
+          <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
+            <DialogContent className="max-w-4xl h-[80vh]">
+              <DialogTitle className="sr-only">Resume</DialogTitle>
+              <iframe
+                src={`${talentProfile.resume_url ?? ''}?t=${resumeCacheBuster}`}
+                className="w-full h-full border-0 rounded-lg"
+                title="Resume"
+              />
+            </DialogContent>
+          </Dialog>
 
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-2">Presentation Video</p>
             {talentProfile.video_url ? (
               <div className="aspect-video rounded-lg overflow-hidden bg-gray-100 max-w-lg">
                 <iframe
-                  src={talentProfile.video_url}
+                  src={toEmbedUrl(talentProfile.video_url)}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

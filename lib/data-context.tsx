@@ -50,7 +50,10 @@ interface DataContextType {
   approveContractRequest: (requestId: string, processId: string) => void;
   rejectContractRequest: (requestId: string, processId: string) => void;
   uploadContract: (processId: string) => void;
+  signContract: (processId: string, signatureBlob: Blob) => Promise<void>;
+  verifyContract: (processId: string) => Promise<void>;
   getProcessById: (processId: string) => SelectionProcess | undefined;
+  refreshAll: () => Promise<void>;
   setAccessRequests: (updater: AccessRequest[] | ((prev: AccessRequest[]) => AccessRequest[])) => void;
   setProfiles: (list: Profile[]) => void;
   updateTalentProfile: (profile: TalentProfile & { skills: TalentSkill[] }) => Promise<void>;
@@ -94,7 +97,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (tp.status === 'fulfilled' && tp.value.length) setTalentProfiles(tp.value);
       if (av.status === 'fulfilled' && av.value.length) setAvailabilitySlots(av.value);
       if (p.status === 'fulfilled' && p.value.length) setProfilesState(p.value);
-      if (ep.status === 'fulfilled') setEmployerProfiles(ep.value);
+      if (ep.status === 'fulfilled' && ep.value.length) setEmployerProfiles(ep.value);
       if (ar.status === 'fulfilled' && ar.value.length) setAccessRequestsState(ar.value);
       if (ir.status === 'fulfilled' && ir.value.length) setInterviewRequests(ir.value);
       if (sp.status === 'fulfilled' && sp.value.length) setSelectionProcesses(sp.value);
@@ -205,7 +208,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           applicant_id: request.applicant_id, employer_id: request.employer_id,
           role_title: request.role_title, current_stage: 'intro_interview', status: 'active',
           intro_interview_date: request.requested_date, technical_interview_date: null,
-          meeting_url: null, contract_status: null,
+          meeting_url: null, contract_status: null, contract_url: null, signature_url: null,
           notes: 'Process started from interview request acceptance.',
           created_at: new Date().toISOString(),
         };
@@ -217,7 +220,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const employerForZoom = findEmployer(request.employer_id);
         createZoomMeeting({
           topic: request.role_title,
-          start_time: request.requested_date,
+          start_time: request.requested_date || '',
           interview_id: request.id,
           applicant_name: applicantForZoom?.display_name,
           employer_name: employerForZoom?.company_name,
@@ -469,8 +472,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setContractApprovalRequests((prev) =>
       prev.map((r) => r.id === requestId ? { ...r, status: 'approved', reviewed_at: new Date().toISOString() } : r)
     );
+    const pdfResult = await api.generateContractPdf(processId);
     setSelectionProcesses((prev) => prev.map((p) =>
-      p.id === processId ? { ...p, current_stage: 'contract_signing', contract_status: 'pending' } : p
+      p.id === processId ? { ...p, current_stage: 'contract_signing', contract_status: 'pending', contract_url: pdfResult.url ?? null } : p
     ));
     const process = selectionProcesses.find((p) => p.id === processId);
     if (!process) return;
@@ -526,22 +530,77 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
-  const uploadContract = useCallback((processId: string) => {
+  const signContract = useCallback(async (processId: string, signatureBlob: Blob) => {
+    const result = await api.signContract(processId, signatureBlob);
+    if (result.error) throw new Error(result.error);
+    if (result.signature_url) {
+      setSelectionProcesses((prev) => prev.map((p) =>
+        p.id === processId ? {
+          ...p,
+          signature_url: result.signature_url!,
+          contract_url: result.contract_url ?? p.contract_url,
+          contract_status: 'under_review',
+        } : p
+      ));
+      const process = selectionProcesses.find((p) => p.id === processId);
+      if (process) {
+        const applicant = findTalentById(process.applicant_id);
+        const employer = findEmployer(process.employer_id);
+        const adminNotif: Notification = {
+          id: crypto.randomUUID(), user_id: 'p-admin1',
+          title: 'Contract Signed by Applicant',
+          message: `${applicant?.display_name || 'Applicant'} has signed the contract for ${process.role_title}. Please review and verify.`,
+          type: 'contract', read: false, created_at: new Date().toISOString(),
+        };
+        setNotifications((prev) => [...prev, adminNotif]);
+        api.upsertNotification(adminNotif).catch(() => {});
+      }
+    }
+  }, [selectionProcesses, findTalentById, findEmployer]);
+
+  const verifyContract = useCallback(async (processId: string) => {
+    await api.verifyContract(processId);
     setSelectionProcesses((prev) => prev.map((p) =>
       p.id === processId ? { ...p, contract_status: 'signed', status: 'hired' } : p
     ));
     const process = selectionProcesses.find((p) => p.id === processId);
     if (process) {
-      const updated: SelectionProcess = { ...process, contract_status: 'signed', status: 'hired' as const };
-      api.upsertSelectionProcess(updated).catch(() => {});
+      const applicant = findTalentById(process.applicant_id);
+      const employer = findEmployer(process.employer_id);
+      const empUserId = findEmployerUserId(process.employer_id);
+      if (empUserId) {
+        const n: Notification = {
+          id: crypto.randomUUID(), user_id: empUserId,
+          title: 'Contract Finalized',
+          message: `The contract for ${applicant?.display_name || 'candidate'} has been finalized and signed.`,
+          type: 'contract', read: false, created_at: new Date().toISOString(),
+        };
+        setNotifications((prev) => [...prev, n]);
+        api.upsertNotification(n).catch(() => {});
+      }
+      const appUserId = applicant?.user_id;
+      if (appUserId) {
+        const n: Notification = {
+          id: crypto.randomUUID(), user_id: appUserId,
+          title: 'Contract Finalized',
+          message: `Your contract with ${employer?.company_name || 'the company'} has been finalized.`,
+          type: 'contract', read: false, created_at: new Date().toISOString(),
+        };
+        setNotifications((prev) => [...prev, n]);
+        api.upsertNotification(n).catch(() => {});
+      }
     }
-  }, [selectionProcesses]);
+  }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
+
+  const uploadContract = verifyContract;
 
   const getProcessById = useCallback((processId: string) => {
     return selectionProcesses.find((p) => p.id === processId);
   }, [selectionProcesses]);
 
-  const getNotifsForUser = useCallback((userId: string) => notifications.filter((n) => n.user_id === userId), [notifications]);
+  const getNotifsForUser = useCallback((userId: string) =>
+    notifications.filter((n) => n.user_id === userId).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+  [notifications]);
 
   const setProfiles = useCallback((list: Profile[]) => setProfilesState(list), []);
 
@@ -562,9 +621,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getEmployerById: findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,
     approveContractRequest, rejectContractRequest,
-    uploadContract, getProcessById,
+    uploadContract, signContract, verifyContract, getProcessById,
     setAccessRequests: setAccessRequestsState,
     setProfiles,
+    refreshAll: hydrateFromSupabase,
     updateTalentProfile: updateTalentProfileFn,
   }), [
     isHydrated, talentProfiles, profiles, employerProfiles, accessRequests,
@@ -576,8 +636,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getNotifsForUser, findTalentById, findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,
     approveContractRequest, rejectContractRequest,
-    uploadContract, getProcessById,
+    uploadContract, signContract, verifyContract, getProcessById,
     updateTalentProfileFn,
+    hydrateFromSupabase,
   ]);
 
   return (

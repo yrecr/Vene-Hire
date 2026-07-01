@@ -10,6 +10,22 @@ import { Eye, Check, Minus } from 'lucide-react';
 
 type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
 
+function calcCompletion(p: TalentProfile): number {
+  const checks = [
+    p.display_name.length > 0,
+    p.title.length > 0,
+    (p.summary?.length ?? 0) > 2,
+    (p.bio?.length ?? 0) > 0,
+    (p.tech_stack?.length ?? 0) > 0,
+    (p.tech_stack?.length ?? 0) > 0,
+    p.english_level !== 'Basic',
+    (p.resume_url?.length ?? 0) > 0,
+    (p.video_url?.length ?? 0) > 0,
+    p.availability_status !== 'In Training',
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
+
 const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
@@ -90,18 +106,18 @@ export default function ApplicantManagementPage() {
             <div
               className="h-full rounded-full transition-all"
               style={{
-                width: `${item.profile_completion}%`,
+                width: `${calcCompletion(item)}%`,
                 backgroundColor:
-                  item.profile_completion >= 80
+                  calcCompletion(item) >= 80
                     ? 'hsl(152, 69%, 40%)'
-                    : item.profile_completion >= 60
+                    : calcCompletion(item) >= 60
                     ? 'hsl(38, 92%, 50%)'
                     : 'hsl(0, 84%, 60%)',
               }}
             />
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {item.profile_completion}%
+            {calcCompletion(item)}%
           </span>
         </div>
       ),

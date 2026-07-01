@@ -53,8 +53,15 @@ export default function ApplicantAvailabilityPage() {
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+    }
+    return null;
   }, [user, talentProfiles]);
 
   const initialSlots = useMemo(function () {
@@ -227,7 +234,7 @@ export default function ApplicantAvailabilityPage() {
                           >
                             <Clock className="w-3.5 h-3.5 text-[hsl(210,100%,45%)]" />
                             <span className="text-sm text-foreground">
-                              {slot.start_time} - {slot.end_time}
+                              {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                             </span>
                             <button
                               type="button"

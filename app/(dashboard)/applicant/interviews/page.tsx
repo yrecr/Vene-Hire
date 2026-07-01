@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import { useData } from '@/lib/data-context';
 
 export default function ApplicantInterviewsPage() {
   const { currentUser } = useAuth();
-  const { interviewRequests, respondToInterview, talentProfiles, employerProfiles, isHydrated } = useData();
+  const { interviewRequests, respondToInterview, talentProfiles, employerProfiles, isHydrated, refreshAll } = useData();
+
+  useEffect(() => { refreshAll(); }, [refreshAll]);
   const user = currentUser;
 
   const talentProfile = useMemo(function () {

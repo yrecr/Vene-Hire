@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Video } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Video, Eye } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -219,6 +219,16 @@ export default function EmployerProcessesPage() {
                   />
                 </div>
 
+                {process.current_stage === 'contract_signing' && process.contract_status === 'signed' && process.contract_url && (
+                  <div className="mb-3 flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(process.contract_url!, '_blank')}>
+                      <Eye className="w-4 h-4" />
+                      View Contract
+                    </Button>
+                    <span className="text-xs text-emerald-600 font-medium">Finalized</span>
+                  </div>
+                )}
+
                 {process.notes && (
                   <p className="text-sm text-muted-foreground mb-2">
                     <span className="font-medium text-foreground">Notes:</span> {process.notes}
@@ -260,7 +270,7 @@ export default function EmployerProcessesPage() {
                 schedulingSlots.map((slot) => (
                   <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time} - {slot.end_time}
+                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                   </Badge>
                 ))
               )}

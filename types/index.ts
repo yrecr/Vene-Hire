@@ -71,6 +71,8 @@ export interface SelectionProcess {
   technical_interview_date: string | null;
   meeting_url?: string | null;
   contract_status: 'pending' | 'under_review' | 'signed' | null;
+  contract_url: string | null;
+  signature_url: string | null;
   notes: string;
   created_at: string;
   applicant?: TalentProfile;
@@ -158,6 +160,38 @@ export interface ContractApprovalRequest {
   notes: string | null;
   created_at: string;
   reviewed_at: string | null;
+}
+
+export interface Vacancy {
+  id: string;
+  employer_id: string;
+  titulo: string;
+  departamento: string;
+  ubicacion: string;
+  tipo_jornada: 'Full-time' | 'Part-time' | 'Freelance';
+  modalidad: 'Remote' | 'Hybrid' | 'On-site';
+  estado: 'Abierta' | 'Cerrada';
+  fecha_publicacion: string;
+}
+
+export interface Candidate {
+  id: string;
+  vacancy_id: string;
+  nombre: string;
+  iniciales: string;
+  score: number;
+  estado_manual: 'Oferta' | 'Entrevista' | 'Recibido';
+  estado_ia: 'Avanzar' | 'Hold' | 'Rechazar';
+  fecha_aplicacion: string;
+  resumen_perfil: string;
+  razonamiento_modelo: string;
+  fortalezas: string[];
+  areas_mejora: string[];
+  metadatos: {
+    modelo_usado: string;
+    tiempo_respuesta: string;
+    tokens_totales: number;
+  };
 }
 
 export interface DemoUser {

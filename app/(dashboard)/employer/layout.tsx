@@ -11,10 +11,12 @@ import {
   MessageSquare,
   Bell,
   Building2,
+  Briefcase,
 } from 'lucide-react';
 
 const employerLinks: SidebarLink[] = [
   { href: '/employer', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/employer/vacancies', label: 'Vacantes', icon: Briefcase },
   { href: '/employer/applicants', label: 'Browse Applicants', icon: Users },
   { href: '/employer/shortlist', label: 'Shortlist', icon: Star },
   { href: '/employer/processes', label: 'Active Processes', icon: GitBranch },

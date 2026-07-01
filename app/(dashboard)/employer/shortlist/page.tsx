@@ -77,7 +77,7 @@ export default function EmployerShortlistPage() {
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400 flex-shrink-0" />
               </div>
 
-              <div className="flex flex-wrap gap-1.5 mb-3">
+              <div className="flex flex-wrap gap-1.5 mb-3 min-h-[5rem]">
                 {applicant.tech_stack.map((tech) => (
                   <Badge key={tech} variant="secondary" className="text-xs font-normal">{tech}</Badge>
                 ))}

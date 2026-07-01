@@ -41,8 +41,15 @@ export default function ApplicantVideoPage() {
   const user = currentUser;
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+    }
+    return null;
   }, [user, talentProfiles]);
 
   const [videoUrl, setVideoUrl] = useState(talentProfile?.video_url || '');

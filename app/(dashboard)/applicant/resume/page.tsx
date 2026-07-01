@@ -4,6 +4,11 @@ import { useState, useMemo, useRef } from 'react';
 import { FileText, Upload, File, CircleCheck as CheckCircle2, Loader2, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 
 export default function ApplicantResumePage() {
@@ -13,10 +18,19 @@ export default function ApplicantResumePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
 
   const talentProfile = useMemo(function () {
-    if (!user?.talent_profile_id) return null;
-    return talentProfiles.find(function (t) { return t.id === user.talent_profile_id; }) || null;
+    if (user?.talent_profile_id) {
+      const found = talentProfiles.find(function (t) { return t.id === user.talent_profile_id; });
+      if (found) return found;
+    }
+    if (user?.profile_id) {
+      const found = talentProfiles.find(function (t) { return t.user_id === user.profile_id; });
+      if (found) return found;
+    }
+    return null;
   }, [user, talentProfiles]);
 
   if (!user) {
@@ -100,12 +114,10 @@ export default function ApplicantResumePage() {
               variant="outline"
               size="sm"
               className="gap-2"
-              asChild
+              onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
             >
-              <a href={talentProfile!.resume_url!} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="w-4 h-4" />
-                View Resume
-              </a>
+              <ExternalLink className="w-4 h-4" />
+              View Resume
             </Button>
             <Button
               variant="outline"
@@ -120,6 +132,17 @@ export default function ApplicantResumePage() {
           </div>
         </div>
       )}
+
+      <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogTitle className="sr-only">Resume</DialogTitle>
+          <iframe
+            src={`${talentProfile?.resume_url ?? ''}?t=${resumeCacheBuster}`}
+            className="w-full h-full border-0 rounded-lg"
+            title="Resume"
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Upload area */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">

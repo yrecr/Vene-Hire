@@ -201,7 +201,7 @@ export default function EmployerApplicantsPage() {
 
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{applicant.summary}</p>
 
-                <div className="flex flex-wrap gap-1.5 mb-3">
+                <div className="flex flex-wrap gap-1.5 mb-3 min-h-[5rem]">
                   {applicant.tech_stack.slice(0, 5).map((tech) => (
                     <Badge key={tech} variant="secondary" className="text-xs font-normal">{tech}</Badge>
                   ))}

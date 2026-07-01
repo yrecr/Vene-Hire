@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X, Zap, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
+import { NotificationCenter } from '@/components/notification-center';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -13,6 +17,9 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const { currentUser, logout } = useAuth();
+  const { notifications } = useData();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,16 +61,33 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-sm font-medium">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/request-sign-up">
-              <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
-                Request a Demo
-              </Button>
-            </Link>
+            {currentUser ? (
+              <>
+                <NotificationCenter
+                  notifications={notifications.filter((n) => n.user_id === currentUser.profile_id)}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { logout(); router.push('/'); }}
+                >
+                  <LogOut className="w-[18px] h-[18px]" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-sm font-medium">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/request-sign-up">
+                  <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
+                    Request a Demo
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -89,16 +113,30 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <Link href="/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full" size="sm">
-                  Sign In
+              {currentUser ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  size="sm"
+                  onClick={() => { logout(); router.push('/'); setMobileOpen(false); }}
+                >
+                  <LogOut className="w-[18px] h-[18px] mr-2" />
+                  Sign Out
                 </Button>
-              </Link>
-              <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
-                  Request a Demo
-                </Button>
-              </Link>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
+                      Request a Demo
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -26,27 +26,33 @@ export function ProfileCompletionCard({ completion, items }: ProfileCompletionCa
         />
       </div>
 
-      {/* Completion items */}
-      <ul className="space-y-2.5">
-        {items.map((item) => (
-          <li key={item.label} className="flex items-center gap-2.5">
-            {item.done ? (
-              <CircleCheck className="w-4.5 h-4.5 text-emerald-500 flex-shrink-0" />
-            ) : (
-              <div className="w-4.5 h-4.5 rounded-full border-2 border-gray-300 flex-shrink-0" />
-            )}
-            <span
-              className={`text-sm ${
-                item.done
-                  ? 'text-muted-foreground line-through'
-                  : 'text-foreground font-medium'
-              }`}
-            >
-              {item.label}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {clampedCompletion === 100 ? (
+        <div className="flex items-center gap-2 text-emerald-600 text-sm font-medium">
+          <CircleCheck className="w-5 h-5" />
+          Your profile is complete
+        </div>
+      ) : (
+        <ul className="space-y-2.5">
+          {items.map((item) => (
+            <li key={item.label} className="flex items-center gap-2.5">
+              {item.done ? (
+                <CircleCheck className="w-4.5 h-4.5 text-emerald-500 flex-shrink-0" />
+              ) : (
+                <div className="w-4.5 h-4.5 rounded-full border-2 border-gray-300 flex-shrink-0" />
+              )}
+              <span
+                className={`text-sm ${
+                  item.done
+                    ? 'text-muted-foreground line-through'
+                    : 'text-foreground font-medium'
+                }`}
+              >
+                {item.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

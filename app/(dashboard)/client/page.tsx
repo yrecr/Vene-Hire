@@ -64,7 +64,7 @@ export default function ClientDashboard() {
               <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                 {talent.summary}
               </p>
-              <div className="flex flex-wrap gap-1.5 mb-4">
+              <div className="flex flex-wrap gap-1.5 mb-4 min-h-[5rem]">
                 {talent.tech_stack.slice(0, 3).map((tech) => (
                   <Badge
                     key={tech}

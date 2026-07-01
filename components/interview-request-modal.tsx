@@ -170,7 +170,7 @@ export function InterviewRequestModal({
                 availabilitySlots.map((slot) => (
                   <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time} - {slot.end_time}
+                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                   </Badge>
                 ))
               )}

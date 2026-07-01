@@ -42,7 +42,7 @@ export default function ClientTalentPage() {
               {talent.summary}
             </p>
 
-            <div className="flex flex-wrap gap-1.5 mb-4">
+            <div className="flex flex-wrap gap-1.5 mb-4 min-h-[5rem]">
               {talent.tech_stack.map((tech) => (
                 <Badge
                   key={tech}

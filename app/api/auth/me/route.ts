@@ -17,15 +17,15 @@ export async function GET(req: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
+  const { data: { user: authUser } } = await supabase.auth.getUser();
+  if (!authUser) {
     return NextResponse.json({ user: null });
   }
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('auth_user_id', session.user.id)
+    .eq('auth_user_id', authUser.id)
     .single();
 
   if (!profile) {
@@ -33,8 +33,8 @@ export async function GET(req: NextRequest) {
   }
 
   const user: any = {
-    id: session.user.id,
-    email: session.user.email,
+    id: authUser.id,
+    email: authUser.email,
     full_name: profile.full_name,
     role: profile.role,
     profile_id: profile.id,

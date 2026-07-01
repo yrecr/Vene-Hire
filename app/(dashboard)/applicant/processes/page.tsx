@@ -1,19 +1,22 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Hourglass } from 'lucide-react';
+import { GitBranch, Hourglass, FileSignature, Eye } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
+import { ContractSigningModal } from '@/components/contract-signing-modal';
+import type { SelectionProcess } from '@/types';
 
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function ApplicantProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, talentProfiles, employerProfiles } = useData();
+  const { selectionProcesses, interviewRequests, talentProfiles, employerProfiles, signContract } = useData();
   const user = currentUser;
+  const [contractSignProcess, setContractSignProcess] = useState<SelectionProcess | null>(null);
 
   const talentProfile = useMemo(function () {
     if (user?.talent_profile_id) {
@@ -144,6 +147,40 @@ export default function ApplicantProcessesPage() {
                   meetingUrl={process.meeting_url}
                 />
 
+                {process.current_stage === 'contract_signing' && process.contract_status === 'pending' && (
+                  <div className="mt-4">
+                    <Button
+                      onClick={() => setContractSignProcess(process)}
+                      className="w-full gap-2"
+                      variant="default"
+                    >
+                      <FileSignature className="w-4 h-4" />
+                      View Contract &amp; Sign
+                    </Button>
+                  </div>
+                )}
+
+                {process.current_stage === 'contract_signing' && process.contract_status === 'under_review' && (
+                  <div className="mt-4 flex items-center gap-2 bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700">
+                    <Eye className="w-4 h-4 shrink-0" />
+                    Your signature has been submitted. Waiting for admin verification.
+                  </div>
+                )}
+
+                {process.current_stage === 'contract_signing' && process.contract_status === 'signed' && process.contract_url && (
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => window.open(process.contract_url!, '_blank')}
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Final Contract
+                    </Button>
+                    <span className="text-xs text-emerald-600 font-medium">Signed &amp; Finalized</span>
+                  </div>
+                )}
+
                 {process.notes && (
                   <div className="mt-5 pt-4 border-t border-gray-100">
                     <p className="text-sm text-muted-foreground">
@@ -162,6 +199,13 @@ export default function ApplicantProcessesPage() {
           })}
         </div>
       )}
+
+      <ContractSigningModal
+        open={!!contractSignProcess}
+        onClose={() => setContractSignProcess(null)}
+        process={contractSignProcess}
+        onSign={signContract}
+      />
     </div>
   );
 }

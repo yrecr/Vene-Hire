@@ -6,7 +6,7 @@ import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
 import type { SelectionProcess } from '@/types';
-import { Eye, Upload, Check, X } from 'lucide-react';
+import { Eye, Upload, Check, X, FileSignature, CheckCircle } from 'lucide-react';
 
 const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
 
@@ -18,7 +18,7 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
-  const { selectionProcesses, uploadContract, getApplicantById, getEmployerById, contractApprovalRequests, approveContractRequest, rejectContractRequest } = useData();
+  const { selectionProcesses, uploadContract, verifyContract, getApplicantById, getEmployerById, contractApprovalRequests, approveContractRequest, rejectContractRequest } = useData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {
@@ -87,9 +87,11 @@ export default function ProcessesPage() {
         const pendingReq = contractApprovalRequests.find((r) => r.process_id === item.id && r.status === 'pending');
         return (
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Eye className="w-4 h-4" />
-            </Button>
+            {item.contract_url && (
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => window.open(item.contract_url!, '_blank')}>
+                <Eye className="w-4 h-4" />
+              </Button>
+            )}
             {pendingReq ? (
               <>
                 <Button variant="outline" size="sm" className="h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => approveContractRequest(pendingReq.id, item.id)}>
@@ -101,11 +103,17 @@ export default function ProcessesPage() {
                   Reject
                 </Button>
               </>
-            ) : item.contract_status === 'pending' ? (
-              <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => uploadContract(item.id)}>
-                <Upload className="w-3.5 h-3.5" />
-                Upload
-              </Button>
+            ) : item.contract_status === 'under_review' && item.signature_url ? (
+              <>
+                <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => window.open(item.signature_url!, '_blank')}>
+                  <Eye className="w-3.5 h-3.5" />
+                  View Signature
+                </Button>
+                <Button variant="outline" size="sm" className="h-8 gap-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => verifyContract(item.id)}>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Verify &amp; Finalize
+                </Button>
+              </>
             ) : null}
           </div>
         );

@@ -209,6 +209,44 @@ export async function reviewContractApprovalRequest(requestId: string, status: '
   if (!res.ok) throw new Error(`reviewContractApprovalRequest failed: ${await res.text()}`);
 }
 
+// ─── Contract Documents ──────────────────────────────
+export async function generateContractPdf(processId: string): Promise<{ url?: string; error?: string }> {
+  const res = await fetch('/api/contracts/generate', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ process_id: processId }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    return { error: body.error || 'Failed to generate contract PDF' };
+  }
+  return res.json();
+}
+
+export async function signContract(processId: string, signatureBlob: Blob): Promise<{ signature_url?: string; contract_url?: string; error?: string }> {
+  const fd = new FormData();
+  fd.append('process_id', processId);
+  fd.append('signature', signatureBlob, 'signature.png');
+  const res = await fetch('/api/contracts/sign', { method: 'POST', body: fd });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    try { const body = JSON.parse(text); return { error: `${res.status}: ${body.error || res.statusText}` }; }
+    catch { return { error: `${res.status}: ${text.slice(0, 100) || res.statusText}` }; }
+  }
+  return res.json();
+}
+
+export async function verifyContract(processId: string): Promise<{ error?: string }> {
+  const res = await fetch('/api/contracts/verify', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ process_id: processId }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    return { error: body.error || 'Failed to verify contract' };
+  }
+  return res.json();
+}
+
 // ─── Bootcamps ───────────────────────────────────────
 export async function fetchBootcamps(): Promise<Bootcamp[]> {
   const { data } = await sb().from('bootcamps').select('*');

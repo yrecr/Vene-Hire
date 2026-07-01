@@ -7,9 +7,26 @@ import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Play, Clock, MapPin, Calendar, Briefcase, ArrowRight, Globe, CircleCheck as CheckCircle2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ArrowLeft, Play, Clock, MapPin, Calendar, Briefcase, ArrowRight, Globe, CircleCheck as CheckCircle2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+
+function toEmbedUrl(url: string): string {
+  if (!url) return url;
+  if (url.includes('youtube.com/embed/') || url.includes('player.vimeo.com/video/')) return url;
+  const yt = url.match(/(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const ytShort = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (ytShort) return `https://www.youtube.com/embed/${ytShort[1]}`;
+  const vimeo = url.match(/vimeo\.com\/([0-9]+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return url;
+}
 
 const availabilityConfig: Record<string, { label: string; className: string }> = {
   Available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -24,6 +41,8 @@ export default function TalentProfilePage() {
   const { currentUser } = useAuth();
   const { getEmployerById, talentProfiles } = useData();
   const [modalOpen, setModalOpen] = useState(false);
+  const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
 
   const talent = talentProfiles.find((t) => t.slug === slug);
 
@@ -132,6 +151,30 @@ export default function TalentProfilePage() {
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
             </div>
 
+            {talent.resume_url && (
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Resume</h2>
+                <button
+                  onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
+                  className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
+                >
+                  <FileText className="w-5 h-5" />
+                  <span className="text-base font-medium">View Resume</span>
+                </button>
+              </div>
+            )}
+
+            <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
+              <DialogContent className="max-w-4xl h-[80vh]">
+                <DialogTitle className="sr-only">Resume</DialogTitle>
+                <iframe
+                  src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
+                  className="w-full h-full border-0 rounded-lg"
+                  title="Resume"
+                />
+              </DialogContent>
+            </Dialog>
+
             {talent.video_url && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="flex items-center gap-2 mb-5">
@@ -140,7 +183,7 @@ export default function TalentProfilePage() {
                 </div>
                 <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: '16 / 9' }}>
                   <iframe
-                    src={talent.video_url}
+                    src={toEmbedUrl(talent.video_url)}
                     title={`${talent.display_name} introduction video`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
