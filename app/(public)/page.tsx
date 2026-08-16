@@ -6,6 +6,7 @@ import { SectionHeader } from '@/components/section-header';
 import { TalentCard } from '@/components/talent-card';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { ValueCard } from '@/components/value-card';
+import { Reveal } from '@/components/scroll-reveal';
 import { useData } from '@/lib/data-context';
 import { ArrowRight, Zap, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
 
@@ -54,18 +55,18 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div className="animate-fade-in-up">
-              <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/10 rounded-full mb-6">
+            <div>
+              <span className="animate-fade-in-up stagger-1 inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/10 rounded-full mb-6">
                 Talent Accelerator Platform
               </span>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1]">
+              <h1 className="animate-fade-in-up stagger-2 text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1]">
                 Hire Production-Ready Engineers in{' '}
                 <span className="gradient-text">Days, Not Months</span>
               </h1>
-              <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
+              <p className="animate-fade-in-up stagger-3 mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
                 Access pre-trained, pre-evaluated software engineers ready to integrate into your team from day one.
               </p>
-              <div className="mt-8 flex flex-wrap gap-4">
+              <div className="animate-fade-in-up stagger-4 mt-8 flex flex-wrap gap-4">
                 <Link href="/request-sign-up">
                   <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
                     Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
@@ -90,7 +91,7 @@ export default function HomePage() {
                     <span className="ml-2 text-xs text-muted-foreground">talent-dashboard</span>
                   </div>
                   {featuredTalent.slice(0, 3).map((talent, i) => (
-                    <div key={talent.id} className={`flex items-center gap-4 p-3 rounded-xl bg-gray-50/80 animate-fade-in-up stagger-${i + 2}`}>
+                    <div key={talent.id} className={`flex items-center gap-4 p-3 rounded-xl bg-gray-50/80 animate-fade-in-up stagger-${i + 4}`}>
                       <img
                         src={talent.profile_image_url || ''}
                         alt={talent.display_name}
@@ -119,9 +120,9 @@ export default function HomePage() {
       {/* Trust Strip */}
       <section className="py-12 border-y border-gray-100 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {trustItems.map((item) => (
-              <div key={item.label} className="flex items-center gap-4">
+          <Reveal className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {trustItems.map((item, i) => (
+              <div key={item.label} className="reveal-item flex items-center gap-4" style={{ transitionDelay: `${i * 50}ms` }}>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center flex-shrink-0">
                   <item.icon className="w-6 h-6 text-[hsl(210,100%,45%)]" />
                 </div>
@@ -131,76 +132,86 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* How It Works */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            badge="How It Works"
-            title="From Discovery to Hire in 4 Simple Steps"
-            description="Our streamlined process gets you from browsing talent to integrating engineers into your team as fast as possible."
-          />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {steps.map((step, i) => (
-              <div key={step.title} className="relative group">
-                {i < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-8 left-[calc(50%+40px)] w-[calc(100%-80px)] h-px bg-gradient-to-r from-gray-200 to-gray-100" />
-                )}
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
-                    <step.icon className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+          <Reveal>
+            <SectionHeader
+              badge="How It Works"
+              title="From Discovery to Hire in 4 Simple Steps"
+              description="Our streamlined process gets you from browsing talent to integrating engineers into your team as fast as possible."
+            />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {steps.map((step, i) => (
+                <div key={step.title} className="reveal-item relative group" style={{ transitionDelay: `${i * 50}ms` }}>
+                  {i < steps.length - 1 && (
+                    <div className="hidden lg:block absolute top-8 left-[calc(50%+40px)] w-[calc(100%-80px)] h-px bg-gradient-to-r from-gray-200 to-gray-100" />
+                  )}
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300">
+                      <step.icon className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+                    </div>
+                    <span className="text-xs font-bold text-[hsl(210,100%,45%)] uppercase tracking-wider mb-2 block">
+                      Step {i + 1}
+                    </span>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                   </div>
-                  <span className="text-xs font-bold text-[hsl(210,100%,45%)] uppercase tracking-wider mb-2 block">
-                    Step {i + 1}
-                  </span>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Featured Talent */}
       <section className="py-20 lg:py-28 bg-gray-50/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            badge="Featured Talent"
-            title="Meet Our Top Engineers"
-            description="Hand-picked, production-ready engineers who have completed our rigorous training and evaluation program."
-          />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredTalent.slice(0, 6).map((talent) => (
-              <TalentCard key={talent.id} talent={talent} />
-            ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link href="/talent">
-              <Button variant="outline" size="lg" className="px-8">
-                View All Talent <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
+          <Reveal>
+            <SectionHeader
+              badge="Featured Talent"
+              title="Meet Our Top Engineers"
+              description="Hand-picked, production-ready engineers who have completed our rigorous training and evaluation program."
+            />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredTalent.slice(0, 6).map((talent, i) => (
+                <div key={talent.id} className="reveal-item" style={{ transitionDelay: `${i * 50}ms` }}>
+                  <TalentCard talent={talent} />
+                </div>
+              ))}
+            </div>
+            <div className="text-center mt-10">
+              <Link href="/talent">
+                <Button variant="outline" size="lg" className="px-8">
+                  View All Talent <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Value Proposition */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            badge="Why VeneHire"
-            title="The Smarter Way to Hire Engineers"
-            description="Our talent accelerator model eliminates the biggest pain points in technical hiring."
-          />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {valueProps.map((vp) => (
-              <ValueCard key={vp.title} icon={vp.icon} title={vp.title} description={vp.description} />
-            ))}
-          </div>
+          <Reveal>
+            <SectionHeader
+              badge="Why VeneHire"
+              title="The Smarter Way to Hire Engineers"
+              description="Our talent accelerator model eliminates the biggest pain points in technical hiring."
+            />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {valueProps.map((vp, i) => (
+                <div key={vp.title} className="reveal-item" style={{ transitionDelay: `${i * 50}ms` }}>
+                  <ValueCard icon={vp.icon} title={vp.title} description={vp.description} />
+                </div>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -208,49 +219,55 @@ export default function HomePage() {
       <section className="py-20 lg:py-28 bg-[hsl(220,20%,7%)] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,100%,15%)]/30 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
-            <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-400/10 rounded-full mb-4">
-              Our Differentiator
-            </span>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-              Not Just Recruitment.{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-blue-400">
-                Real Training.
+          <Reveal>
+            <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
+              <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-teal-400 bg-teal-400/10 rounded-full mb-4">
+                Our Differentiator
               </span>
-            </h2>
-            <p className="mt-4 text-lg text-gray-400 leading-relaxed">
-              Our engineers go through an intensive accelerator program that simulates real-world product development.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {bootcampFeatures.map((feature) => (
-              <div key={feature.title} className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <feature.icon className="w-6 h-6 text-teal-400" />
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
+                Not Just Recruitment.{' '}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-blue-400">
+                  Real Training.
+                </span>
+              </h2>
+              <p className="mt-4 text-lg text-gray-400 leading-relaxed">
+                Our engineers go through an intensive accelerator program that simulates real-world product development.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bootcampFeatures.map((feature, i) => (
+                <div
+                  key={feature.title}
+                  className="reveal-item group p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300"
+                  style={{ transitionDelay: `${i * 50}ms` }}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <feature.icon className="w-6 h-6 text-teal-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Talent Carousel */}
       <section className="py-20 lg:py-28 bg-gray-50/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
           <SectionHeader
             badge="Talent Pool"
             title="Discover More Engineers"
             description="Browse through our growing pool of trained and evaluated software engineers."
           />
-        </div>
+        </Reveal>
         <TalentCarousel talents={talentProfiles} />
       </section>
 
       {/* Final CTA */}
       <section className="py-20 lg:py-28 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Build Your Team Faster with{' '}
             <span className="gradient-text">Job-Ready Engineers</span>
@@ -270,7 +287,7 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-        </div>
+        </Reveal>
       </section>
     </>
   );
