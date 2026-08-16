@@ -7,6 +7,7 @@ import { TalentCard } from '@/components/talent-card';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { ValueCard } from '@/components/value-card';
 import { Reveal } from '@/components/scroll-reveal';
+import { GhostOrb } from '@/components/ghost-orb';
 import { useData } from '@/lib/data-context';
 import { ArrowRight, Zap, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
 
@@ -50,8 +51,26 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 -z-10" />
-        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-100/40 to-teal-100/30 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 rounded-full blur-3xl -z-10" />
+        <div className="absolute -z-10 top-1/2 right-[-10%] -translate-y-1/2 w-[900px] h-[900px] pointer-events-none hidden lg:block">
+          <GhostOrb
+            width="100%"
+            height="100%"
+            backgroundColor="transparent"
+            opacity={0.4}
+            colorA="#3399ff"
+            colorB="#47d1ba"
+            colorC="#99ccff"
+            specularColorA="#ffffff"
+            specularColorB="#adebe0"
+            turbulence={0.22}
+            noiseScale={1.4}
+            flowSpeed={0.15}
+            glowStrength={0.6}
+            maskFeather={0.55}
+            rimStrength={0.9}
+            cursorLight={0.2}
+          />
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
