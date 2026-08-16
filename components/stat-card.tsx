@@ -12,8 +12,8 @@ export function StatCard({ icon: Icon, label, value, trend, trendUp }: StatCardP
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-primary" />
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-[hsl(210,100%,45%)]" />
         </div>
         {trend && (
           <span className={`text-xs font-medium px-2 py-1 rounded-full ${

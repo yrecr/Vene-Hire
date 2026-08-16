@@ -62,7 +62,7 @@ export function ContractSigningModal({ open, onClose, process, onSign }: Props) 
 
         {mode === 'submitting' ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <Loader2 className="w-8 h-8 animate-spin text-[hsl(210,100%,45%)]" />
             <p className="text-sm text-muted-foreground">Submitting your signature...</p>
           </div>
         ) : mode === 'sign' ? (

@@ -118,7 +118,7 @@ export default function EmployerApplicantsPage() {
                 onClick={() => toggleTag(tag)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                   selectedTags.includes(tag)
-                    ? 'bg-primary text-white border-primary'
+                    ? 'bg-[hsl(210,100%,45%)] text-white border-[hsl(210,100%,45%)]'
                     : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                 }`}
               >
@@ -133,7 +133,7 @@ export default function EmployerApplicantsPage() {
             <select
               value={englishFilter}
               onChange={(e) => setEnglishFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
               {englishLevels.map((level) => (
                 <option key={level} value={level}>{level}</option>
@@ -145,7 +145,7 @@ export default function EmployerApplicantsPage() {
             <select
               value={availabilityFilter}
               onChange={(e) => setAvailabilityFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
               {availabilityOptions.map((opt) => (
                 <option key={opt} value={opt}>{opt}</option>
@@ -157,7 +157,7 @@ export default function EmployerApplicantsPage() {
             <select
               value={experienceFilter}
               onChange={(e) => setExperienceFilter(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
               {experienceLevels.map((level) => (
                 <option key={level} value={level}>{level}</option>

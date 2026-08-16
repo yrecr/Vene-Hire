@@ -86,7 +86,7 @@ export default function EmployerCompanyPage() {
             </Button>
             <Button
               size="sm"
-              className="gap-1.5 bg-primary hover:bg-primary/90"
+              className="gap-1.5 bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,40%)]"
               onClick={handleSave}
             >
               <Save className="w-4 h-4" />
@@ -99,8 +99,8 @@ export default function EmployerCompanyPage() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         {/* Company header */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-            <Building2 className="w-8 h-8 text-primary" />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+            <Building2 className="w-8 h-8 text-[hsl(210,100%,45%)]" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-foreground">
@@ -160,7 +160,7 @@ export default function EmployerCompanyPage() {
                 onChange={(e) => setSummary(e.target.value)}
                 placeholder="Describe your company..."
                 rows={4}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 whitespace-pre-wrap">
@@ -180,7 +180,7 @@ export default function EmployerCompanyPage() {
                 onChange={(e) => setHiringNeeds(e.target.value)}
                 placeholder="Describe your current hiring needs..."
                 rows={3}
-                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 whitespace-pre-wrap">

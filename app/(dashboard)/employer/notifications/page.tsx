@@ -34,9 +34,9 @@ function getNotificationIcon(type: string): LucideIcon {
 function getNotificationIconColor(type: string): string {
   switch (type) {
     case 'interview':
-      return 'bg-blue-50 text-primary';
+      return 'bg-blue-50 text-[hsl(210,100%,45%)]';
     case 'process':
-      return 'bg-teal-50 text-accent';
+      return 'bg-teal-50 text-[hsl(170,60%,42%)]';
     case 'contract':
       return 'bg-amber-50 text-amber-600';
     case 'info':
@@ -78,7 +78,7 @@ export default function EmployerNotificationsPage() {
           <p className="text-muted-foreground mt-1">
             Stay updated on your hiring activity.
             {unreadCount > 0 && (
-              <span className="ml-1 font-medium text-primary">
+              <span className="ml-1 font-medium text-[hsl(210,100%,45%)]">
                 {unreadCount} unread
               </span>
             )}
@@ -137,7 +137,7 @@ export default function EmployerNotificationsPage() {
                     </h3>
                     {/* Read/unread dot */}
                     {!isRead && (
-                      <div className="w-2.5 h-2.5 rounded-full bg-primary flex-shrink-0 mt-1" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[hsl(210,100%,45%)] flex-shrink-0 mt-1" />
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-0.5">
@@ -148,7 +148,7 @@ export default function EmployerNotificationsPage() {
                       href={joinUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
                     >
                       <Video className="w-3.5 h-3.5" />
                       Join Meeting

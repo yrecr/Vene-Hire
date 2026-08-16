@@ -5,33 +5,30 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 207 78% 19%;
+    --foreground: 220 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 207 78% 19%;
+    --card-foreground: 220 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 207 78% 19%;
-    --primary: 215 100% 50%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 210 100% 45%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 218 36% 96%;
-    --secondary-foreground: 207 78% 19%;
-    --muted: 218 36% 96%;
-    --muted-foreground: 210 16% 42%;
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 10%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 46%;
     --accent: 170 60% 42%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 215 100% 50%;
-    --chart-1: 215 100% 50%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 210 100% 45%;
+    --chart-1: 210 100% 45%;
     --chart-2: 170 60% 42%;
     --chart-3: 35 92% 50%;
     --chart-4: 0 72% 51%;
     --chart-5: 220 20% 65%;
-    --radius: 0.5rem;
-    /* Alternating section backgrounds, sampled from calendly.com */
-    --surface: 218 36% 96%;
-    --surface-muted: 220 27% 98%;
+    --radius: 0.625rem;
     --success: 152 60% 42%;
     --success-foreground: 0 0% 100%;
     --warning: 35 92% 50%;
@@ -45,10 +42,8 @@
     --card-foreground: 210 20% 96%;
     --popover: 222 25% 12%;
     --popover-foreground: 210 20% 96%;
-    --primary: 215 100% 55%;
+    --primary: 210 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --surface: 222 25% 12%;
-    --surface-muted: 222 22% 14%;
     --secondary: 222 20% 16%;
     --secondary-foreground: 210 20% 96%;
     --muted: 222 20% 16%;
@@ -71,9 +66,6 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  h1, h2, h3 {
-    @apply font-display tracking-tight;
-  }
   html {
     scroll-behavior: smooth;
   }
@@ -82,6 +74,12 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)];
+  }
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20;
   }
 }
 

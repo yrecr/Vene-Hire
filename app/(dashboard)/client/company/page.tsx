@@ -27,8 +27,8 @@ export default function ClientCompanyPage() {
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-            <Building2 className="w-7 h-7 text-primary" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+            <Building2 className="w-7 h-7 text-[hsl(210,100%,45%)]" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground">TechCorp Inc.</h3>

@@ -35,11 +35,11 @@ export function DashboardSidebar({ links, role, open, onClose }: DashboardSideba
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-gray-100">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold text-foreground tracking-tight">
-              Vene<span className="text-primary">Hire</span>
+              Vene<span className="gradient-text">Hire</span>
             </span>
           </Link>
           <button className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100" onClick={onClose}>
@@ -64,11 +64,11 @@ export function DashboardSidebar({ links, role, open, onClose }: DashboardSideba
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                   active
-                    ? 'bg-primary/10 text-primary'
+                    ? 'bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)]'
                     : 'text-muted-foreground hover:text-foreground hover:bg-gray-50'
                 )}
               >
-                <link.icon className={cn('w-[18px] h-[18px]', active ? 'text-primary' : '')} />
+                <link.icon className={cn('w-[18px] h-[18px]', active ? 'text-[hsl(210,100%,45%)]' : '')} />
                 {link.label}
               </Link>
             );

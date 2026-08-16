@@ -58,11 +58,11 @@ export default function BootcampPage() {
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-lg font-semibold text-foreground">Overall Progress</h3>
-          <span className="text-2xl font-bold text-primary">{enrollment.progress}%</span>
+          <span className="text-2xl font-bold text-[hsl(210,100%,45%)]">{enrollment.progress}%</span>
         </div>
         <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700"
+            className="h-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] rounded-full transition-all duration-700"
             style={{ width: `${enrollment.progress}%` }}
           />
         </div>
@@ -73,8 +73,8 @@ export default function BootcampPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-[hsl(210,100%,45%)]" />
             </div>
             <span className="text-sm text-muted-foreground">Start Date</span>
           </div>
@@ -82,8 +82,8 @@ export default function BootcampPage() {
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-              <Calendar className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-[hsl(210,100%,45%)]" />
             </div>
             <span className="text-sm text-muted-foreground">End Date</span>
           </div>
@@ -91,8 +91,8 @@ export default function BootcampPage() {
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-              <Activity className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+              <Activity className="w-4 h-4 text-[hsl(210,100%,45%)]" />
             </div>
             <span className="text-sm text-muted-foreground">Status</span>
           </div>
@@ -100,8 +100,8 @@ export default function BootcampPage() {
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-primary" />
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-[hsl(210,100%,45%)]" />
             </div>
             <span className="text-sm text-muted-foreground">Duration</span>
           </div>
@@ -122,7 +122,7 @@ export default function BootcampPage() {
                 {mod.status === 'completed' ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                 ) : mod.status === 'in_progress' ? (
-                  <BookOpen className="w-5 h-5 text-primary" />
+                  <BookOpen className="w-5 h-5 text-[hsl(210,100%,45%)]" />
                 ) : (
                   <Lock className="w-5 h-5 text-gray-400" />
                 )}

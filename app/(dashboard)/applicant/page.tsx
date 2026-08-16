@@ -257,7 +257,7 @@ export default function ApplicantDashboardPage() {
                     <div key={interview.id} className="bg-white rounded-2xl border border-gray-100 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0">
-                          <MessageSquare className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)] flex-shrink-0 mt-0.5" />
                           <div className="min-w-0">
                             <p className="font-medium text-foreground">{employer?.company_name ?? 'Unknown Company'}</p>
                             <p className="text-sm text-muted-foreground line-clamp-1">{interview.message}</p>
@@ -276,7 +276,7 @@ export default function ApplicantDashboardPage() {
                           </Button>
                           <Button
                             size="sm"
-                            className="text-xs h-7 bg-primary hover:bg-primary/90"
+                            className="text-xs h-7 bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]"
                             onClick={() => respondToInterview(interview.id, 'accepted')}
                           >
                             Accept
@@ -321,7 +321,7 @@ export default function ApplicantDashboardPage() {
               <Bell className="w-4 h-4" />
               Notifications
               {notifications.filter((n) => !n.read).length > 0 && (
-                <span className="ml-auto text-xs bg-primary text-white rounded-full px-2 py-0.5">
+                <span className="ml-auto text-xs bg-[hsl(210,100%,45%)] text-white rounded-full px-2 py-0.5">
                   {notifications.filter((n) => !n.read).length}
                 </span>
               )}
@@ -333,7 +333,7 @@ export default function ApplicantDashboardPage() {
               <div className="space-y-3">
                 {notifications.map((notif) => (
                   <div key={notif.id} className="flex items-start gap-2">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-gray-300' : 'bg-primary'}`} />
+                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-gray-300' : 'bg-[hsl(210,100%,45%)]'}`} />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">{notif.title}</p>
                       <p className="text-xs text-muted-foreground line-clamp-2">{notif.message}</p>
@@ -342,7 +342,7 @@ export default function ApplicantDashboardPage() {
                           href={notif.metadata.join_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
                         >
                           <Video className="w-3 h-3" />
                           Join Meeting
@@ -370,7 +370,7 @@ export default function ApplicantDashboardPage() {
                   href={resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   View Resume
@@ -478,7 +478,7 @@ export default function ApplicantDashboardPage() {
               <button
                 type="button"
                 onClick={addSlot}
-                className="ml-auto text-primary hover:text-primary/90"
+                className="ml-auto text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,38%)]"
               >
                 <Plus className="w-4 h-4" />
               </button>

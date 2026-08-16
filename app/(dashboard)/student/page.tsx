@@ -65,11 +65,11 @@ export default function StudentDashboardPage() {
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-sm font-medium text-foreground">Progress</span>
-              <span className="text-sm font-semibold text-primary">{progressPct}%</span>
+              <span className="text-sm font-semibold text-[hsl(210,100%,45%)]">{progressPct}%</span>
             </div>
             <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700"
+                className="h-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] rounded-full transition-all duration-700"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
@@ -120,8 +120,8 @@ export default function StudentDashboardPage() {
               className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 text-[hsl(210,100%,45%)]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{resource.title}</p>

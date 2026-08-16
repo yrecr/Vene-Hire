@@ -55,12 +55,12 @@ export default function EmployerDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link href="/employer/applicants">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow group cursor-pointer">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
-                <Users className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
+                <Users className="w-5 h-5 text-[hsl(210,100%,45%)]" />
               </div>
               <h4 className="font-semibold text-foreground mb-1">Browse Applicants</h4>
               <p className="text-sm text-muted-foreground mb-3">Search and filter through our vetted talent pool.</p>
-              <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+              <span className="text-sm font-medium text-[hsl(210,100%,45%)] flex items-center gap-1 group-hover:gap-2 transition-all">
                 Explore <ArrowRight className="w-4 h-4" />
               </span>
             </div>
@@ -68,12 +68,12 @@ export default function EmployerDashboard() {
 
           <Link href="/employer/processes">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow group cursor-pointer">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
-                <GitBranch className="w-5 h-5 text-accent" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
+                <GitBranch className="w-5 h-5 text-[hsl(170,60%,42%)]" />
               </div>
               <h4 className="font-semibold text-foreground mb-1">View Processes</h4>
               <p className="text-sm text-muted-foreground mb-3">Track your active selection processes and stages.</p>
-              <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+              <span className="text-sm font-medium text-[hsl(210,100%,45%)] flex items-center gap-1 group-hover:gap-2 transition-all">
                 View <ArrowRight className="w-4 h-4" />
               </span>
             </div>
@@ -81,12 +81,12 @@ export default function EmployerDashboard() {
 
           <Link href="/employer/requests">
             <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow group cursor-pointer">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
-                <MessageSquare className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
+                <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)]" />
               </div>
               <h4 className="font-semibold text-foreground mb-1">Schedule Interview</h4>
               <p className="text-sm text-muted-foreground mb-3">Manage interview requests and scheduling.</p>
-              <span className="text-sm font-medium text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+              <span className="text-sm font-medium text-[hsl(210,100%,45%)] flex items-center gap-1 group-hover:gap-2 transition-all">
                 Manage <ArrowRight className="w-4 h-4" />
               </span>
             </div>
@@ -107,7 +107,7 @@ export default function EmployerDashboard() {
           ) : (
             recentNotifications.map((notification) => (
               <div key={notification.id} className="flex items-start gap-3 px-5 py-4">
-                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-primary'}`} />
+                <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-[hsl(210,100%,45%)]'}`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground">{notification.title}</p>
                   <p className="text-sm text-muted-foreground line-clamp-1">{notification.message}</p>

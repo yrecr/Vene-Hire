@@ -152,7 +152,7 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className="text-2xl font-bold text-foreground">User Management</h2>
-          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
             {profiles.length}
           </span>
         </div>
@@ -173,7 +173,7 @@ export default function UserManagementPage() {
           placeholder="Search by name, email, role, or company..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] bg-white"
         />
       </div>
 
@@ -240,24 +240,24 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
           <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
           <input type="text" placeholder="Enter full name" value={data.full_name}
             onChange={(e) => setData((d) => ({ ...d, full_name: e.target.value }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
           <input type="email" placeholder="Enter email address" value={data.email}
             onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
           <input type="text" placeholder="Leave as Demo123! for default" value={data.password}
             onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Role</label>
           <select value={data.role} onChange={(e) => setData((d) => ({ ...d, role: e.target.value as Profile['role'] }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]">
             <option value="admin">Admin</option>
             <option value="applicant">Applicant</option>
             <option value="employer">Employer</option>
@@ -266,7 +266,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Status</label>
           <select value={data.status} onChange={(e) => setData((d) => ({ ...d, status: e.target.value as Profile['status'] }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]">
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
             <option value="pending">Pending</option>
@@ -277,7 +277,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
             <label className="block text-sm font-medium text-foreground mb-1.5">Company Name</label>
             <input type="text" placeholder="Enter company name" value={data.company_name}
               onChange={(e) => setData((d) => ({ ...d, company_name: e.target.value }))}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary" />
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
           </div>
         )}
       </div>

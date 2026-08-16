@@ -62,12 +62,12 @@ export default function AboutPage() {
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 rounded-full blur-3xl -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary bg-primary/10 rounded-full mb-6">
+          <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/10 rounded-full mb-6">
             About Us
           </span>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1] max-w-4xl mx-auto">
             About{' '}
-            <span className="text-primary">VeneHire</span>
+            <span className="gradient-text">VeneHire</span>
           </h1>
           <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
             We are on a mission to bridge the gap between exceptional talent and
@@ -114,8 +114,8 @@ export default function AboutPage() {
                 <div className="grid grid-cols-2 gap-6">
                   {stats.map((stat) => (
                     <div key={stat.label} className="text-center p-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-3">
-                        <stat.icon className="w-6 h-6 text-primary" />
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-3">
+                        <stat.icon className="w-6 h-6 text-[hsl(210,100%,45%)]" />
                       </div>
                       <p className="text-2xl font-bold text-foreground">
                         {stat.value}
@@ -143,8 +143,8 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
             {/* For Companies */}
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6">
-                <Building2 className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-6">
+                <Building2 className="w-7 h-7 text-[hsl(210,100%,45%)]" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 For Companies
@@ -156,7 +156,7 @@ export default function AboutPage() {
               <ul className="space-y-3">
                 {forCompanies.map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-[hsl(170,60%,42%)] flex-shrink-0 mt-0.5" />
                     <span className="text-sm text-muted-foreground">
                       {item}
                     </span>
@@ -167,8 +167,8 @@ export default function AboutPage() {
 
             {/* For Engineers */}
             <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm hover:shadow-lg hover:shadow-gray-200/50 transition-all duration-300">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-6">
-                <GraduationCap className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-6">
+                <GraduationCap className="w-7 h-7 text-[hsl(210,100%,45%)]" />
               </div>
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 For Engineers
@@ -180,7 +180,7 @@ export default function AboutPage() {
               <ul className="space-y-3">
                 {forEngineers.map((item) => (
                   <li key={item} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-5 h-5 text-[hsl(170,60%,42%)] flex-shrink-0 mt-0.5" />
                     <span className="text-sm text-muted-foreground">
                       {item}
                     </span>
@@ -214,7 +214,7 @@ export default function AboutPage() {
       </section>
 
       {/* Stats */}
-      <section className="py-20 lg:py-28 bg-foreground text-white relative overflow-hidden">
+      <section className="py-20 lg:py-28 bg-[hsl(220,20%,7%)] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,100%,15%)]/30 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="max-w-3xl mx-auto text-center mb-12 lg:mb-16">
@@ -256,7 +256,7 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
             Ready to See VeneHire{' '}
-            <span className="text-primary">in Action?</span>
+            <span className="gradient-text">in Action?</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
             Schedule a personalized demo to see how our platform can help you
@@ -266,7 +266,7 @@ export default function AboutPage() {
             <Link href="/request-sign-up">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12"
+                className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12"
               >
                 Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

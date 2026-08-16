@@ -27,8 +27,8 @@ export default function ResourcesPage() {
             className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col"
           >
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center flex-shrink-0">
-                <FileText className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center flex-shrink-0">
+                <FileText className="w-5 h-5 text-[hsl(210,100%,45%)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-foreground">{resource.title}</h3>

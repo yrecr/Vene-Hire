@@ -387,7 +387,7 @@ export default function ApplicantProfilePage() {
             {talentProfile.resume_url ? (
               <button
                 onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
               >
                 <FileText className="w-4 h-4" />
                 View Resume

@@ -151,7 +151,7 @@ export default function VacanciesPage() {
                 vacancyCandidates.map((cand, i) => (
                   <div key={cand.id} className="border border-gray-100 rounded-xl overflow-hidden">
                     <div className="flex items-center gap-3 p-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                         {cand.iniciales}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -160,7 +160,7 @@ export default function VacanciesPage() {
                           {medalIcon(i)}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs font-bold text-primary">{cand.score}% match</span>
+                          <span className="text-xs font-bold text-[hsl(210,100%,45%)]">{cand.score}% match</span>
                           {iaBadge(cand.estado_ia)}
                         </div>
                       </div>

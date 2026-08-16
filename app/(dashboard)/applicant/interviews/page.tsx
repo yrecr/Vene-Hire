@@ -77,8 +77,8 @@ export default function ApplicantInterviewsPage() {
 
       {interviews.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="w-7 h-7 text-primary" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="w-7 h-7 text-[hsl(210,100%,45%)]" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-1">No interview requests yet</h3>
           <p className="text-sm text-muted-foreground">
@@ -100,8 +100,8 @@ export default function ApplicantInterviewsPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary" />
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-[hsl(210,100%,45%)]" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground">
