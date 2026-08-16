@@ -9,7 +9,7 @@ import type {
 } from '@/types';
 import { createZoomMeeting } from '@/lib/zoom';
 import * as api from './supabase-service';
-import { mockEmployerProfiles } from '@/data/mock';
+import { mockEmployerProfiles, mockTalentProfiles } from '@/data/mock';
 
 interface NewInterviewData {
   applicant_id: string;
@@ -67,7 +67,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [shortlistedIds, setShortlistedIds] = useState<string[]>([]);
   const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([]);
-  const [talentProfiles, setTalentProfiles] = useState<(TalentProfile & { skills: TalentSkill[] })[]>([]);
+  const [talentProfiles, setTalentProfiles] = useState<(TalentProfile & { skills: TalentSkill[] })[]>(mockTalentProfiles);
   const [profiles, setProfilesState] = useState<Profile[]>([]);
   const [employerProfiles, setEmployerProfiles] = useState<EmployerProfile[]>(mockEmployerProfiles);
   const [accessRequests, setAccessRequestsState] = useState<AccessRequest[]>([]);

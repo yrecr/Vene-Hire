@@ -51,12 +51,12 @@ export default function HomePage() {
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 -z-10" />
-        <div className="absolute -z-10 top-1/2 right-[-10%] -translate-y-1/2 w-[900px] h-[900px] pointer-events-none hidden lg:block">
+        <div className="absolute -z-10 top-1/2 right-[-340px] -translate-y-1/2 w-[1300px] h-[1300px] pointer-events-none hidden lg:block">
           <GhostOrb
             width="100%"
             height="100%"
             backgroundColor="transparent"
-            opacity={0.4}
+            opacity={0.7}
             colorA="#3399ff"
             colorB="#47d1ba"
             colorC="#99ccff"
@@ -65,8 +65,8 @@ export default function HomePage() {
             turbulence={0.22}
             noiseScale={1.4}
             flowSpeed={0.15}
-            glowStrength={0.6}
-            maskFeather={0.55}
+            glowStrength={0.7}
+            maskFeather={0.32}
             rimStrength={0.9}
             cursorLight={0.2}
           />

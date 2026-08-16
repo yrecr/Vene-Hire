@@ -277,13 +277,20 @@ export function GhostOrb({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Skip entirely below the `lg` breakpoint: the caller hides the canvas with
-    // `hidden lg:block` there, but without this guard the WebGL context still
-    // gets created and the render loop still runs, burning GPU/battery for a
-    // frame nobody sees.
-    if (!window.matchMedia('(min-width: 1024px)').matches) return;
+    // Below the `lg` breakpoint the caller hides the canvas with `hidden lg:block`.
+    // Context creation is cheap and left unconditional, but the render loop below
+    // checks this on every frame and skips drawing (without tearing anything down)
+    // so a resize back above the breakpoint resumes automatically -- a one-time
+    // check at mount would wrongly stay skipped forever after such a resize.
+    const desktopMql = window.matchMedia('(min-width: 1024px)');
 
-    const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false });
+    // preserveDrawingBuffer: without it, some engines are free to clear the
+    // backbuffer right after compositing a frame -- fine for the live page
+    // (the loop redraws every rAF before the next paint), but it means any
+    // read/capture that lands between "present" and "next draw" (a headless
+    // screenshot tool, readPixels from outside the loop) can catch a blank
+    // buffer. Reproduced against this project's dev server.
+    const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: true });
     if (!gl) return; // graceful no-op if WebGL2 isn't available
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -417,6 +424,11 @@ export function GhostOrb({
     function frame(now: number) {
       const dt = now - lastFrameTime;
       lastFrameTime = now;
+
+      if (!desktopMql.matches) {
+        raf = requestAnimationFrame(frame);
+        return;
+      }
 
       if (!pausedRef.current && !reduceMotion) {
         elapsed += dt / 1000;
