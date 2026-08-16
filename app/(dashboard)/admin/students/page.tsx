@@ -63,7 +63,7 @@ export default function StudentsPage() {
               </div>
               <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] transition-all duration-500"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
                   style={{ width: `${student.progress}%` }}
                 />
               </div>

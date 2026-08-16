@@ -81,9 +81,9 @@ export default function AdminDashboardPage() {
         <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Link href="/admin/users" className="block">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[hsl(210,100%,45%)]/20 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
-                <UserCog className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-primary/20 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
+                <UserCog className="w-5 h-5 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">Manage Users</h3>
               <p className="text-sm text-muted-foreground">View and manage platform users</p>
@@ -91,9 +91,9 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
           <Link href="/admin/requests" className="block">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[hsl(210,100%,45%)]/20 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
-                <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-primary/20 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
+                <MessageSquare className="w-5 h-5 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">Review Requests</h3>
               <p className="text-sm text-muted-foreground">Manage access requests</p>
@@ -101,9 +101,9 @@ export default function AdminDashboardPage() {
             </div>
           </Link>
           <Link href="/admin/processes" className="block">
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-[hsl(210,100%,45%)]/20 transition-all group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mb-3">
-                <GitBranch className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+            <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md hover:border-primary/20 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-3">
+                <GitBranch className="w-5 h-5 text-primary" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">View Processes</h3>
               <p className="text-sm text-muted-foreground">Monitor all selection processes</p>

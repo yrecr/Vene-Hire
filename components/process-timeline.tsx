@@ -131,13 +131,13 @@ export function ProcessTimeline({
       if (isIntro && !introMeetingUrl && onCreateIntroMeet) {
         return (
           <div
-            className="w-8 h-8 rounded-full border-2 border-dashed border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5 flex items-center justify-center cursor-pointer hover:bg-[hsl(210,100%,45%)]/15 transition-colors group"
+            className="w-8 h-8 rounded-full border-2 border-dashed border-primary bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-primary/15 transition-colors group"
             onClick={(e) => { e.stopPropagation(); if (!isCreatingMeet) onCreateIntroMeet(); }}
           >
             {isCreatingMeet ? (
-              <span className="w-3 h-3 border-2 border-[hsl(210,100%,45%)] border-t-transparent rounded-full animate-spin" />
+              <span className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : (
-              <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+              <CalendarPlus className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
             )}
           </div>
         );
@@ -146,7 +146,7 @@ export function ProcessTimeline({
       return (
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all
-            ${zoom ? 'bg-blue-500 cursor-pointer hover:bg-blue-600 group relative' : 'bg-[hsl(210,100%,45%)]'}`}
+            ${zoom ? 'bg-blue-500 cursor-pointer hover:bg-blue-600 group relative' : 'bg-primary'}`}
           onClick={zoom
             ? (e) => {
                 e.stopPropagation();
@@ -169,11 +169,11 @@ export function ProcessTimeline({
 
     if (clickable) {
       return (
-        <div className="w-8 h-8 rounded-full border-2 border-dashed border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5 flex items-center justify-center cursor-pointer hover:bg-[hsl(210,100%,45%)]/15 transition-colors group">
+        <div className="w-8 h-8 rounded-full border-2 border-dashed border-primary bg-primary/5 flex items-center justify-center cursor-pointer hover:bg-primary/15 transition-colors group">
           {isContract ? (
-            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+            <FileText className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
           ) : (
-            <CalendarPlus className="w-4 h-4 text-[hsl(210,100%,45%)] group-hover:scale-110 transition-transform" />
+            <CalendarPlus className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
           )}
         </div>
       );
@@ -193,7 +193,7 @@ export function ProcessTimeline({
     if (leftState === 'completed' && rightState === 'current') {
       if (status === 'not_selected') return 'bg-red-300';
       if (status === 'on_hold') return 'bg-amber-300';
-      return 'bg-[hsl(210,100%,45%)]/40';
+      return 'bg-primary/40';
     }
     return 'bg-gray-200';
   }
@@ -204,9 +204,9 @@ export function ProcessTimeline({
     if (stepState === 'current') {
       if (status === 'not_selected') return 'text-red-700';
       if (status === 'on_hold') return 'text-amber-700';
-      return 'text-[hsl(210,100%,45%)]';
+      return 'text-primary';
     }
-    if (isClickable(index)) return 'text-[hsl(210,100%,45%)] cursor-pointer hover:underline';
+    if (isClickable(index)) return 'text-primary cursor-pointer hover:underline';
     return 'text-gray-400';
   }
 

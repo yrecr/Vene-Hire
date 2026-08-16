@@ -78,21 +78,21 @@ export default function AdminNotificationsPage() {
               className={`bg-white rounded-2xl border p-4 flex items-start gap-4 transition-colors ${
                 notification.read
                   ? 'border-gray-100'
-                  : 'border-[hsl(210,100%,45%)]/20 bg-[hsl(210,100%,45%)]/[0.02]'
+                  : 'border-primary/20 bg-primary/[0.02]'
               }`}
             >
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                   notification.read
                     ? 'bg-gray-100'
-                    : 'bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10'
+                    : 'bg-gradient-to-br from-primary/10 to-accent/10'
                 }`}
               >
                 <Icon
                   className={`w-5 h-5 ${
                     notification.read
                       ? 'text-muted-foreground'
-                      : 'text-[hsl(210,100%,45%)]'
+                      : 'text-primary'
                   }`}
                 />
               </div>
@@ -106,7 +106,7 @@ export default function AdminNotificationsPage() {
                     {notification.title}
                   </h3>
                   {!notification.read && (
-                    <span className="w-2 h-2 rounded-full bg-[hsl(210,100%,45%)] flex-shrink-0" />
+                    <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mt-0.5">{notification.message}</p>
@@ -118,7 +118,7 @@ export default function AdminNotificationsPage() {
                 className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full capitalize ${
                   notification.read
                     ? 'bg-gray-100 text-gray-500'
-                    : 'bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)]'
+                    : 'bg-primary/10 text-primary'
                 }`}
               >
                 {notification.type}

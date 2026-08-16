@@ -168,7 +168,7 @@ function RequestDemoForm() {
                 </Button>
               </Link>
               <Link href="/talent">
-                <Button className="px-6 h-11 bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25">
+                <Button className="px-6 h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg shadow-blue-500/25">
                   Browse Talent
                 </Button>
               </Link>
@@ -354,7 +354,7 @@ function RequestDemoForm() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-12 text-base bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+                  className="w-full h-12 text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
                 >
                   {isSubmitting ? (
                     <>
@@ -385,7 +385,7 @@ function RequestDemoForm() {
                     className="flex gap-4 p-4 rounded-xl bg-white border border-gray-100 shadow-sm"
                   >
                     <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <prop.icon className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+                      <prop.icon className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                       <h3 className="text-sm font-semibold text-foreground mb-1">

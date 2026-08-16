@@ -44,7 +44,7 @@ export default function ProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center text-center">
-          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient mb-4 ring-4 ring-[hsl(210,100%,45%)]/10">
+          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-gradient mb-4 ring-4 ring-primary/10">
             <Image
               src={profile.photo}
               alt={profile.name}
@@ -58,15 +58,15 @@ export default function ProfilePage() {
 
           <div className="w-full mt-6 space-y-3">
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Mail className="w-4 h-4 text-[hsl(210,100%,45%)]" />
+              <Mail className="w-4 h-4 text-primary" />
               <span>{profile.email}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Globe className="w-4 h-4 text-[hsl(210,100%,45%)]" />
+              <Globe className="w-4 h-4 text-primary" />
               <span>English Level: {profile.englishLevel}</span>
             </div>
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <Briefcase className="w-4 h-4 text-[hsl(210,100%,45%)]" />
+              <Briefcase className="w-4 h-4 text-primary" />
               <span>{profile.availability}</span>
             </div>
           </div>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
                 <Badge
                   key={tech}
                   variant="secondary"
-                  className="bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20 hover:bg-[hsl(210,100%,45%)]/15"
+                  className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15"
                 >
                   {tech}
                 </Badge>

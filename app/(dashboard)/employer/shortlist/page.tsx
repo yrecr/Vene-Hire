@@ -44,7 +44,7 @@ export default function EmployerShortlistPage() {
 
       {shortlistedApplicants.length > 0 && (
         <div className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-3">
-          <Info className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 flex-shrink-0" />
+          <Info className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
           <p className="text-sm text-blue-700">
             Use the shortlist to keep track of promising candidates. Request an interview directly from here.
           </p>

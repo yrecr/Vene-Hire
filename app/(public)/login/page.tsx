@@ -54,7 +54,7 @@ export default function LoginPage() {
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)]">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent">
               <Zap className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">VeneHire</span>
@@ -119,7 +119,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-400 mt-8">
             Access is by invitation only.{' '}
-            <Link href="/contact" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
+            <Link href="/contact" className="text-primary hover:text-primary/90 underline">
               Contact us
             </Link>{' '}
             to learn more.

@@ -18,8 +18,8 @@ const typeIcons: Record<Notification['type'], typeof Info> = {
 };
 
 const typeColors: Record<Notification['type'], string> = {
-  info: 'bg-blue-50 text-[hsl(210,100%,45%)]',
-  interview: 'bg-teal-50 text-[hsl(170,60%,42%)]',
+  info: 'bg-blue-50 text-primary',
+  interview: 'bg-teal-50 text-accent',
   process: 'bg-purple-50 text-purple-600',
   contract: 'bg-amber-50 text-amber-600',
   request: 'bg-emerald-50 text-emerald-600',
@@ -98,7 +98,7 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs font-medium text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,35%)] transition-colors"
+                className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 Mark all as read
               </button>
@@ -133,7 +133,7 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
                           {notification.title}
                         </p>
                         {!notification.read && (
-                          <span className="w-2 h-2 rounded-full bg-[hsl(210,100%,45%)] flex-shrink-0 mt-1.5" />
+                          <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-1.5" />
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">

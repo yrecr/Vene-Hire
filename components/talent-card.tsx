@@ -27,7 +27,7 @@ const englishColor: Record<string, string> = {
 export function TalentCard({ talent, compact }: TalentCardProps) {
   if (compact) {
     return (
-      <div className="group bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-200 transition-all duration-300 flex-shrink-0 w-[280px]">
+      <div className="group bg-white rounded-2xl border border-border p-5 hover:border-primary/40 transition-colors duration-300 flex-shrink-0 w-[280px]">
         <div className="flex items-center gap-3 mb-3">
           <img
             src={talent.profile_image_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100'}
@@ -56,13 +56,13 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
   }
 
   return (
-    <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 hover:border-gray-200 transition-all duration-300">
+    <div className="group bg-white rounded-2xl border border-border overflow-hidden hover:border-primary/40 hover:shadow-lg hover:shadow-foreground/[0.04] transition-all duration-300">
       <div className="p-6">
         <div className="flex items-start gap-4 mb-4">
           <img
             src={talent.profile_image_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200'}
             alt={talent.display_name}
-            className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all"
+            className="w-16 h-16 rounded-2xl object-cover ring-2 ring-border group-hover:ring-primary/25 transition-all"
           />
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold text-foreground">{talent.display_name}</h3>
@@ -98,7 +98,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
         </div>
 
         <Link href={`/talent/${talent.slug}`}>
-          <Button variant="outline" className="w-full group-hover:bg-[hsl(210,100%,45%)] group-hover:text-white group-hover:border-[hsl(210,100%,45%)] transition-all duration-300" size="sm">
+          <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300" size="sm">
             View Profile <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
           </Button>
         </Link>

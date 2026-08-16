@@ -156,7 +156,7 @@ export default function TalentProfilePage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Resume</h2>
                 <button
                   onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
-                  className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
+                  className="inline-flex items-center gap-2 text-primary hover:underline"
                 >
                   <FileText className="w-5 h-5" />
                   <span className="text-base font-medium">View Resume</span>

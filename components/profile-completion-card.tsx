@@ -21,7 +21,7 @@ export function ProfileCompletionCard({ completion, items }: ProfileCompletionCa
       </div>
       <div className="h-3 bg-gray-100 rounded-full overflow-hidden mb-5">
         <div
-          className="h-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] rounded-full transition-all duration-700 ease-out"
+          className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700 ease-out"
           style={{ width: `${clampedCompletion}%` }}
         />
       </div>

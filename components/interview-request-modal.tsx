@@ -153,7 +153,7 @@ export function InterviewRequestModal({
               value={roleTitle}
               onChange={(e) => setRoleTitle(e.target.value)}
               placeholder="e.g. Senior Backend Engineer"
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
@@ -209,7 +209,7 @@ export function InterviewRequestModal({
                       onClick={() => setTimeSlot(option)}
                       className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                         timeSlot === option
-                          ? 'bg-[hsl(210,100%,45%)] text-white border-[hsl(210,100%,45%)]'
+                          ? 'bg-primary text-white border-primary'
                           : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -238,7 +238,7 @@ export function InterviewRequestModal({
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a personal message to the candidate..."
               rows={3}
-              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
             />
           </div>
         </div>

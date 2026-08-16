@@ -183,23 +183,23 @@ export default function ApplicantAvailabilityPage() {
                 className={
                   'flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all ' +
                   (isSelected
-                    ? 'border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5'
+                    ? 'border-primary bg-primary/5'
                     : 'border-gray-200 hover:border-gray-300')
                 }
               >
                 <div
                   className={
                     'w-4 h-4 rounded-full border-2 flex items-center justify-center ' +
-                    (isSelected ? 'border-[hsl(210,100%,45%)]' : 'border-gray-300')
+                    (isSelected ? 'border-primary' : 'border-gray-300')
                   }
                 >
                   {isSelected && (
-                    <div className="w-2 h-2 rounded-full bg-[hsl(210,100%,45%)]" />
+                    <div className="w-2 h-2 rounded-full bg-primary" />
                   )}
                 </div>
                 <span className={
                   'text-sm font-medium ' +
-                  (isSelected ? 'text-[hsl(210,100%,45%)]' : 'text-foreground')
+                  (isSelected ? 'text-primary' : 'text-foreground')
                 }>
                   {option}
                 </span>
@@ -230,9 +230,9 @@ export default function ApplicantAvailabilityPage() {
                         return (
                           <div
                             key={slot.id}
-                            className="flex items-center gap-2 bg-[hsl(210,100%,45%)]/5 border border-[hsl(210,100%,45%)]/20 rounded-lg px-3 py-1.5"
+                            className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-lg px-3 py-1.5"
                           >
-                            <Clock className="w-3.5 h-3.5 text-[hsl(210,100%,45%)]" />
+                            <Clock className="w-3.5 h-3.5 text-primary" />
                             <span className="text-sm text-foreground">
                               {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                             </span>

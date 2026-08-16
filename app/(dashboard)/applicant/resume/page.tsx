@@ -91,15 +91,15 @@ export default function ApplicantResumePage() {
             <h3 className="text-base font-semibold text-foreground">Resume Uploaded</h3>
           </div>
           <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
-              <File className="w-6 h-6 text-[hsl(210,100%,45%)]" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+              <File className="w-6 h-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <a
                 href={talentProfile!.resume_url!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-foreground truncate hover:text-[hsl(210,100%,45%)] flex items-center gap-1"
+                className="text-sm font-medium text-foreground truncate hover:text-primary flex items-center gap-1"
               >
                 {talentProfile?.display_name?.toLowerCase().replace(/\s+/g, '-')}-resume.pdf
                 <ExternalLink className="w-3 h-3 shrink-0" />
@@ -160,13 +160,13 @@ export default function ApplicantResumePage() {
           type="button"
           disabled={uploading}
           onClick={function () { inputRef.current?.click(); }}
-          className="w-full border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-[hsl(210,100%,45%)]/40 transition-colors cursor-pointer disabled:opacity-50"
+          className="w-full border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-primary/40 transition-colors cursor-pointer disabled:opacity-50"
         >
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4">
             {uploading ? (
-              <Loader2 className="w-7 h-7 text-[hsl(210,100%,45%)] animate-spin" />
+              <Loader2 className="w-7 h-7 text-primary animate-spin" />
             ) : (
-              <Upload className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+              <Upload className="w-7 h-7 text-primary" />
             )}
           </div>
           <p className="text-sm font-medium text-foreground mb-1">
@@ -183,19 +183,19 @@ export default function ApplicantResumePage() {
         <h3 className="text-base font-semibold text-foreground mb-3">Resume Tips</h3>
         <ul className="space-y-2">
           <li className="flex items-start gap-2">
-            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Keep it concise, ideally 1-2 pages.</span>
           </li>
           <li className="flex items-start gap-2">
-            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Highlight relevant technical skills and projects.</span>
           </li>
           <li className="flex items-start gap-2">
-            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Include measurable achievements and impact metrics.</span>
           </li>
           <li className="flex items-start gap-2">
-            <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <FileText className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Use PDF format for best compatibility.</span>
           </li>
         </ul>

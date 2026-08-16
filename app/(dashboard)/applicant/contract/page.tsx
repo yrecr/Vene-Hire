@@ -55,8 +55,8 @@ export default function ApplicantContractPage() {
 
       {contractProcesses.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
-            <FileSignature className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4">
+            <FileSignature className="w-7 h-7 text-primary" />
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-1">No active contracts</h3>
           <p className="text-sm text-muted-foreground">
@@ -153,7 +153,7 @@ function ContractCard({ process, employer, signContract }: {
     <div className="bg-white rounded-2xl border border-gray-100 p-6">
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center shrink-0">
             {getContractIcon(process.contract_status)}
           </div>
           <div>
@@ -196,7 +196,7 @@ function ContractCard({ process, employer, signContract }: {
       {process.contract_url && (
         <div className="mb-5">
           <a href={process.contract_url} target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[hsl(210,100%,45%)] text-white text-sm font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             <FileDown className="w-4 h-4" />
             View Contract PDF
@@ -223,7 +223,7 @@ function ContractCard({ process, employer, signContract }: {
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="sm" onClick={clearSig}>Remove</Button>
-                <Button size="sm" className="bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]"
+                <Button size="sm" className="bg-primary hover:bg-primary/90"
                   disabled={signing} onClick={handleSign}>
                   {signing ? 'Signing...' : 'Sign Contract'}
                 </Button>

@@ -133,7 +133,7 @@ export default function ApplicantVideoPage() {
       {/* Paste URL */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Link2 className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+          <Link2 className="w-5 h-5 text-primary" />
           <h3 className="text-base font-semibold text-foreground">Paste Your Video URL</h3>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
@@ -159,12 +159,12 @@ export default function ApplicantVideoPage() {
       {/* Upload area */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Upload className="w-5 h-5 text-[hsl(210,100%,45%)]" />
+          <Upload className="w-5 h-5 text-primary" />
           <h3 className="text-base font-semibold text-foreground">Upload a Video</h3>
         </div>
-        <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-[hsl(210,100%,45%)]/40 transition-colors cursor-pointer">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
-            <Video className="w-7 h-7 text-[hsl(210,100%,45%)]" />
+        <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-primary/40 transition-colors cursor-pointer">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mx-auto mb-4">
+            <Video className="w-7 h-7 text-primary" />
           </div>
           <p className="text-sm font-medium text-foreground mb-1">
             Drop your video here or click to browse
@@ -180,19 +180,19 @@ export default function ApplicantVideoPage() {
         <h3 className="text-base font-semibold text-foreground mb-3">Video Tips</h3>
         <ul className="space-y-2">
           <li className="flex items-start gap-2">
-            <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <Video className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Keep it under 3 minutes.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <Video className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Introduce yourself and highlight your key skills.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <Video className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Speak in English to demonstrate your proficiency.</span>
           </li>
           <li className="flex items-start gap-2">
-            <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
+            <Video className="w-4 h-4 text-primary mt-0.5 shrink-0" />
             <span className="text-sm text-muted-foreground">Use good lighting and a quiet environment.</span>
           </li>
         </ul>

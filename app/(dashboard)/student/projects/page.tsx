@@ -128,7 +128,7 @@ export default function ProjectsPage() {
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] rounded-full transition-all duration-700"
+                  className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700"
                   style={{ width: `${project.progress}%` }}
                 />
               </div>

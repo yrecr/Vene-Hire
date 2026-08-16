@@ -314,8 +314,8 @@ export default function EmployerProcessesPage() {
                         onClick={() => setSelectedTimeSlot(label)}
                         className={`px-3 py-2 rounded-lg text-sm border text-left transition-colors ${
                           selectedTimeSlot === label
-                            ? 'bg-[hsl(210,100%,45%)] text-white border-[hsl(210,100%,45%)]'
-                            : 'bg-white text-foreground border-gray-200 hover:border-[hsl(210,100%,45%)]'
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-white text-foreground border-gray-200 hover:border-primary'
                         }`}
                       >
                         {from} - {to}
