@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle } from 'lucide-react';
+import { MessageSquare, Calendar, Building2, CheckCircle2, XCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
@@ -159,7 +159,7 @@ export default function ApplicantInterviewsPage() {
                   <div className="pt-2 border-t border-gray-100">
                     <span className="text-sm font-medium text-emerald-600 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      Accepted — A selection process has been created.
+                      Accepted — waiting for the employer to share a meeting link.
                     </span>
                   </div>
                 )}
@@ -173,11 +173,33 @@ export default function ApplicantInterviewsPage() {
                   </div>
                 )}
 
-                {!isPending && interview.status !== 'accepted' && interview.status !== 'declined' && (
+                {interview.status === 'scheduled' && (
                   <div className="pt-2 border-t border-gray-100">
-                    <span className="text-sm font-medium text-muted-foreground capitalize">
-                      Status: {interview.status}
+                    <span className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-1">
+                      Meeting scheduled
                     </span>
+                    {interview.meeting_url && (
+                      <a
+                        href={interview.meeting_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-[hsl(210,100%,45%)] hover:underline flex items-center gap-1"
+                      >
+                        Join meeting <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {interview.status === 'completed' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <span className={`text-sm font-medium flex items-center gap-1.5 ${interview.outcome === 'passed' ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {interview.outcome === 'passed' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                      Result: {interview.outcome === 'passed' ? 'Passed' : 'Not selected'}
+                    </span>
+                    {interview.outcome_notes && (
+                      <p className="text-sm text-muted-foreground mt-1">{interview.outcome_notes}</p>
+                    )}
                   </div>
                 )}
 

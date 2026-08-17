@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Video, Eye } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye } from 'lucide-react';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -27,14 +27,12 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, createIntroMeeting } = useData();
+  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
-  const [introMeetProcess, setIntroMeetProcess] = useState<SelectionProcess | null>(null);
-  const [isCreatingMeet, setIsCreatingMeet] = useState(false);
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -95,21 +93,6 @@ export default function EmployerProcessesPage() {
       setSelectedTimeSlot('');
     }
   }, [interviewRequests]);
-
-  const handleCreateIntroMeet = useCallback((process: SelectionProcess) => {
-    setIntroMeetProcess(process);
-  }, []);
-
-  const handleConfirmIntroMeet = useCallback(async () => {
-    if (!introMeetProcess) return;
-    setIsCreatingMeet(true);
-    try {
-      await createIntroMeeting(introMeetProcess.id);
-    } finally {
-      setIsCreatingMeet(false);
-      setIntroMeetProcess(null);
-    }
-  }, [introMeetProcess, createIntroMeeting]);
 
   const handleInitiateContract = useCallback(() => {
     if (!contractProcess) return;
@@ -212,10 +195,7 @@ export default function EmployerProcessesPage() {
                     technicalDate={process.technical_interview_date}
                     contractStatus={process.contract_status as 'pending' | 'under_review' | 'signed' | null}
                     meetingUrl={process.meeting_url}
-                    introMeetingUrl={process.current_stage === 'intro_interview' ? (process.meeting_url ?? null) : null}
                     onStageClick={(stageKey) => handleStageClick(process, stageKey)}
-                    onCreateIntroMeet={process.current_stage === 'intro_interview' && !process.meeting_url ? () => handleCreateIntroMeet(process) : undefined}
-                    isCreatingMeet={isCreatingMeet && introMeetProcess?.id === process.id}
                   />
                 </div>
 
@@ -369,38 +349,6 @@ export default function EmployerProcessesPage() {
             <Button onClick={handleInitiateContract} className="gap-2">
               <FileSignature className="w-4 h-4" />
               Send Approval Request
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!introMeetProcess} onOpenChange={(open) => { if (!open && !isCreatingMeet) setIntroMeetProcess(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Intro Interview Meeting</DialogTitle>
-            <DialogDescription>
-              {introMeetProcess && (
-                <>A Zoom/Meet link will be generated via n8n for the intro interview with {getApplicantById(introMeetProcess.applicant_id)?.display_name || 'the candidate'} for {introMeetProcess.role_title}. Both you and the candidate will receive the link.</>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
-            <Video className="w-8 h-8 text-blue-600" />
-            <p className="text-sm text-blue-800">
-              The meeting link will be sent to both the employer and applicant via notifications and will appear as a join button on the timeline.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isCreatingMeet}>Cancel</Button>
-            </DialogClose>
-            <Button onClick={handleConfirmIntroMeet} disabled={isCreatingMeet} className="gap-2">
-              {isCreatingMeet ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Video className="w-4 h-4" />
-              )}
-              {isCreatingMeet ? 'Creating...' : 'Create Meeting'}
             </Button>
           </DialogFooter>
         </DialogContent>

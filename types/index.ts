@@ -89,6 +89,8 @@ export interface InterviewRequest {
   message: string;
   created_at: string;
   meeting_url?: string | null;
+  outcome?: 'passed' | 'failed' | null;
+  outcome_notes?: string;
   applicant?: TalentProfile;
   employer?: EmployerProfile;
 }
