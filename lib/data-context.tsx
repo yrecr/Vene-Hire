@@ -7,7 +7,6 @@ import type {
   EmployerProfile, Profile, AccessRequest, TalentSkill, Bootcamp, Enrollment, Resource,
   ContractApprovalRequest,
 } from '@/types';
-import { createZoomMeeting } from '@/lib/zoom';
 import * as api from './supabase-service';
 import { mockEmployerProfiles } from '@/data/mock';
 
@@ -36,7 +35,8 @@ interface DataContextType {
   createInterviewRequest: (data: NewInterviewData) => void;
   respondToInterview: (requestId: string, status: 'accepted' | 'declined') => void;
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
-  createIntroMeeting: (processId: string) => Promise<void>;
+  addMeetingLink: (requestId: string, url: string) => void;
+  reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
   toggleShortlist: (applicantId: string) => void;
   isShortlisted: (applicantId: string) => boolean;
   getAvailabilityForApplicant: (applicantId: string) => AvailabilitySlot[];
@@ -214,32 +214,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
         };
         setSelectionProcesses((prev) => [...prev, newProcess]);
         api.upsertSelectionProcess(newProcess).catch(() => {});
-
-        // Create Zoom meeting via n8n NOW (when applicant accepts the intro interview)
-        const applicantForZoom = findTalentById(request.applicant_id);
-        const employerForZoom = findEmployer(request.employer_id);
-        createZoomMeeting({
-          topic: request.role_title,
-          start_time: request.requested_date || '',
-          interview_id: request.id,
-          applicant_name: applicantForZoom?.display_name,
-          employer_name: employerForZoom?.company_name,
-          employer_id: request.employer_id,
-          applicant_id: request.applicant_id,
-        }).then((meeting) => {
-          // Update the interview request with the real join_url
-          setInterviewRequests((prev) =>
-            prev.map((r) => r.id === request.id ? { ...r, meeting_url: meeting.join_url } : r)
-          );
-          api.upsertInterviewRequest({ ...request, status, meeting_url: meeting.join_url }).catch(() => {});
-          // Update the selection process with the real join_url
-          setSelectionProcesses((prev) =>
-            prev.map((p) => p.id === processId ? { ...p, meeting_url: meeting.join_url } : p)
-          );
-          api.upsertSelectionProcess({ ...newProcess, meeting_url: meeting.join_url }).catch(() => {});
-        }).catch(() => {
-          // n8n/Zoom failed — process already saved without meeting_url, user can retry via CreateIntroMeet button
-        });
       }
       const applicant = findTalentById(request.applicant_id);
       const employer = findEmployer(request.employer_id);
@@ -248,7 +222,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const n: Notification = {
           id: crypto.randomUUID(), user_id: uid_app,
           title: existingProcess ? 'Technical Interview Accepted' : 'Interview Accepted',
-          message: existingProcess ? `You accepted the technical interview with ${employer?.company_name || 'employer'} for ${request.role_title}.` : `You accepted the interview with ${employer?.company_name || 'employer'}. A Zoom meeting will be ready shortly.`,
+          message: existingProcess ? `You accepted the technical interview with ${employer?.company_name || 'employer'} for ${request.role_title}.` : `You accepted the interview with ${employer?.company_name || 'employer'}. The employer will share a meeting link shortly.`,
           type: 'interview', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
@@ -259,7 +233,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const n: Notification = {
           id: crypto.randomUUID(), user_id: empUserId,
           title: existingProcess ? 'Technical Interview Accepted' : 'Interview Accepted',
-          message: existingProcess ? `${applicant?.display_name || 'Applicant'} accepted the technical interview.` : `${applicant?.display_name || 'Applicant'} accepted your interview request. A Zoom meeting is being created.`,
+          message: existingProcess ? `${applicant?.display_name || 'Applicant'} accepted the technical interview.` : `${applicant?.display_name || 'Applicant'} accepted your interview request. Add a meeting link from Interview Requests.`,
           type: 'process', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
@@ -302,117 +276,96 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const employer = findEmployer(process.employer_id);
     const applicantUserId2 = applicant?.user_id;
     const empUserId4 = findEmployerUserId(process.employer_id);
-    createZoomMeeting({
-      topic: techInterviewReq.role_title, start_time: date, interview_id: techInterviewReq.id,
-      applicant_name: applicant?.display_name, employer_name: employer?.company_name,
-      employer_id: process.employer_id, applicant_id: process.applicant_id,
-    }).then((meeting) => {
-      setInterviewRequests((prev) => prev.map((r) => r.id === techInterviewReq.id ? { ...r, meeting_url: meeting.join_url } : r));
-      api.upsertInterviewRequest({ ...techInterviewReq, meeting_url: meeting.join_url }).catch(() => {});
-      // Also store join_url in SelectionProcess so the timeline video icon works
-      setSelectionProcesses((prev) => prev.map((p) =>
-        p.id === processId ? { ...p, meeting_url: meeting.join_url } : p
-      ));
-      api.upsertSelectionProcess({ ...updatedProcess, meeting_url: meeting.join_url }).catch(() => {});
-      // Notify applicant with join_url in metadata
-      if (applicantUserId2) {
-        const n: Notification = {
-          id: crypto.randomUUID(), user_id: applicantUserId2,
-          title: 'Technical Interview Scheduled',
-          message: `A technical interview has been scheduled with ${employer?.company_name || 'the employer'} for ${process.role_title} on ${new Date(date).toLocaleDateString()}.`,
-          type: 'process', read: false, created_at: new Date().toISOString(),
-          metadata: { join_url: meeting.join_url },
-        };
-        setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
-      }
-      // Notify employer with join_url in metadata
-      if (empUserId4) {
-        const n: Notification = {
-          id: crypto.randomUUID(), user_id: empUserId4,
-          title: 'Technical Interview Scheduled',
-          message: `Technical interview for ${applicant?.display_name || 'candidate'} has been scheduled for ${new Date(date).toLocaleDateString()}.`,
-          type: 'process', read: false, created_at: new Date().toISOString(),
-          metadata: { join_url: meeting.join_url },
-        };
-        setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
-      }
-    }).catch(() => {
-      // Zoom failed – still notify without link
-      if (applicantUserId2) {
-        const n: Notification = {
-          id: crypto.randomUUID(), user_id: applicantUserId2,
-          title: 'Technical Interview Scheduled',
-          message: `A technical interview has been scheduled with ${employer?.company_name || 'the employer'} for ${process.role_title} on ${new Date(date).toLocaleDateString()}.`,
-          type: 'process', read: false, created_at: new Date().toISOString(),
-        };
-        setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
-      }
-      if (empUserId4) {
-        const n: Notification = {
-          id: crypto.randomUUID(), user_id: empUserId4,
-          title: 'Technical Interview Scheduled',
-          message: `Technical interview for ${applicant?.display_name || 'candidate'} has been scheduled for ${new Date(date).toLocaleDateString()}.`,
-          type: 'process', read: false, created_at: new Date().toISOString(),
-        };
-        setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
-      }
-    });
+    if (applicantUserId2) {
+      const n: Notification = {
+        id: crypto.randomUUID(), user_id: applicantUserId2,
+        title: 'Technical Interview Scheduled',
+        message: `A technical interview has been scheduled with ${employer?.company_name || 'the employer'} for ${process.role_title} on ${new Date(date).toLocaleDateString()}.`,
+        type: 'process', read: false, created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [...prev, n]);
+      api.upsertNotification(n).catch(() => {});
+    }
+    if (empUserId4) {
+      const n: Notification = {
+        id: crypto.randomUUID(), user_id: empUserId4,
+        title: 'Technical Interview Scheduled',
+        message: `Technical interview for ${applicant?.display_name || 'candidate'} has been scheduled for ${new Date(date).toLocaleDateString()}.`,
+        type: 'process', read: false, created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [...prev, n]);
+      api.upsertNotification(n).catch(() => {});
+    }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
-  const createIntroMeeting = useCallback(async (processId: string): Promise<void> => {
-    const process = selectionProcesses.find((p) => p.id === processId);
-    if (!process) return;
-    const applicant = findTalentById(process.applicant_id);
-    const employer = findEmployer(process.employer_id);
-    const interviewId = crypto.randomUUID();
-    let meeting;
-    try {
-      meeting = await createZoomMeeting({
-        topic: `Intro Interview - ${process.role_title}`,
-        start_time: process.intro_interview_date || new Date().toISOString(),
-        interview_id: interviewId,
-        applicant_name: applicant?.display_name,
-        employer_name: employer?.company_name,
-        employer_id: process.employer_id,
-        applicant_id: process.applicant_id,
-      });
-    } catch {
-      return;
+  /** Find the selection process this interview request belongs to (by stage, matching the role_title convention used for technical interviews). */
+  const findProcessForRequest = useCallback((request: InterviewRequest) => {
+    const isTechnical = request.role_title.startsWith('Technical Interview - ');
+    return selectionProcesses.find((p) =>
+      p.applicant_id === request.applicant_id &&
+      p.employer_id === request.employer_id &&
+      p.current_stage === (isTechnical ? 'technical_interview' : 'intro_interview')
+    );
+  }, [selectionProcesses]);
+
+  const addMeetingLink = useCallback((requestId: string, url: string) => {
+    setInterviewRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, meeting_url: url, status: 'scheduled' } : r));
+    const request = interviewRequests.find((r) => r.id === requestId);
+    if (!request) return;
+    api.upsertInterviewRequest({ ...request, meeting_url: url, status: 'scheduled' }).catch(() => {});
+
+    const process = findProcessForRequest(request);
+    if (process) {
+      const updatedProcess = { ...process, meeting_url: url };
+      setSelectionProcesses((prev) => prev.map((p) => p.id === process.id ? updatedProcess : p));
+      api.upsertSelectionProcess(updatedProcess).catch(() => {});
     }
-    const updatedProcess: SelectionProcess = { ...process, meeting_url: meeting.join_url };
-    setSelectionProcesses((prev) => prev.map((p) => p.id === processId ? updatedProcess : p));
-    api.upsertSelectionProcess(updatedProcess).catch(() => {});
-    // Notify applicant
+
+    const applicant = findTalentById(request.applicant_id);
     const applicantUserId = applicant?.user_id;
     if (applicantUserId) {
       const n: Notification = {
         id: crypto.randomUUID(), user_id: applicantUserId,
-        title: 'Intro Interview Meeting Ready',
-        message: `${employer?.company_name || 'The employer'} has created a meeting for your intro interview for ${process.role_title}.`,
+        title: 'Meeting Link Ready',
+        message: `The meeting link for your ${request.role_title} interview is ready.`,
         type: 'interview', read: false, created_at: new Date().toISOString(),
-        metadata: { join_url: meeting.join_url },
+        metadata: { join_url: url },
       };
       setNotifications((prev) => [...prev, n]);
       api.upsertNotification(n).catch(() => {});
     }
-    // Notify employer
-    const empUserId = findEmployerUserId(process.employer_id);
-    if (empUserId) {
+  }, [interviewRequests, findProcessForRequest, findTalentById]);
+
+  const reportInterviewOutcome = useCallback((requestId: string, outcome: 'passed' | 'failed', notes: string) => {
+    setInterviewRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, outcome, outcome_notes: notes, status: 'completed' } : r));
+    const request = interviewRequests.find((r) => r.id === requestId);
+    if (!request) return;
+    api.upsertInterviewRequest({ ...request, outcome, outcome_notes: notes, status: 'completed' }).catch(() => {});
+
+    if (outcome === 'failed') {
+      const process = findProcessForRequest(request);
+      if (process) {
+        const updatedProcess: SelectionProcess = { ...process, status: 'not_selected' };
+        setSelectionProcesses((prev) => prev.map((p) => p.id === process.id ? updatedProcess : p));
+        api.upsertSelectionProcess(updatedProcess).catch(() => {});
+      }
+    }
+
+    const applicant = findTalentById(request.applicant_id);
+    const applicantUserId = applicant?.user_id;
+    if (applicantUserId) {
       const n: Notification = {
-        id: crypto.randomUUID(), user_id: empUserId,
-        title: 'Intro Interview Meeting Created',
-        message: `Intro interview meeting created for ${applicant?.display_name || 'candidate'} – ${process.role_title}.`,
+        id: crypto.randomUUID(), user_id: applicantUserId,
+        title: 'Interview Result',
+        message: outcome === 'passed'
+          ? `Good news — you passed the ${request.role_title} interview.`
+          : `Your ${request.role_title} interview result: not moving forward this time.`,
         type: 'interview', read: false, created_at: new Date().toISOString(),
-        metadata: { join_url: meeting.join_url },
       };
       setNotifications((prev) => [...prev, n]);
       api.upsertNotification(n).catch(() => {});
     }
-  }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
+  }, [interviewRequests, findProcessForRequest, findTalentById]);
 
   const toggleShortlist = useCallback((applicantId: string) => {
     setShortlistedIds((prev) => prev.includes(applicantId) ? prev.filter((id) => id !== applicantId) : [...prev, applicantId]);
@@ -614,7 +567,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
     contractApprovalRequests,
-    createInterviewRequest, respondToInterview, setProcessStage, createIntroMeeting,
+    createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
     getApplicantById: findTalentById,
@@ -631,7 +584,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
     contractApprovalRequests,
-    createInterviewRequest, respondToInterview, setProcessStage, createIntroMeeting,
+    createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,
