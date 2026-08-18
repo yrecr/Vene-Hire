@@ -72,7 +72,7 @@ export default function TalentPage() {
         matchesAvailability
       );
     });
-  }, [searchTerm, roleFilter, techFilter, englishFilter, availabilityFilter]);
+  }, [talentProfiles, searchTerm, roleFilter, techFilter, englishFilter, availabilityFilter]);
 
   const activeFilterCount = [
     roleFilter,
