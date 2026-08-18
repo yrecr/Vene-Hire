@@ -50,7 +50,7 @@ export default function ApplicantManagementPage() {
     }
 
     return result;
-  }, [visibilityFilter, featuredFilter]);
+  }, [talentProfiles, visibilityFilter, featuredFilter]);
 
   const columns: DataTableColumn<TalentWithSkills>[] = [
     {

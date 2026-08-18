@@ -81,7 +81,7 @@ export default function EmployerApplicantsPage() {
         if (experienceFilter === '5+ years') return t.years_experience >= 5;
         return true;
       });
-  }, [searchQuery, selectedTags, englishFilter, availabilityFilter, experienceFilter]);
+  }, [talentProfiles, searchQuery, selectedTags, englishFilter, availabilityFilter, experienceFilter]);
 
   function handleRequestInterview(applicant: TalentProfile) {
     setSelectedApplicant(applicant);
