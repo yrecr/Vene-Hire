@@ -1,7 +1,7 @@
-import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { requireSession } from '@/lib/api-auth';
 
 const DEFAULT_PASSWORD = 'Demo123!';
 
@@ -10,31 +10,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 });
   }
 
-  const res = NextResponse.next();
-  const authClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (key) => req.cookies.get(key)?.value,
-        set: (key, value, options) => { res.cookies.set(key, value, options); },
-        remove: (key, options) => { res.cookies.set(key, '', options); },
-      },
-    }
-  );
-
-  const { data: { session } } = await authClient.auth.getSession();
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: callerProfile } = await authClient
-    .from('profiles')
-    .select('role')
-    .eq('auth_user_id', session.user.id)
-    .single();
-
-  if (callerProfile?.role !== 'admin') {
+  const caller = await requireSession(req);
+  if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (caller.role !== 'admin') {
     return NextResponse.json({ error: 'Forbidden: admins only' }, { status: 403 });
   }
 

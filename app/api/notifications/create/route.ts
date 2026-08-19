@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Notification } from '@/types';
+import { requireSession } from '@/lib/api-auth';
 
 /**
  * Server-side endpoint to insert notifications using the service role key,
@@ -13,6 +14,12 @@ import type { Notification } from '@/types';
  */
 export async function POST(req: NextRequest) {
   try {
+    // ponytail: notifications are inherently cross-user (employer notifies
+    // applicant and vice versa), so there's no "ownership" to check here —
+    // this only closes the door on unauthenticated callers.
+    const caller = await requireSession(req);
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const notifications: Notification[] = Array.isArray(body) ? body : [body];
 

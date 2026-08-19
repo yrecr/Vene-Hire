@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireSession } from '@/lib/api-auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,6 +11,12 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
+    const caller = await requireSession(req);
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (caller.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: admins only' }, { status: 403 });
+    }
+
     const { process_id } = await req.json();
     if (!process_id) {
       return NextResponse.json({ error: 'Missing process_id' }, { status: 400 });
