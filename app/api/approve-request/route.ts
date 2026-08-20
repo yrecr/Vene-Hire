@@ -100,12 +100,12 @@ export async function POST(req: NextRequest) {
       // Insert default skills
       const defaultSkills = ['Python', 'JavaScript', 'SQL', 'Git', 'Communication'];
       const { error: skError } = await supabaseAdmin.from('talent_skills').insert(
-        defaultSkills.map((name) => ({
+        defaultSkills.map((name, i) => ({
           id: crypto.randomUUID(),
           talent_profile_id: tpId,
           skill_name: name,
           score: 50,
-          category: 'technical',
+          display_order: i,
         }))
       );
       if (skError) {
