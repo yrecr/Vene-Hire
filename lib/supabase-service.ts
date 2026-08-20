@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
-import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest } from '@/types';
+import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate } from '@/types';
 
 let _sb: ReturnType<typeof createBrowserClient> | null = null;
 function sb() {
@@ -245,6 +245,36 @@ export async function verifyContract(processId: string): Promise<{ error?: strin
     return { error: body.error || 'Failed to verify contract' };
   }
   return res.json();
+}
+
+// ─── Vacancies ───────────────────────────────────────
+export async function fetchVacancies(): Promise<Vacancy[]> {
+  const { data } = await sb().from('vacancies').select('*');
+  return data ?? [];
+}
+
+// ponytail: route through /api/vacancies/create to use service_role key,
+// same pattern as upsertInterviewRequest/upsertSelectionProcess
+export async function upsertVacancy(v: Vacancy): Promise<void> {
+  const res = await fetch('/api/vacancies/create', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(v),
+  });
+  if (!res.ok) throw new Error(`Failed to upsert vacancy: ${await res.text()}`);
+}
+
+// ─── Candidates ──────────────────────────────────────
+export async function fetchCandidates(): Promise<Candidate[]> {
+  const { data } = await sb().from('candidates').select('*');
+  return data ?? [];
+}
+
+export async function updateCandidateStatus(candidateId: string, manualStatus: Candidate['manual_status']): Promise<void> {
+  const res = await fetch('/api/candidates/status', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ candidate_id: candidateId, manual_status: manualStatus }),
+  });
+  if (!res.ok) throw new Error(`Failed to update candidate status: ${await res.text()}`);
 }
 
 // ─── Bootcamps ───────────────────────────────────────
