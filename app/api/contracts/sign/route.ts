@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       .from('signatures')
       .upload(sigPath, sigBuffer, { contentType: file.type || 'image/png', upsert: true });
     if (sigErr) {
-      return NextResponse.json({ error: sigErr.message }, { status: 500 });
+      return dbError('contracts/sign:upload', sigErr);
     }
     const { data: sigUrlData } = supabase.storage.from('signatures').getPublicUrl(sigPath);
 
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
       .from('resumes')
       .upload(pdfPath, modifiedPdfBytes, { contentType: 'application/pdf', upsert: true });
     if (pdfErr) {
-      return NextResponse.json({ error: pdfErr.message }, { status: 500 });
+      return dbError('contracts/sign:pdf', pdfErr);
     }
     const { data: pdfUrlData } = supabase.storage.from('resumes').getPublicUrl(pdfPath);
 

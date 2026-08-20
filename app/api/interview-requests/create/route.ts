@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { InterviewRequest } from '@/types';
 import { requireSession, resolveActorIds } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,8 +34,7 @@ export async function POST(req: NextRequest) {
       .upsert(requests, { onConflict: 'id' });
 
     if (error) {
-      console.error('[interview-requests/create] Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError('interview-requests/create', error);
     }
 
     return NextResponse.json({ ok: true, count: requests.length });

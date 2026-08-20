@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       .eq('id', process_id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError('contracts/verify', error);
     }
 
     return NextResponse.json({ ok: true });

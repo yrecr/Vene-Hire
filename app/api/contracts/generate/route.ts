@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
       .upload(path, pdfBytes, { contentType: 'application/pdf', upsert: true });
 
     if (upErr) {
-      return NextResponse.json({ error: upErr.message }, { status: 500 });
+      return dbError('contracts/generate', upErr);
     }
 
     const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(path);

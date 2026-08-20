@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { Notification } from '@/types';
 import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 /**
  * Server-side endpoint to insert notifications using the service role key,
@@ -39,8 +40,7 @@ export async function POST(req: NextRequest) {
       .upsert(notifications, { onConflict: 'id' });
 
     if (error) {
-      console.error('[notifications/create] Supabase error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError('notifications/create', error);
     }
 
     return NextResponse.json({ ok: true, count: notifications.length });

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSession, resolveActorIds } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -34,8 +35,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[contract-approval] POST error:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return dbError('contract-approval:POST', error);
     }
 
     return NextResponse.json(data);
@@ -80,8 +80,7 @@ export async function PATCH(req: NextRequest) {
       .eq('id', requestId);
 
     if (updateError) {
-      console.error('[contract-approval] PATCH error:', updateError);
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      return dbError('contract-approval:PATCH', updateError);
     }
 
     if (status === 'approved') {
@@ -91,8 +90,7 @@ export async function PATCH(req: NextRequest) {
         .eq('id', request.process_id);
 
       if (processError) {
-        console.error('[contract-approval] process update error:', processError);
-        return NextResponse.json({ error: processError.message }, { status: 500 });
+        return dbError('contract-approval:process_update', processError);
       }
     }
 

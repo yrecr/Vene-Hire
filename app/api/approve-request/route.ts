@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 const DEFAULT_PASSWORD = 'Demo123!';
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     });
     if (profileError) {
-      return NextResponse.json({ error: `profile: ${profileError.message}` }, { status: 500 });
+      return dbError('approve-request:profile', profileError);
     }
   } else {
     // User already exists — look up existing profile
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
         created_at: new Date().toISOString(),
       });
       if (tpError) {
-        return NextResponse.json({ error: `talent_profile: ${tpError.message}` }, { status: 500 });
+        return dbError('approve-request:talent_profile', tpError);
       }
       // Insert default skills
       const defaultSkills = ['Python', 'JavaScript', 'SQL', 'Git', 'Communication'];
@@ -108,7 +109,7 @@ export async function POST(req: NextRequest) {
         }))
       );
       if (skError) {
-        return NextResponse.json({ error: `talent_skills: ${skError.message}` }, { status: 500 });
+        return dbError('approve-request:talent_skills', skError);
       }
     } else {
       const { error: tpUpdateError } = await supabaseAdmin
@@ -116,7 +117,7 @@ export async function POST(req: NextRequest) {
         .update({ public_visible: true })
         .eq('user_id', profileId);
       if (tpUpdateError) {
-        return NextResponse.json({ error: `talent_profile_update: ${tpUpdateError.message}` }, { status: 500 });
+        return dbError('approve-request:talent_profile_update', tpUpdateError);
       }
     }
   }
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     });
     if (empError) {
-      return NextResponse.json({ error: `employer_profile: ${empError.message}` }, { status: 500 });
+      return dbError('approve-request:employer_profile', empError);
     }
   }
 
