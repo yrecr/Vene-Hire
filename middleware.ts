@@ -6,8 +6,6 @@ const roleRoutes: Record<string, string[]> = {
   admin: ['/admin'],
   applicant: ['/applicant'],
   employer: ['/employer'],
-  client: ['/client'],
-  student: ['/student'],
 };
 
 export async function middleware(req: NextRequest) {
@@ -42,7 +40,7 @@ export async function middleware(req: NextRequest) {
   )?.[0];
 
   if (allowed && role !== allowed) {
-    const redirectMap: Record<string, string> = { admin: '/admin', applicant: '/applicant', employer: '/employer', client: '/client', student: '/student' };
+    const redirectMap: Record<string, string> = { admin: '/admin', applicant: '/applicant', employer: '/employer' };
     return NextResponse.redirect(new URL(redirectMap[role] || '/', req.url));
   }
 
@@ -50,5 +48,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/applicant/:path*', '/employer/:path*', '/client/:path*', '/student/:path*'],
+  matcher: ['/admin/:path*', '/applicant/:path*', '/employer/:path*'],
 };

@@ -32,7 +32,7 @@ const countries = [
   'Other',
 ];
 
-const valueProps = [
+const employerValueProps = [
   {
     icon: ShieldCheck,
     title: 'Manually Reviewed Access',
@@ -59,6 +59,35 @@ const valueProps = [
   },
 ];
 
+const applicantValueProps = [
+  {
+    icon: ShieldCheck,
+    title: 'Manually Reviewed Access',
+    description:
+      'Every application is reviewed by our team to keep the talent pool high quality.',
+  },
+  {
+    icon: Clock,
+    title: 'Response Within 24 Hours',
+    description:
+      'Our team will reach out to you within one business day about next steps.',
+  },
+  {
+    icon: Users,
+    title: 'Curated Companies',
+    description:
+      'Once approved, you get a profile in front of vetted companies actively hiring.',
+  },
+  {
+    icon: Building2,
+    title: 'Built for International Remote',
+    description:
+      'Our process is designed to get you ready for remote roles with global teams.',
+  },
+];
+
+type RequestType = 'employer' | 'applicant';
+
 interface FormData {
   fullName: string;
   company: string;
@@ -69,11 +98,10 @@ interface FormData {
   message: string;
 }
 
-function RequestDemoForm() {
+function RequestDemoForm({ initialType, candidateParam }: { initialType: RequestType; candidateParam: string }) {
   const { setAccessRequests } = useData();
-  const searchParams = useSearchParams();
-  const candidateParam = searchParams.get('candidate') || '';
 
+  const [requestType, setRequestType] = useState<RequestType>(initialType);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     company: '',
@@ -87,6 +115,9 @@ function RequestDemoForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isApplicant = requestType === 'applicant';
+  const valueProps = isApplicant ? applicantValueProps : employerValueProps;
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -97,13 +128,11 @@ function RequestDemoForm() {
     e.preventDefault();
     setError(null);
 
-    if (
-      !formData.fullName.trim() ||
-      !formData.company.trim() ||
-      !formData.email.trim() ||
-      !formData.country ||
-      !formData.hiringNeed.trim()
-    ) {
+    const requiredOk = isApplicant
+      ? formData.fullName.trim() && formData.email.trim() && formData.country && formData.hiringNeed.trim()
+      : formData.fullName.trim() && formData.company.trim() && formData.email.trim() && formData.country && formData.hiringNeed.trim();
+
+    if (!requiredOk) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -113,13 +142,13 @@ function RequestDemoForm() {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const entry = {
       id,
-      request_type: 'employer' as const,
+      request_type: requestType,
       full_name: formData.fullName,
-      company: formData.company,
+      company: isApplicant ? '' : formData.company,
       email: formData.email,
       country: formData.country,
       hiring_need: formData.hiringNeed,
-      candidate_slug: formData.candidateSlug || null,
+      candidate_slug: isApplicant ? null : formData.candidateSlug || null,
       message: formData.message,
       status: 'pending' as const,
       created_at: new Date().toISOString(),
@@ -196,14 +225,14 @@ function RequestDemoForm() {
         </Link>
 
         {/* Header */}
-        <div className="max-w-2xl mb-12">
+        <div className="max-w-2xl mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            Request a Demo
+            {isApplicant ? 'Apply as Talent' : 'Request a Demo'}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            To request interviews or gain access to additional candidate details,
-            please submit your request below. Our team will review your request
-            and contact you directly.
+            {isApplicant
+              ? 'Want to join our talent pool? Tell us about yourself below and our team will review your application.'
+              : 'To request interviews or gain access to additional candidate details, please submit your request below. Our team will review your request and contact you directly.'}
           </p>
           <div className="mt-4 inline-flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
             <ShieldCheck className="w-4 h-4 flex-shrink-0" />
@@ -211,6 +240,30 @@ function RequestDemoForm() {
               Access is reviewed manually to ensure quality for all parties.
             </span>
           </div>
+        </div>
+
+        {/* Type toggle */}
+        <div className="mb-8 inline-flex rounded-xl bg-gray-100 p-1">
+          <button
+            type="button"
+            aria-pressed={requestType === 'employer'}
+            onClick={() => setRequestType('employer')}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+              requestType === 'employer' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            I&apos;m a Company
+          </button>
+          <button
+            type="button"
+            aria-pressed={requestType === 'applicant'}
+            onClick={() => setRequestType('applicant')}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-colors ${
+              requestType === 'applicant' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            I&apos;m a Candidate
+          </button>
         </div>
 
         {/* Two-column layout */}
@@ -243,30 +296,32 @@ function RequestDemoForm() {
                 </div>
 
                 {/* Company & Email row */}
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="company">
-                      Company Name <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="company"
-                      name="company"
-                      type="text"
-                      placeholder="Acme Inc."
-                      value={formData.company}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                <div className={isApplicant ? '' : 'grid sm:grid-cols-2 gap-6'}>
+                  {!isApplicant && (
+                    <div className="space-y-2">
+                      <Label htmlFor="company">
+                        Company Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="company"
+                        name="company"
+                        type="text"
+                        placeholder="Acme Inc."
+                        value={formData.company}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="email">
-                      Work Email <span className="text-red-500">*</span>
+                      {isApplicant ? 'Email' : 'Work Email'} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="jane@acme.com"
+                      placeholder={isApplicant ? 'jane@example.com' : 'jane@acme.com'}
                       value={formData.email}
                       onChange={handleChange}
                       required
@@ -298,39 +353,41 @@ function RequestDemoForm() {
                   </Select>
                 </div>
 
-                {/* Hiring Need */}
+                {/* Hiring Need / Role of Interest */}
                 <div className="space-y-2">
                   <Label htmlFor="hiringNeed">
-                    Role / Hiring Need <span className="text-red-500">*</span>
+                    {isApplicant ? 'Tech Stack / Role of Interest' : 'Role / Hiring Need'} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="hiringNeed"
                     name="hiringNeed"
                     type="text"
-                    placeholder="e.g. Full-Stack Engineer, React Developer"
+                    placeholder={isApplicant ? 'e.g. React, Node.js, Backend Engineer' : 'e.g. Full-Stack Engineer, React Developer'}
                     value={formData.hiringNeed}
                     onChange={handleChange}
                     required
                   />
                 </div>
 
-                {/* Candidate of Interest */}
-                <div className="space-y-2">
-                  <Label htmlFor="candidateSlug">
-                    Candidate of Interest{' '}
-                    <span className="text-muted-foreground font-normal">
-                      (optional)
-                    </span>
-                  </Label>
-                  <Input
-                    id="candidateSlug"
-                    name="candidateSlug"
-                    type="text"
-                    placeholder="Candidate name or profile link"
-                    value={formData.candidateSlug}
-                    onChange={handleChange}
-                  />
-                </div>
+                {/* Candidate of Interest — employers only */}
+                {!isApplicant && (
+                  <div className="space-y-2">
+                    <Label htmlFor="candidateSlug">
+                      Candidate of Interest{' '}
+                      <span className="text-muted-foreground font-normal">
+                        (optional)
+                      </span>
+                    </Label>
+                    <Input
+                      id="candidateSlug"
+                      name="candidateSlug"
+                      type="text"
+                      placeholder="Candidate name or profile link"
+                      value={formData.candidateSlug}
+                      onChange={handleChange}
+                    />
+                  </div>
+                )}
 
                 {/* Message */}
                 <div className="space-y-2">
@@ -418,6 +475,16 @@ function RequestDemoForm() {
   );
 }
 
+function RequestDemoFormLoader() {
+  const searchParams = useSearchParams();
+  const candidateParam = searchParams.get('candidate') || '';
+  const typeParam: RequestType = searchParams.get('type') === 'applicant' ? 'applicant' : 'employer';
+
+  // Remount on type change so the toggle reflects a fresh ?type= navigation
+  // (e.g. clicking "Apply as Talent" while already on this page).
+  return <RequestDemoForm key={typeParam} initialType={typeParam} candidateParam={candidateParam} />;
+}
+
 export default function RequestDemoPage() {
   return (
     <Suspense
@@ -433,7 +500,7 @@ export default function RequestDemoPage() {
         </div>
       }
     >
-      <RequestDemoForm />
+      <RequestDemoFormLoader />
     </Suspense>
   );
 }

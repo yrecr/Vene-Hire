@@ -3,7 +3,7 @@ export interface Profile {
   auth_user_id: string;
   full_name: string;
   email: string;
-  role: 'admin' | 'client' | 'student' | 'applicant' | 'employer';
+  role: 'admin' | 'applicant' | 'employer';
   company_name: string | null;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
