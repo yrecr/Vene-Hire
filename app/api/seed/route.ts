@@ -21,6 +21,10 @@ const SEED_USERS = [
 const uuid = () => crypto.randomUUID();
 
 export async function POST() {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not available in production' }, { status: 403 });
+  }
+
   if (!supabaseAdmin) {
     return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 });
   }

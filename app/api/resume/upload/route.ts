@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { dbError } from '@/lib/api-error';
 
 // Service-role client: bypasses RLS for secure server-side operations
 const adminSupabase = createClient(
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return dbError('resume/upload', uploadError);
   }
 
   const { data: urlData } = adminSupabase.storage.from('resumes').getPublicUrl(path);

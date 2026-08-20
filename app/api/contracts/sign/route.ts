@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { requireSession } from '@/lib/api-auth';
+import { dbError } from '@/lib/api-error';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,12 +13,29 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
+    const caller = await requireSession(req);
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (caller.role !== 'applicant') {
+      return NextResponse.json({ error: 'Forbidden: applicants only' }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const processId = formData.get('process_id') as string;
     const file = formData.get('signature') as File | null;
 
     if (!processId || !file) {
       return NextResponse.json({ error: 'Missing process_id or signature file' }, { status: 400 });
+    }
+
+    // Ownership: the process's applicant must be this caller
+    const { data: ownerCheck } = await supabase
+      .from('selection_processes')
+      .select('talent_profiles!inner(user_id)')
+      .eq('id', processId)
+      .single();
+    const owner = (ownerCheck as any)?.talent_profiles;
+    if (!owner || owner.user_id !== caller.id) {
+      return NextResponse.json({ error: 'Forbidden: not your contract' }, { status: 403 });
     }
 
     // 1. Upload signature image
@@ -27,7 +46,7 @@ export async function POST(req: NextRequest) {
       .from('signatures')
       .upload(sigPath, sigBuffer, { contentType: file.type || 'image/png', upsert: true });
     if (sigErr) {
-      return NextResponse.json({ error: sigErr.message }, { status: 500 });
+      return dbError('contracts/sign:upload', sigErr);
     }
     const { data: sigUrlData } = supabase.storage.from('signatures').getPublicUrl(sigPath);
 
@@ -83,7 +102,7 @@ export async function POST(req: NextRequest) {
       .from('resumes')
       .upload(pdfPath, modifiedPdfBytes, { contentType: 'application/pdf', upsert: true });
     if (pdfErr) {
-      return NextResponse.json({ error: pdfErr.message }, { status: 500 });
+      return dbError('contracts/sign:pdf', pdfErr);
     }
     const { data: pdfUrlData } = supabase.storage.from('resumes').getPublicUrl(pdfPath);
 

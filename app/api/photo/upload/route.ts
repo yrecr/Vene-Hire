@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { dbError } from '@/lib/api-error';
 
 const adminSupabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
     });
 
   if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    return dbError('photo/upload', uploadError);
   }
 
   const { data: urlData } = adminSupabase.storage.from('profile-photos').getPublicUrl(path);
