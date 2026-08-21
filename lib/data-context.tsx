@@ -41,7 +41,7 @@ interface DataContextType {
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
   addMeetingLink: (requestId: string, url: string) => void;
   reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
-  toggleShortlist: (applicantId: string) => void;
+  toggleShortlist: (applicantId: string) => Promise<void>;
   isShortlisted: (applicantId: string) => boolean;
   getAvailabilityForApplicant: (applicantId: string) => AvailabilitySlot[];
   getNotificationsForUser: (userId: string) => Notification[];
@@ -84,7 +84,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrateFromSupabase = useCallback(async () => {
     try {
-      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand] = await Promise.allSettled([
+      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand, sl] = await Promise.allSettled([
         api.fetchTalentProfiles(),
         api.fetchProfiles(),
         api.fetchEmployerProfiles(),
@@ -99,6 +99,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.fetchContractApprovalRequests(),
         api.fetchVacancies(),
         api.fetchCandidates(),
+        api.fetchShortlistedIds(),
       ]);
 
       // Replace seed data with real Supabase data to avoid duplicates
@@ -116,6 +117,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (car.status === 'fulfilled' && car.value.length) setContractApprovalRequests(car.value);
       if (vac.status === 'fulfilled' && vac.value.length) setVacancies(vac.value);
       if (cand.status === 'fulfilled' && cand.value.length) setCandidates(cand.value);
+      if (sl.status === 'fulfilled' && sl.value.length) setShortlistedIds(sl.value);
     } catch {
       // Supabase unavailable
     } finally {
@@ -377,9 +379,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [interviewRequests, findProcessForRequest, findTalentById]);
 
-  const toggleShortlist = useCallback((applicantId: string) => {
-    setShortlistedIds((prev) => prev.includes(applicantId) ? prev.filter((id) => id !== applicantId) : [...prev, applicantId]);
-  }, []);
+  const toggleShortlist = useCallback(async (applicantId: string) => {
+    const wasShortlisted = shortlistedIds.includes(applicantId);
+    setShortlistedIds((prev) => wasShortlisted ? prev.filter((id) => id !== applicantId) : [...prev, applicantId]);
+    try {
+      await api.toggleShortlist(applicantId);
+    } catch {
+      setShortlistedIds((prev) => wasShortlisted ? [...prev, applicantId] : prev.filter((id) => id !== applicantId));
+    }
+  }, [shortlistedIds]);
 
   const isShortlisted = useCallback((applicantId: string) => shortlistedIds.includes(applicantId), [shortlistedIds]);
 

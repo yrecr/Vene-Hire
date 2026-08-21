@@ -10,7 +10,7 @@ import { useData } from '@/lib/data-context';
 import * as api from '@/lib/supabase-service';
 
 export default function UserManagementPage() {
-  const { profiles: contextProfiles, setProfiles } = useData();
+  const { profiles: contextProfiles, setProfiles, isHydrated } = useData();
   const [profiles, setLocalProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -146,6 +146,16 @@ export default function UserManagementPage() {
         ),
     },
   ];
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

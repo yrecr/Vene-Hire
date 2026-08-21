@@ -30,7 +30,7 @@ const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
 export default function ApplicantManagementPage() {
-  const { talentProfiles } = useData();
+  const { talentProfiles, isHydrated } = useData();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
 
@@ -152,6 +152,16 @@ export default function ApplicantManagementPage() {
       ),
     },
   ];
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

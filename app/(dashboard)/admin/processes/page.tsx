@@ -18,7 +18,7 @@ const statusMap: Record<string, string> = {
 };
 
 export default function ProcessesPage() {
-  const { selectionProcesses, uploadContract, verifyContract, getApplicantById, getEmployerById, contractApprovalRequests, approveContractRequest, rejectContractRequest } = useData();
+  const { selectionProcesses, uploadContract, verifyContract, getApplicantById, getEmployerById, contractApprovalRequests, approveContractRequest, rejectContractRequest, isHydrated } = useData();
   const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const filteredProcesses = useMemo(() => {
@@ -120,6 +120,16 @@ export default function ProcessesPage() {
       },
     },
   ];
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
