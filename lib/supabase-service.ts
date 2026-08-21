@@ -155,6 +155,22 @@ export async function markNotificationRead(id: string): Promise<void> {
   await sb().from('notifications').update({ read: true }).eq('id', id);
 }
 
+// ─── Shortlists ──────────────────────────────────────
+export async function fetchShortlistedIds(): Promise<string[]> {
+  const { data } = await sb().from('shortlists').select('talent_profile_id');
+  return (data ?? []).map((r: { talent_profile_id: string }) => r.talent_profile_id);
+}
+
+export async function toggleShortlist(talentProfileId: string): Promise<boolean> {
+  const res = await fetch('/api/shortlist/toggle', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ talent_profile_id: talentProfileId }),
+  });
+  if (!res.ok) throw new Error(`Failed to toggle shortlist: ${await res.text()}`);
+  const { shortlisted } = await res.json();
+  return shortlisted as boolean;
+}
+
 // ─── Availability Slots ──────────────────────────────
 export async function fetchAvailabilitySlots(): Promise<AvailabilitySlot[]> {
   const { data } = await sb().from('availability_slots').select('*');

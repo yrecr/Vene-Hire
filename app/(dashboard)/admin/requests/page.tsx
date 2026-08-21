@@ -12,7 +12,7 @@ const statusTabs = ['All', 'Pending', 'Contacted', 'Approved', 'Rejected'] as co
 const typeTabs = ['All', 'Applicant Requests', 'Employer Requests'] as const;
 
 export default function AccessRequestsPage() {
-  const { accessRequests, setAccessRequests, setProfiles, profiles, employerProfiles } = useData();
+  const { accessRequests, setAccessRequests, setProfiles, profiles, employerProfiles, isHydrated } = useData();
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>('All');
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>('All');
 
@@ -179,6 +179,16 @@ export default function AccessRequestsPage() {
       ),
     },
   ];
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

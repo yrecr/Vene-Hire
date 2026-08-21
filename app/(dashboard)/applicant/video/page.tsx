@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Video, Upload, Link2, Save } from 'lucide-react';
+import { Video, Link2, Save } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -153,25 +153,6 @@ export default function ApplicantVideoPage() {
             <Save className="w-4 h-4" />
             {saving ? 'Saving...' : 'Save URL'}
           </Button>
-        </div>
-      </div>
-
-      {/* Upload area */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Upload className="w-5 h-5 text-[hsl(210,100%,45%)]" />
-          <h3 className="text-base font-semibold text-foreground">Upload a Video</h3>
-        </div>
-        <div className="border-2 border-dashed border-gray-200 rounded-xl p-10 text-center hover:border-[hsl(210,100%,45%)]/40 transition-colors cursor-pointer">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
-            <Video className="w-7 h-7 text-[hsl(210,100%,45%)]" />
-          </div>
-          <p className="text-sm font-medium text-foreground mb-1">
-            Drop your video here or click to browse
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Supports MP4, MOV, WebM (max 100MB)
-          </p>
         </div>
       </div>
 

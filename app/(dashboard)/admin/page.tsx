@@ -46,12 +46,22 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
-  const { selectionProcesses, accessRequests, profiles } = useData();
+  const { selectionProcesses, accessRequests, profiles, isHydrated } = useData();
   const totalApplicants = profiles.filter((p) => p.role === 'applicant').length;
   const totalEmployers = profiles.filter((p) => p.role === 'employer').length;
   const pendingRequests = accessRequests.filter((r) => r.status === 'pending').length;
   const activeProcesses = selectionProcesses.filter((p) => p.status === 'active').length;
   const hiredCount = selectionProcesses.filter((p) => p.status === 'hired').length;
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

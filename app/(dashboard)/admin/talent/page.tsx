@@ -115,7 +115,18 @@ const columns: DataTableColumn<TalentWithSkills>[] = [
 ];
 
 export default function TalentProfilesPage() {
-  const { talentProfiles } = useData();
+  const { talentProfiles, isHydrated } = useData();
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
