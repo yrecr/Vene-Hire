@@ -459,10 +459,9 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               {/* Trust badge */}
               <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-100/60">
                 <p className="text-sm text-blue-900 font-medium mb-1">
-                  Trusted by growing teams
+                  Built for growing teams
                 </p>
                 <p className="text-xs text-blue-700/80 leading-relaxed">
-                  Over 200 engineers placed with a 95% client retention rate.
                   Our talent is pre-trained through real-world agile simulations
                   and rigorous evaluations.
                 </p>

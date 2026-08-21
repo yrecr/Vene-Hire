@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard icon={Users} label="Total Applicants" value={totalApplicants} />
         <StatCard icon={Building2} label="Total Employers" value={totalEmployers} />
         <StatCard icon={MessageSquare} label="Pending Requests" value={pendingRequests} />

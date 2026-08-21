@@ -10,10 +10,10 @@ import { useData } from '@/lib/data-context';
 import { ArrowRight, Zap, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
 
 const trustItems = [
-  { icon: Clock, label: 'Faster Hiring', value: '3x' },
-  { icon: ShieldCheck, label: 'Pre-Evaluated', value: '100%' },
-  { icon: Users, label: 'Engineers Placed', value: '200+' },
-  { icon: Target, label: 'Client Retention', value: '95%' },
+  { icon: Clock, label: 'Faster Hiring', value: 'Pre-Screened' },
+  { icon: ShieldCheck, label: 'Pre-Evaluated', value: 'Every Engineer' },
+  { icon: Users, label: 'Curated Pool', value: 'Skill-Matched' },
+  { icon: Target, label: 'Fit Assessed', value: 'Before You Meet' },
 ];
 
 const steps = [
@@ -119,7 +119,7 @@ export default function HomePage() {
       {/* Trust Strip */}
       <section className="py-12 border-y border-gray-100 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {trustItems.map((item) => (
               <div key={item.label} className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center flex-shrink-0">

@@ -173,7 +173,7 @@ export default function ApplicantDashboardPage() {
       </div>
 
       {/* ── KPI Stats ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={TrendingUp} label="Active Processes" value={activeProcesses.length} />
         <StatCard icon={MessageSquare} label="Pending Interviews" value={pendingInterviews.length} />
         <StatCard icon={CalendarDays} label="Total Interviews" value={myInterviews.length} />
