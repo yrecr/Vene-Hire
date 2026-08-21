@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import type {
   TalentProfile, InterviewRequest, SelectionProcess, Notification, AvailabilitySlot,
   EmployerProfile, Profile, AccessRequest, TalentSkill, Bootcamp, Enrollment, Resource,
-  ContractApprovalRequest,
+  ContractApprovalRequest, Vacancy, Candidate,
 } from '@/types';
 import * as api from './supabase-service';
 import { mockEmployerProfiles } from '@/data/mock';
@@ -32,6 +32,10 @@ interface DataContextType {
   bootcamps: Bootcamp[];
   enrollments: Enrollment[];
   resources: Resource[];
+  vacancies: Vacancy[];
+  candidates: Candidate[];
+  createVacancy: (v: Vacancy) => Promise<void>;
+  updateCandidateStatus: (candidateId: string, status: Candidate['manual_status']) => Promise<void>;
   createInterviewRequest: (data: NewInterviewData) => void;
   respondToInterview: (requestId: string, status: 'accepted' | 'declined') => void;
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
@@ -75,10 +79,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [contractApprovalRequests, setContractApprovalRequests] = useState<ContractApprovalRequest[]>([]);
+  const [vacancies, setVacancies] = useState<Vacancy[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrateFromSupabase = useCallback(async () => {
     try {
-      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car] = await Promise.allSettled([
+      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand] = await Promise.allSettled([
         api.fetchTalentProfiles(),
         api.fetchProfiles(),
         api.fetchEmployerProfiles(),
@@ -91,6 +97,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.fetchEnrollments(),
         api.fetchResources(),
         api.fetchContractApprovalRequests(),
+        api.fetchVacancies(),
+        api.fetchCandidates(),
       ]);
 
       // Replace seed data with real Supabase data to avoid duplicates
@@ -106,6 +114,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (en.status === 'fulfilled' && en.value.length) setEnrollments(en.value);
       if (re.status === 'fulfilled' && re.value.length) setResources(re.value);
       if (car.status === 'fulfilled' && car.value.length) setContractApprovalRequests(car.value);
+      if (vac.status === 'fulfilled' && vac.value.length) setVacancies(vac.value);
+      if (cand.status === 'fulfilled' && cand.value.length) setCandidates(cand.value);
     } catch {
       // Supabase unavailable
     } finally {
@@ -557,6 +567,27 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const setProfiles = useCallback((list: Profile[]) => setProfilesState(list), []);
 
+  const createVacancy = useCallback(async (v: Vacancy): Promise<void> => {
+    setVacancies((prev) => [v, ...prev]);
+    try {
+      await api.upsertVacancy(v);
+    } catch (err) {
+      setVacancies((prev) => prev.filter((x) => x.id !== v.id));
+      throw err;
+    }
+  }, []);
+
+  const updateCandidateStatusFn = useCallback(async (candidateId: string, status: Candidate['manual_status']): Promise<void> => {
+    const prevStatus = candidates.find((c) => c.id === candidateId)?.manual_status;
+    setCandidates((prev) => prev.map((c) => c.id === candidateId ? { ...c, manual_status: status } : c));
+    try {
+      await api.updateCandidateStatus(candidateId, status);
+    } catch (err) {
+      if (prevStatus) setCandidates((prev) => prev.map((c) => c.id === candidateId ? { ...c, manual_status: prevStatus } : c));
+      throw err;
+    }
+  }, [candidates]);
+
   const updateTalentProfileFn = useCallback(async (profile: TalentProfile & { skills: TalentSkill[] }): Promise<void> => {
     await api.upsertTalentProfile(profile as TalentProfile & { skills: TalentSkill[] });
     setTalentProfiles((prev) => prev.map((t) => t.id === profile.id ? profile : t));
@@ -567,6 +598,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
     contractApprovalRequests,
+    vacancies, candidates, createVacancy,
+    updateCandidateStatus: updateCandidateStatusFn,
     createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
@@ -584,6 +617,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
     contractApprovalRequests,
+    vacancies, candidates, createVacancy, updateCandidateStatusFn,
     createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
