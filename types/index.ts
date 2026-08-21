@@ -167,33 +167,33 @@ export interface ContractApprovalRequest {
 export interface Vacancy {
   id: string;
   employer_id: string;
-  titulo: string;
-  departamento: string;
-  ubicacion: string;
-  tipo_jornada: 'Full-time' | 'Part-time' | 'Freelance';
-  modalidad: 'Remote' | 'Hybrid' | 'On-site';
-  estado: 'Abierta' | 'Cerrada';
-  fecha_publicacion: string;
+  title: string;
+  department: string;
+  location: string;
+  employment_type: 'Full-time' | 'Part-time' | 'Freelance';
+  work_mode: 'Remote' | 'Hybrid' | 'On-site';
+  status: 'Open' | 'Closed';
+  published_at: string;
+  created_at: string;
 }
 
 export interface Candidate {
   id: string;
   vacancy_id: string;
-  nombre: string;
-  iniciales: string;
+  name: string;
+  initials: string;
   score: number;
-  estado_manual: 'Oferta' | 'Entrevista' | 'Recibido';
-  estado_ia: 'Avanzar' | 'Hold' | 'Rechazar';
-  fecha_aplicacion: string;
-  resumen_perfil: string;
-  razonamiento_modelo: string;
-  fortalezas: string[];
-  areas_mejora: string[];
-  metadatos: {
-    modelo_usado: string;
-    tiempo_respuesta: string;
-    tokens_totales: number;
-  };
+  manual_status: 'Received' | 'Interview' | 'Offer';
+  ai_status: 'Advance' | 'Hold' | 'Reject';
+  applied_at: string;
+  profile_summary: string;
+  ai_reasoning: string;
+  strengths: string[];
+  improvement_areas: string[];
+  ai_model: string;
+  ai_response_time: string;
+  ai_total_tokens: number;
+  created_at: string;
 }
 
 export interface DemoUser {

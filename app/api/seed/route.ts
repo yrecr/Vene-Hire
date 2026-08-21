@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import {
   mockProfiles, mockTalentProfiles, mockEmployerProfiles,
   mockBootcamps, mockResources, mockAccessRequests,
-  mockNotifications,
+  mockNotifications, mockVacancies, mockCandidates,
 } from '@/data/mock';
 
 const SEED_USERS = [
@@ -84,6 +84,28 @@ export async function POST() {
 
   const { error: empErr } = await supabaseAdmin.from('employer_profiles').insert(empRows);
   if (empErr) out.errors.push(`employer_profiles: ${empErr.message}`);
+
+  // Vacancies — map employer_id to real UUID
+  const vacUuid: Record<string, string> = {};
+  const vacRows = mockVacancies.map((v) => {
+    const id = uuid(); vacUuid[v.id] = id;
+    return { id, employer_id: empUuid[v.employer_id] ?? null, title: v.title, department: v.department, location: v.location, employment_type: v.employment_type, work_mode: v.work_mode, status: v.status, published_at: v.published_at, created_at: v.created_at };
+  });
+  const { error: vacErr } = await supabaseAdmin.from('vacancies').insert(vacRows);
+  if (vacErr) out.errors.push(`vacancies: ${vacErr.message}`);
+
+  // Candidates — map vacancy_id to real UUID
+  const { error: candErr } = await supabaseAdmin.from('candidates').insert(
+    mockCandidates.map((c) => ({
+      id: uuid(), vacancy_id: vacUuid[c.vacancy_id] ?? null, name: c.name, initials: c.initials, score: c.score,
+      manual_status: c.manual_status, ai_status: c.ai_status, applied_at: c.applied_at,
+      profile_summary: c.profile_summary, ai_reasoning: c.ai_reasoning,
+      strengths: c.strengths, improvement_areas: c.improvement_areas,
+      ai_model: c.ai_model, ai_response_time: c.ai_response_time, ai_total_tokens: c.ai_total_tokens,
+      created_at: c.created_at,
+    })),
+  );
+  if (candErr) out.errors.push(`candidates: ${candErr.message}`);
 
   // Talent profiles + skills — map user_id to real UUID
   const tpUuid: Record<string, string> = {};
