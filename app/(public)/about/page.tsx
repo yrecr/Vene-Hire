@@ -32,10 +32,10 @@ const values = [
 ];
 
 const stats = [
-  { value: '200+', label: 'Engineers Placed', icon: Users },
-  { value: '50+', label: 'Client Companies', icon: Building2 },
-  { value: '95%', label: 'Client Retention', icon: TrendingUp },
-  { value: '12', label: 'Cohorts Completed', icon: GraduationCap },
+  { value: 'Curated', label: 'Talent Pool', icon: Users },
+  { value: 'Direct', label: 'Employer Access', icon: Building2 },
+  { value: 'Rigorous', label: 'Evaluation Process', icon: TrendingUp },
+  { value: 'Ongoing', label: 'Cohorts', icon: GraduationCap },
 ];
 
 const forCompanies = [
