@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Zap, Mail, Lock, ArrowRight, CircleAlert as AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, CircleAlert as AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -54,9 +54,7 @@ export default function LoginPage() {
       <div className="max-w-md mx-auto">
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)]">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="VeneHire" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold text-gray-900">VeneHire</span>
           </div>
 
