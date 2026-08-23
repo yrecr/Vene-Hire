@@ -1,20 +1,16 @@
 'use client';
 
-import { useMemo, useState, useCallback, useRef } from 'react';
-import Link from 'next/link';
+import { useMemo } from 'react';
 import {
   GitBranch, MessageSquare, TrendingUp, CalendarDays,
-  Bell, Globe, Clock, Code2, CheckCircle2,
-  FileText, Video, Plus, Trash2, Upload,
+  Bell, Globe, Clock, CheckCircle2, Video,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
-import { uploadResume } from '@/lib/supabase-service';
 import { StatCard } from '@/components/stat-card';
 import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 
@@ -41,12 +37,9 @@ export default function ApplicantDashboardPage() {
     interviewRequests,
     selectionProcesses,
     getNotificationsForUser,
-    getAvailabilityForApplicant,
-    updateAvailabilitySlots,
     respondToInterview,
     talentProfiles,
     getEmployerById,
-    updateTalentProfile,
   } = useData();
 
   const user = currentUser;
@@ -76,50 +69,6 @@ export default function ApplicantDashboardPage() {
   const activeProcesses = myProcesses.filter((p) => p.status === 'active');
   const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
   const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
-
-  const resumeInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-
-  const [newSlotDay, setNewSlotDay] = useState('1');
-  const [newSlotStart, setNewSlotStart] = useState('09:00');
-  const [newSlotEnd, setNewSlotEnd] = useState('10:00');
-
-  const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  const resumeUrl = talentProfile?.resume_url;
-  const videoUrl = talentProfile?.video_url;
-
-  const slots = useMemo(
-    () => talentProfile ? getAvailabilityForApplicant(talentProfile.id) : [],
-    [talentProfile, getAvailabilityForApplicant]
-  );
-
-  const addSlot = useCallback(() => {
-    if (!talentProfile) return;
-    const slot = {
-      id: `as-mock-${Date.now()}`,
-      applicant_id: talentProfile.id,
-      day_of_week: parseInt(newSlotDay),
-      start_time: newSlotStart,
-      end_time: newSlotEnd,
-      timezone: talentProfile.timezone,
-    };
-    updateAvailabilitySlots(talentProfile.id, [...slots, slot]);
-  }, [talentProfile, newSlotDay, newSlotStart, newSlotEnd, slots, updateAvailabilitySlots]);
-
-  async function handleResumeUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !talentProfile) return;
-    setUploading(true);
-    const result = await uploadResume(talentProfile.id, file);
-    if (result.url) updateTalentProfile({ ...talentProfile, resume_url: result.url });
-    setUploading(false);
-  }
-
-  const removeSlot = useCallback((slotId: string) => {
-    if (!talentProfile) return;
-    updateAvailabilitySlots(talentProfile.id, slots.filter((s) => s.id !== slotId));
-  }, [talentProfile, slots, updateAvailabilitySlots]);
 
   if (!user || !talentProfile) {
     return (
@@ -291,23 +240,6 @@ export default function ApplicantDashboardPage() {
             )}
           </section>
 
-          {/* Tech Stack */}
-          <section>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Tech Stack</h3>
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Code2 className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{talentProfile.years_experience} year{talentProfile.years_experience !== 1 ? 's' : ''} of experience</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {talentProfile.tech_stack.map((tech) => (
-                  <Badge key={tech} variant="secondary" className="text-xs">
-                    {tech}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </section>
         </div>
 
         {/* RIGHT: sidebar */}
@@ -354,135 +286,6 @@ export default function ApplicantDashboardPage() {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* Multimedia */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-            <h3 className="font-semibold text-foreground flex items-center gap-2">
-              <Video className="w-4 h-4" />
-              Multimedia
-            </h3>
-
-            {/* Resume */}
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Resume</p>
-              {resumeUrl ? (
-                <a
-                  href={resumeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-[hsl(210,100%,45%)] hover:underline"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  View Resume
-                </a>
-              ) : (
-                <>
-                  <input
-                    ref={resumeInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    className="hidden"
-                    onChange={handleResumeUpload}
-                  />
-                  <button
-                    type="button"
-                    disabled={uploading}
-                    onClick={() => resumeInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  >
-                    <Upload className="w-3.5 h-3.5" />
-                    {uploading ? 'Uploading...' : 'Upload Resume'}
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Video */}
-            <div>
-              <p className="text-xs font-medium text-muted-foreground mb-1">Presentation Video</p>
-              {videoUrl ? (
-                <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
-                  <iframe
-                    src={videoUrl}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Presentation video"
-                  />
-                </div>
-              ) : (
-                <Link
-                  href="/applicant/video"
-                  className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-                >
-                  <Upload className="w-3.5 h-3.5" />
-                  Add Video
-                </Link>
-              )}
-            </div>
-          </div>
-
-          {/* Availability */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Clock className="w-4 h-4" />
-              Availability
-            </h3>
-
-            {slots.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-2">No availability set.</p>
-            ) : (
-              <div className="space-y-2 mb-4">
-                {slots.map((s) => (
-                  <div key={s.id} className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">{DAY_NAMES[s.day_of_week]}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">{s.start_time}–{s.end_time}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeSlot(s.id)}
-                        className="text-muted-foreground hover:text-red-500"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
-              <select
-                value={newSlotDay}
-                onChange={(e) => setNewSlotDay(e.target.value)}
-                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
-              >
-                {DAY_NAMES.map((name, i) => (
-                  <option key={i} value={i}>{name}</option>
-                ))}
-              </select>
-              <input
-                type="time"
-                value={newSlotStart}
-                onChange={(e) => setNewSlotStart(e.target.value)}
-                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white w-16"
-              />
-              <span className="text-xs text-muted-foreground">–</span>
-              <input
-                type="time"
-                value={newSlotEnd}
-                onChange={(e) => setNewSlotEnd(e.target.value)}
-                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white w-16"
-              />
-              <button
-                type="button"
-                onClick={addSlot}
-                className="ml-auto text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,38%)]"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
           </div>
 
           {/* All Processes (historical) */}

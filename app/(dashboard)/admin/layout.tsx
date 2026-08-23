@@ -12,7 +12,6 @@ import {
   GitBranch,
   BookOpen,
   FolderOpen,
-  Bell,
 } from 'lucide-react';
 
 const adminLinks: SidebarLink[] = [
@@ -24,7 +23,6 @@ const adminLinks: SidebarLink[] = [
   { href: '/admin/processes', label: 'Processes', icon: GitBranch },
   { href: '/admin/bootcamps', label: 'Bootcamps', icon: BookOpen },
   { href: '/admin/resources', label: 'Resources', icon: FolderOpen },
-  { href: '/admin/notifications', label: 'Notifications', icon: Bell },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -1,13 +1,36 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Bell, MessageSquare, GitBranch, FileText, Inbox, Info } from 'lucide-react';
 import type { Notification } from '@/types';
 import * as api from '@/lib/supabase-service';
 
 interface NotificationCenterProps {
   notifications: Notification[];
+  role?: 'admin' | 'applicant' | 'employer';
 }
+
+const routeByRole: Record<string, Partial<Record<Notification['type'], string>>> = {
+  admin: {
+    interview: '/admin/processes',
+    process: '/admin/processes',
+    contract: '/admin/processes',
+    request: '/admin/requests',
+  },
+  employer: {
+    interview: '/employer/requests',
+    process: '/employer/processes',
+    contract: '/employer/processes',
+    request: '/employer/requests',
+  },
+  applicant: {
+    interview: '/applicant/interviews',
+    process: '/applicant/processes',
+    contract: '/applicant/contract',
+    request: '/applicant/interviews',
+  },
+};
 
 const typeIcons: Record<Notification['type'], typeof Info> = {
   info: Info,
@@ -41,10 +64,11 @@ function getRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function NotificationCenter({ notifications: initialNotifications }: NotificationCenterProps) {
+export function NotificationCenter({ notifications: initialNotifications, role }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const panelRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -71,6 +95,18 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
     const ids = notifications.filter((n) => !n.read).map((n) => n.id);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     ids.forEach((id) => api.markNotificationRead(id).catch(() => {}));
+  }
+
+  function handleNotificationClick(notification: Notification) {
+    if (!notification.read) {
+      setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)));
+      api.markNotificationRead(notification.id).catch(() => {});
+    }
+    const target = role ? routeByRole[role]?.[notification.type] : undefined;
+    if (target) {
+      setIsOpen(false);
+      router.push(target);
+    }
   }
 
   return (
@@ -118,9 +154,11 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
                 const iconColor = typeColors[notification.type];
 
                 return (
-                  <div
+                  <button
                     key={notification.id}
-                    className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
+                    type="button"
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`w-full text-left flex items-start gap-3 px-4 py-3 border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${
                       !notification.read ? 'bg-blue-50/30' : ''
                     }`}
                   >
@@ -143,11 +181,22 @@ export function NotificationCenter({ notifications: initialNotifications }: Noti
                         {getRelativeTime(notification.created_at)}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 );
               })
             )}
           </div>
+
+          {role && (
+            <div className="border-t border-gray-100 px-4 py-2.5 text-center">
+              <button
+                onClick={() => { setIsOpen(false); router.push(`/${role}/notifications`); }}
+                className="text-xs font-medium text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,35%)] transition-colors"
+              >
+                View all notifications
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
