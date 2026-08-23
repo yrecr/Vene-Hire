@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { useToast } from '@/hooks/use-toast';
 
 const rolePath: Record<string, string> = {
   admin: '/admin',
@@ -14,15 +15,20 @@ const rolePath: Record<string, string> = {
   employer: '/employer',
 };
 
-const supabaseClient = () =>
-  createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
 type Phase = 'verifying' | 'ready' | 'invalid';
 
 export default function WelcomePage() {
+  const { toast } = useToast();
+  // One shared client for the whole page lifecycle — calling
+  // createBrowserClient() again per auth call risks "Multiple GoTrueClient
+  // instances in the same browser context", which can clobber the cookie
+  // write from setSession() with the one from updateUser().
+  const [supabase] = useState(() =>
+    createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
   const [phase, setPhase] = useState<Phase>('verifying');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,8 +51,8 @@ export default function WelcomePage() {
       return;
     }
 
-    supabaseClient()
-      .auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+    supabase.auth
+      .setSession({ access_token: accessToken, refresh_token: refreshToken })
       .then(({ data, error: sessionError }) => {
         if (sessionError || !data.session) {
           setError(sessionError?.message ?? 'This invitation link has expired.');
@@ -57,7 +63,7 @@ export default function WelcomePage() {
         window.history.replaceState(null, '', window.location.pathname);
         setPhase('ready');
       });
-  }, []);
+  }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,14 +79,16 @@ export default function WelcomePage() {
     }
 
     setSaving(true);
-    const { data, error: updateError } = await supabaseClient().auth.updateUser({ password });
+    const { data, error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
       setError(updateError.message);
+      toast({ title: 'Could not set password', description: updateError.message, variant: 'destructive' });
       setSaving(false);
       return;
     }
 
+    toast({ title: 'Password set', description: 'Taking you to your dashboard...' });
     const role = (data.user?.user_metadata?.role as string) || '';
     window.location.href = rolePath[role] || '/';
   };

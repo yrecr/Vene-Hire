@@ -41,7 +41,7 @@ const AVAILABILITY_COLORS: Record<string, string> = {
 };
 
 export default function ApplicantDashboardPage() {
-  const { currentUser } = useAuth();
+  const { currentUser, loading } = useAuth();
   const {
     interviewRequests,
     selectionProcesses,
@@ -49,6 +49,7 @@ export default function ApplicantDashboardPage() {
     respondToInterview,
     talentProfiles,
     getEmployerById,
+    isHydrated,
   } = useData();
 
   const user = currentUser;
@@ -84,6 +85,16 @@ export default function ApplicantDashboardPage() {
     () => countByStatus(myProcesses, (p) => p.status, PROCESS_STATUS_LABELS),
     [myProcesses]
   );
+
+  if (loading || !isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user || !talentProfile) {
     return (

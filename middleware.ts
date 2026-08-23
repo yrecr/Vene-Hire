@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { mergeSupabaseCookies } from '@/lib/supabase-response';
 
 const roleRoutes: Record<string, string[]> = {
   admin: ['/admin'],
@@ -26,7 +27,7 @@ export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isProtected = Object.values(roleRoutes).flat().some((p) => path.startsWith(p));
   if (!isProtected) return res;
-  if (!session) return NextResponse.redirect(new URL('/login', req.url));
+  if (!session) return mergeSupabaseCookies(res, NextResponse.redirect(new URL('/login', req.url)));
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -41,7 +42,7 @@ export async function middleware(req: NextRequest) {
 
   if (allowed && role !== allowed) {
     const redirectMap: Record<string, string> = { admin: '/admin', applicant: '/applicant', employer: '/employer' };
-    return NextResponse.redirect(new URL(redirectMap[role] || '/', req.url));
+    return mergeSupabaseCookies(res, NextResponse.redirect(new URL(redirectMap[role] || '/', req.url)));
   }
 
   return res;
