@@ -1,16 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
-import { Eye, Check, Minus, FileText, Video } from 'lucide-react';
+import { Eye, Check, Minus, Download } from 'lucide-react';
 
 type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
 
@@ -33,11 +30,45 @@ function calcCompletion(p: TalentProfile): number {
 const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
+function csvEscape(value: string | number | boolean): string {
+  const str = String(value);
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function exportApplicantsCsv(rows: TalentWithSkills[]) {
+  const headers = [
+    'display_name', 'slug', 'title', 'english_level', 'availability_status',
+    'years_experience', 'tech_stack', 'public_visible', 'featured', 'created_at',
+  ];
+  const lines = [
+    headers.join(','),
+    ...rows.map((r) => [
+      csvEscape(r.display_name),
+      csvEscape(r.slug),
+      csvEscape(r.title),
+      csvEscape(r.english_level),
+      csvEscape(r.availability_status),
+      csvEscape(r.years_experience),
+      csvEscape(r.tech_stack?.join('; ') ?? ''),
+      csvEscape(r.public_visible),
+      csvEscape(r.featured),
+      csvEscape(r.created_at),
+    ].join(',')),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `applicants-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function ApplicantManagementPage() {
   const { talentProfiles, isHydrated } = useData();
+  const router = useRouter();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
-  const [viewing, setViewing] = useState<TalentWithSkills | null>(null);
 
   const filteredProfiles = useMemo(() => {
     let result: TalentWithSkills[] = talentProfiles;
@@ -151,7 +182,7 @@ export default function ApplicantManagementPage() {
       key: 'actions',
       header: 'Actions',
       render: (item) => (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setViewing(item)}>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/admin/applicants/${item.id}`)}>
           <Eye className="w-4 h-4" />
         </Button>
       ),
@@ -171,11 +202,17 @@ export default function ApplicantManagementPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
-        <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
-          {talentProfiles.length}
-        </span>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
+            {talentProfiles.length}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApplicantsCsv(filteredProfiles)}>
+          <Download className="w-4 h-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Filters */}
@@ -212,53 +249,6 @@ export default function ApplicantManagementPage() {
 
       {/* Table */}
       <DataTable columns={columns} data={filteredProfiles} />
-
-      {/* Detail dialog */}
-      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
-        <DialogContent>
-          {viewing && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{viewing.display_name}</DialogTitle>
-                <DialogDescription>{viewing.title} · {viewing.years_experience} yrs experience</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 text-sm">
-                {viewing.summary && (
-                  <p className="text-foreground leading-relaxed">{viewing.summary}</p>
-                )}
-                {viewing.bio && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">Bio</p>
-                    <p className="text-foreground bg-gray-50 rounded-lg p-3 leading-relaxed">{viewing.bio}</p>
-                  </div>
-                )}
-                {viewing.tech_stack?.length > 0 && (
-                  <div>
-                    <p className="text-muted-foreground mb-1.5">Tech stack</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {viewing.tech_stack.map((t) => (
-                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 pt-1">
-                  {viewing.resume_url && (
-                    <a href={viewing.resume_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[hsl(210,100%,45%)] hover:underline">
-                      <FileText className="w-4 h-4" /> Resume
-                    </a>
-                  )}
-                  {viewing.video_url && (
-                    <a href={viewing.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[hsl(210,100%,45%)] hover:underline">
-                      <Video className="w-4 h-4" /> Intro video
-                    </a>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

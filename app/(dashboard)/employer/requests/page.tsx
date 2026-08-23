@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import NextLink from 'next/link';
+import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle, Link as LinkIcon, ExternalLink, Send } from 'lucide-react';
 import { RoleBadge } from '@/components/role-badge';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
@@ -152,9 +153,19 @@ export default function EmployerRequestsPage() {
                 </div>
 
                 {interview.status === 'declined' && (
-                  <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-red-600">
-                    <XCircle className="w-4 h-4" />
-                    Declined
+                  <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-red-600">
+                      <XCircle className="w-4 h-4" />
+                      Declined
+                    </div>
+                    {applicant?.slug && (
+                      <NextLink href={`/talent/${applicant.slug}`}>
+                        <Button size="sm" variant="outline" className="gap-1.5">
+                          <Send className="w-3.5 h-3.5" />
+                          Send New Request
+                        </Button>
+                      </NextLink>
+                    )}
                   </div>
                 )}
 

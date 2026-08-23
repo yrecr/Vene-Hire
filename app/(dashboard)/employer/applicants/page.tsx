@@ -30,6 +30,7 @@ export default function EmployerApplicantsPage() {
   const [englishFilter, setEnglishFilter] = useState('All');
   const [availabilityFilter, setAvailabilityFilter] = useState('All');
   const [experienceFilter, setExperienceFilter] = useState('All');
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<TalentProfile | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -80,8 +81,9 @@ export default function EmployerApplicantsPage() {
         if (experienceFilter === '3-4 years') return t.years_experience >= 3 && t.years_experience <= 4;
         if (experienceFilter === '5+ years') return t.years_experience >= 5;
         return true;
-      });
-  }, [talentProfiles, searchQuery, selectedTags, englishFilter, availabilityFilter, experienceFilter]);
+      })
+      .filter((t) => !favoritesOnly || isShortlisted(t.id));
+  }, [talentProfiles, searchQuery, selectedTags, englishFilter, availabilityFilter, experienceFilter, favoritesOnly, isShortlisted]);
 
   function handleRequestInterview(applicant: TalentProfile) {
     setSelectedApplicant(applicant);
@@ -97,14 +99,24 @@ export default function EmployerApplicantsPage() {
         </p>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, title, or skills..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, title, or skills..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button
+          variant={favoritesOnly ? 'default' : 'outline'}
+          className="gap-1.5 flex-shrink-0"
+          onClick={() => setFavoritesOnly((prev) => !prev)}
+        >
+          {favoritesOnly ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
+          Favorites
+        </Button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">

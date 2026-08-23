@@ -1,20 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { useData } from '@/lib/data-context';
-import { useAuth } from '@/lib/auth';
-import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { ArrowLeft, Play, Clock, MapPin, Calendar, Briefcase, ArrowRight, Globe, CircleCheck as CheckCircle2, FileText } from 'lucide-react';
-import Link from 'next/link';
-import { useParams } from 'next/navigation';
+  ArrowLeft, Play, Briefcase, Globe, CircleCheck as CheckCircle2, FileText,
+} from 'lucide-react';
 
 function toEmbedUrl(url: string): string {
   if (!url) return url;
@@ -35,38 +31,30 @@ const availabilityConfig: Record<string, { label: string; className: string }> =
   'On Hold': { label: 'On Hold', className: 'bg-blue-50 text-blue-700 border-blue-200' },
 };
 
-export default function TalentProfilePage() {
+export default function AdminApplicantDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
-  const { currentUser } = useAuth();
-  const { getEmployerById, talentProfiles } = useData();
-  const [modalOpen, setModalOpen] = useState(false);
+  const id = params.id as string;
+  const { getApplicantById } = useData();
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
 
-  const talent = talentProfiles.find((t) => t.slug === slug);
-
-  const isEmployer = currentUser?.role === 'employer';
-  const employerId = isEmployer && currentUser?.employer_profile_id
-    ? (getEmployerById(currentUser.employer_profile_id)?.id || 'ep-acme')
-    : null;
-  const backLink = isEmployer ? '/employer/applicants' : '/talent';
+  const talent = getApplicantById(id);
 
   if (!talent) {
     return (
-      <div className="min-h-screen pt-24 flex flex-col items-center justify-center px-4">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
         <div className="text-center max-w-md">
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-8 h-8 text-gray-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Talent not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Applicant not found</h1>
           <p className="text-gray-500 mb-8">
-            The talent profile you are looking for does not exist or has been removed.
+            The applicant profile you are looking for does not exist or has been removed.
           </p>
-          <Link href={backLink}>
+          <Link href="/admin/applicants">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Talent
+              Back to Applicants
             </Button>
           </Link>
         </div>
@@ -80,25 +68,25 @@ export default function TalentProfilePage() {
   };
 
   return (
-    <div className="min-h-screen pt-24 pb-20">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
-        <Link href={backLink}>
+    <div className="pb-12">
+      <div className="mb-6">
+        <Link href="/admin/applicants">
           <Button variant="ghost" className="gap-2 text-gray-600 hover:text-gray-900 -ml-2">
             <ArrowLeft className="w-4 h-4" />
-            Back to Talent
+            Back to Applicants
           </Button>
         </Link>
       </div>
 
-      <section className="bg-gray-50 border-y border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+      <section className="bg-gray-50 border border-gray-100 rounded-2xl">
+        <div className="px-6 py-10 md:px-10 md:py-12">
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             <div className="shrink-0">
               <div className="relative">
                 <img
                   src={talent.profile_image_url ?? ''}
                   alt={talent.display_name}
-                  className="w-40 h-40 md:w-52 md:h-52 rounded-2xl object-cover shadow-lg ring-4 ring-white"
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover shadow-lg ring-4 ring-white"
                 />
                 {talent.availability_status === 'Available' && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
@@ -109,9 +97,10 @@ export default function TalentProfilePage() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">
                 {talent.display_name}
               </h1>
+              <p className="text-sm text-gray-400 mb-2">{talent.slug}</p>
               <p className="text-lg text-gray-600 mb-5">{talent.title}</p>
 
               <div className="flex flex-wrap gap-3 mb-6">
@@ -127,9 +116,17 @@ export default function TalentProfilePage() {
                   <Briefcase className="w-3.5 h-3.5 mr-1.5" />
                   {talent.years_experience} years experience
                 </Badge>
+                <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
+                  {talent.public_visible ? 'Visible' : 'Hidden'}
+                </Badge>
+                {talent.featured && (
+                  <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
+                    Featured
+                  </Badge>
+                )}
               </div>
 
-              <p className="text-gray-600 leading-relaxed text-base md:text-lg mb-6">{talent.summary}</p>
+              <p className="text-gray-600 leading-relaxed text-base mb-6">{talent.summary}</p>
 
               <div className="flex flex-wrap gap-2">
                 {talent.tech_stack.map((tech) => (
@@ -143,9 +140,9 @@ export default function TalentProfilePage() {
         </div>
       </section>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-10">
+      <div className="mt-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
@@ -195,7 +192,7 @@ export default function TalentProfilePage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 sticky top-28">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 sticky top-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Skills</h2>
               <div className="space-y-5">
                 {talent.skills?.map((skill) => (
@@ -206,59 +203,6 @@ export default function TalentProfilePage() {
           </div>
         </div>
       </div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12 text-center shadow-xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Interested in {talent.display_name}?
-          </h2>
-          <p className="text-gray-300 mb-8 max-w-xl mx-auto">
-            Get in touch to learn more about this candidate or explore our full talent pool for your hiring needs.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isEmployer && employerId ? (
-              <Button
-                size="lg"
-                className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
-                onClick={() => setModalOpen(true)}
-              >
-                Request Interview
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Link href={`/request-sign-up?candidate=${talent.slug}`}>
-                <Button
-                  size="lg"
-                  className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
-                >
-                  Request Interview
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
-            {!(isEmployer && employerId) && (
-              <Link href="/request-sign-up">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white gap-2 w-full sm:w-auto"
-                >
-                  Request a Demo
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {isEmployer && employerId && (
-        <InterviewRequestModal
-          applicant={talent}
-          employerId={employerId}
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-        />
-      )}
     </div>
   );
 }
