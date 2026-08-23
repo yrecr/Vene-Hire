@@ -148,7 +148,7 @@ export interface Resource {
   title: string;
   description: string;
   file_path: string;
-  visibility: 'all' | 'admin' | 'client' | 'student';
+  visibility: 'all' | 'admin' | 'employer' | 'applicant';
   bootcamp_id: string | null;
   created_at: string;
 }

@@ -32,6 +32,8 @@ interface DataContextType {
   bootcamps: Bootcamp[];
   enrollments: Enrollment[];
   resources: Resource[];
+  createResource: (formData: FormData) => Promise<void>;
+  updateResourceVisibility: (id: string, visibility: Resource['visibility']) => Promise<void>;
   vacancies: Vacancy[];
   candidates: Candidate[];
   createVacancy: (v: Vacancy) => Promise<void>;
@@ -39,6 +41,7 @@ interface DataContextType {
   createInterviewRequest: (data: NewInterviewData) => void;
   respondToInterview: (requestId: string, status: 'accepted' | 'declined') => void;
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
+  updateProcessStatus: (processId: string, status: 'active' | 'on_hold' | 'not_selected') => Promise<void>;
   addMeetingLink: (requestId: string, url: string) => void;
   reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
   toggleShortlist: (applicantId: string) => Promise<void>;
@@ -310,6 +313,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       api.upsertNotification(n).catch(() => {});
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
+
+  const updateProcessStatus = useCallback(async (processId: string, status: 'active' | 'on_hold' | 'not_selected') => {
+    const prevProcess = selectionProcesses.find((p) => p.id === processId);
+    if (!prevProcess) return;
+    const updated: SelectionProcess = { ...prevProcess, status };
+    setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
+    try {
+      await api.upsertSelectionProcess(updated);
+    } catch {
+      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    }
+  }, [selectionProcesses]);
 
   /** Find the selection process this interview request belongs to (by stage, matching the role_title convention used for technical interviews). */
   const findProcessForRequest = useCallback((request: InterviewRequest) => {
@@ -613,14 +628,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setTalentProfiles((prev) => prev.map((t) => t.id === profile.id ? profile : t));
   }, []);
 
+  const createResource = useCallback(async (formData: FormData): Promise<void> => {
+    const created = await api.createResource(formData);
+    setResources((prev) => [created, ...prev]);
+  }, []);
+
+  const updateResourceVisibility = useCallback(async (id: string, visibility: Resource['visibility']): Promise<void> => {
+    const prevResource = resources.find((r) => r.id === id);
+    if (!prevResource) return;
+    setResources((prev) => prev.map((r) => (r.id === id ? { ...r, visibility } : r)));
+    try {
+      await api.upsertResource({ id, visibility });
+    } catch (err) {
+      setResources((prev) => prev.map((r) => (r.id === id ? prevResource : r)));
+      throw err;
+    }
+  }, [resources]);
+
   const value = useMemo<DataContextType>(() => ({
     isHydrated, talentProfiles, profiles, employerProfiles, accessRequests,
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
+    createResource, updateResourceVisibility,
     contractApprovalRequests,
     vacancies, candidates, createVacancy,
     updateCandidateStatus: updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
     getApplicantById: findTalentById,
@@ -636,9 +669,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     isHydrated, talentProfiles, profiles, employerProfiles, accessRequests,
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources,
+    createResource, updateResourceVisibility,
     contractApprovalRequests,
     vacancies, candidates, createVacancy, updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, addMeetingLink, reportInterviewOutcome,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,

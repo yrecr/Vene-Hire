@@ -247,9 +247,9 @@ export const mockEnrollments: Enrollment[] = [
 ];
 
 export const mockResources: Resource[] = [
-  { id: 'r1', title: 'React Best Practices Guide', description: 'Comprehensive guide to writing clean React code.', file_path: '/resources/react-best-practices.pdf', visibility: 'student', bootcamp_id: 'bc1', created_at: '2024-04-05' },
-  { id: 'r2', title: 'Interview Preparation Handbook', description: 'Tips for technical interviews at international companies.', file_path: '/resources/interview-prep.pdf', visibility: 'student', bootcamp_id: null, created_at: '2024-03-01' },
-  { id: 'r3', title: 'Hiring Process Overview', description: 'Guide for clients on evaluating and onboarding talent.', file_path: '/resources/hiring-overview.pdf', visibility: 'client', bootcamp_id: null, created_at: '2024-02-15' },
+  { id: 'r1', title: 'React Best Practices Guide', description: 'Comprehensive guide to writing clean React code.', file_path: '/resources/react-best-practices.pdf', visibility: 'applicant', bootcamp_id: 'bc1', created_at: '2024-04-05' },
+  { id: 'r2', title: 'Interview Preparation Handbook', description: 'Tips for technical interviews at international companies.', file_path: '/resources/interview-prep.pdf', visibility: 'applicant', bootcamp_id: null, created_at: '2024-03-01' },
+  { id: 'r3', title: 'Hiring Process Overview', description: 'Guide for clients on evaluating and onboarding talent.', file_path: '/resources/hiring-overview.pdf', visibility: 'employer', bootcamp_id: null, created_at: '2024-02-15' },
   { id: 'r4', title: 'Platform Admin Guide', description: 'Admin documentation for managing the platform.', file_path: '/resources/admin-guide.pdf', visibility: 'admin', bootcamp_id: null, created_at: '2024-01-10' },
 ];
 

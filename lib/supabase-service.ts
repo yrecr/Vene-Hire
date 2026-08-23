@@ -310,3 +310,20 @@ export async function fetchResources(): Promise<Resource[]> {
   const { data } = await sb().from('resources').select('*');
   return data ?? [];
 }
+
+// ponytail: route through /api/resources/upload to use service_role key,
+// same pattern as upsertInterviewRequest/upsertVacancy
+export async function createResource(formData: FormData): Promise<Resource> {
+  const res = await fetch('/api/resources/upload', { method: 'POST', body: formData });
+  if (!res.ok) throw new Error(`Failed to create resource: ${await res.text()}`);
+  return res.json();
+}
+
+// Metadata-only edit (visibility/title/description) on an existing resource.
+export async function upsertResource(resource: Pick<Resource, 'id' | 'visibility'> & Partial<Resource>): Promise<void> {
+  const res = await fetch('/api/resources/update', {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(resource),
+  });
+  if (!res.ok) throw new Error(`Failed to upsert resource: ${await res.text()}`);
+}

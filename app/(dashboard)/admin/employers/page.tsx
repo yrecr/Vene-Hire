@@ -1,19 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { EmployerProfile } from '@/types';
 import { Eye } from 'lucide-react';
 
 export default function EmployerManagementPage() {
   const { employerProfiles, isHydrated } = useData();
-  const [viewing, setViewing] = useState<EmployerProfile | null>(null);
+  const router = useRouter();
 
   const columns: DataTableColumn<EmployerProfile>[] = [
     {
@@ -59,7 +56,7 @@ export default function EmployerManagementPage() {
       key: 'actions',
       header: 'Actions',
       render: (item) => (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setViewing(item)}>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/admin/employers/${item.id}`)}>
           <Eye className="w-4 h-4" />
         </Button>
       ),
@@ -88,36 +85,6 @@ export default function EmployerManagementPage() {
 
       {/* Table */}
       <DataTable columns={columns} data={employerProfiles} />
-
-      {/* Detail dialog */}
-      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
-        <DialogContent>
-          {viewing && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{viewing.company_name}</DialogTitle>
-                <DialogDescription>{viewing.contact_name}</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Status</span>
-                  <RoleBadge role={viewing.status} />
-                </div>
-                <div>
-                  <p className="text-muted-foreground mb-1">Hiring needs</p>
-                  <p className="text-foreground leading-relaxed">{viewing.hiring_needs}</p>
-                </div>
-                {viewing.summary && (
-                  <div>
-                    <p className="text-muted-foreground mb-1">Summary</p>
-                    <p className="text-foreground bg-gray-50 rounded-lg p-3 leading-relaxed">{viewing.summary}</p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

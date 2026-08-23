@@ -27,7 +27,7 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles } = useData();
+  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -172,6 +172,26 @@ export default function EmployerProcessesPage() {
                   </div>
                   <ProcessStatusBadge status={process.status} />
                 </div>
+
+                {process.status !== 'hired' && (
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <span className="text-xs text-muted-foreground mr-1">Set status:</span>
+                    {(['active', 'on_hold', 'not_selected'] as const).map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => updateProcessStatus(process.id, s)}
+                        disabled={process.status === s}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          process.status === s
+                            ? 'bg-gray-100 text-gray-400 border-gray-100 cursor-default'
+                            : 'bg-white text-muted-foreground border-gray-200 hover:border-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,45%)]'
+                        }`}
+                      >
+                        {s === 'active' ? 'Active' : s === 'on_hold' ? 'On Hold' : 'Not Selected'}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 {hasApprovalPending(process) && (
                   <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
