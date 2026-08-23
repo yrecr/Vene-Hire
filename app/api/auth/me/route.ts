@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { mergeSupabaseCookies } from '@/lib/supabase-response';
 
+// This response depends on the caller's session cookie — Next.js can
+// otherwise treat a cookie-only GET handler as static and let Vercel's CDN
+// cache one response for every visitor (confirmed via X-Vercel-Cache: HIT).
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const res = NextResponse.next();
 
