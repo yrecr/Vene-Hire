@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Zap, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface SidebarLink {
@@ -35,9 +35,7 @@ export function DashboardSidebar({ links, role, open, onClose }: DashboardSideba
       >
         <div className="flex items-center justify-between h-16 px-5 border-b border-gray-100">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.png" alt="VeneHire" className="w-8 h-8 object-contain" />
             <span className="text-lg font-bold text-foreground tracking-tight">
               Vene<span className="gradient-text">Hire</span>
             </span>

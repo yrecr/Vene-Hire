@@ -61,8 +61,14 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {currentUser ? (
               <>
+                <Link href={`/${currentUser.role}`}>
+                  <Button variant="outline" size="sm" className="text-sm font-medium">
+                    Dashboard
+                  </Button>
+                </Link>
                 <NotificationCenter
                   notifications={notifications.filter((n) => n.user_id === currentUser.profile_id)}
+                  role={currentUser.role}
                 />
                 <Button
                   variant="ghost"
@@ -117,15 +123,22 @@ export function Navbar() {
             ))}
             <div className="pt-3 border-t border-gray-100 space-y-2">
               {currentUser ? (
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  size="sm"
-                  onClick={() => { logout(); router.push('/'); setMobileOpen(false); }}
-                >
-                  <LogOut className="w-[18px] h-[18px] mr-2" />
-                  Sign Out
-                </Button>
+                <>
+                  <Link href={`/${currentUser.role}`} onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    onClick={() => { logout(); router.push('/'); setMobileOpen(false); }}
+                  >
+                    <LogOut className="w-[18px] h-[18px] mr-2" />
+                    Sign Out
+                  </Button>
+                </>
               ) : (
                 <>
                   <Link href="/login" onClick={() => setMobileOpen(false)}>

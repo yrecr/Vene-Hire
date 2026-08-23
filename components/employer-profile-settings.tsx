@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Building2, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 
-export default function EmployerCompanyPage() {
+export function EmployerProfileSettings() {
   const { currentUser } = useAuth();
   const { employerProfiles } = useData();
   const [saving, setSaving] = useState(false);
@@ -53,15 +53,11 @@ export default function EmployerCompanyPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Company Profile
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Manage your company information and hiring preferences.
-          </p>
+          <h3 className="text-lg font-semibold text-foreground">Company Profile</h3>
+          <p className="text-sm text-muted-foreground">Manage your company information and hiring preferences.</p>
         </div>
         {!isEditing ? (
           <Button
@@ -88,6 +84,7 @@ export default function EmployerCompanyPage() {
               size="sm"
               className="gap-1.5 bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,40%)]"
               onClick={handleSave}
+              disabled={saving}
             >
               <Save className="w-4 h-4" />
               Save
@@ -97,7 +94,6 @@ export default function EmployerCompanyPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-6">
-        {/* Company header */}
         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
             <Building2 className="w-8 h-8 text-[hsl(210,100%,45%)]" />
@@ -113,7 +109,6 @@ export default function EmployerCompanyPage() {
         </div>
 
         <div className="space-y-5">
-          {/* Company Name */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               Company Name
@@ -131,7 +126,6 @@ export default function EmployerCompanyPage() {
             )}
           </div>
 
-          {/* Contact Name */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               Contact Name
@@ -149,7 +143,6 @@ export default function EmployerCompanyPage() {
             )}
           </div>
 
-          {/* Summary */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               Company Summary
@@ -169,7 +162,6 @@ export default function EmployerCompanyPage() {
             )}
           </div>
 
-          {/* Hiring Needs */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               Hiring Needs
@@ -189,7 +181,6 @@ export default function EmployerCompanyPage() {
             )}
           </div>
 
-          {/* Status */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
               Account Status

@@ -9,8 +9,6 @@ import {
   Star,
   GitBranch,
   MessageSquare,
-  Bell,
-  Building2,
   Briefcase,
 } from 'lucide-react';
 
@@ -21,8 +19,6 @@ const employerLinks: SidebarLink[] = [
   { href: '/employer/shortlist', label: 'Shortlist', icon: Star },
   { href: '/employer/processes', label: 'Active Processes', icon: GitBranch },
   { href: '/employer/requests', label: 'Interviews', icon: MessageSquare },
-  { href: '/employer/notifications', label: 'Notifications', icon: Bell },
-  { href: '/employer/company', label: 'Company', icon: Building2 },
 ];
 
 export default function EmployerLayout({ children }: { children: React.ReactNode }) {
