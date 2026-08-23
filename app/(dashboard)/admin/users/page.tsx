@@ -193,12 +193,12 @@ export default function UserManagementPage() {
 }
 
 function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; onCancel: () => void }) {
-  const [data, setData] = useState({ full_name: '', email: '', password: 'Demo123!', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
+  const [data, setData] = useState({ full_name: '', email: '', password: '', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
   const handleCreate = async () => {
-    if (!data.full_name.trim() || !data.email.trim() || !data.password.trim()) return;
+    if (!data.full_name.trim() || !data.email.trim()) return;
     setCreating(true);
     setCreateError('');
 
@@ -259,8 +259,8 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-          <input type="text" placeholder="Leave as Demo123! for default" value={data.password}
+          <label className="block text-sm font-medium text-foreground mb-1.5">Password (optional)</label>
+          <input type="text" placeholder="Leave empty to email an invitation" value={data.password}
             onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
