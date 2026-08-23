@@ -94,7 +94,9 @@ export async function POST(req: NextRequest) {
     draw('Date: _____________', { size: 10, x: 350 });
 
     const pdfBytes = await doc.save();
-    const path = `contracts/${process_id}.pdf`;
+    const nameSlug = (applicant?.display_name || 'contract')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const path = `contracts/${nameSlug}-${process_id.slice(0, 8)}.pdf`;
 
     const { error: upErr } = await supabase.storage
       .from('resumes')

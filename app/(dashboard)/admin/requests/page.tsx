@@ -1,80 +1,96 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { AccessRequest } from '@/types';
 import { Eye, CircleCheck, CircleX } from 'lucide-react';
 
 const statusTabs = ['All', 'Pending', 'Contacted', 'Approved', 'Rejected'] as const;
 const typeTabs = ['All', 'Applicant Requests', 'Employer Requests'] as const;
+const UNDO_WINDOW_MS = 6000;
 
 export default function AccessRequestsPage() {
-  const { accessRequests, setAccessRequests, setProfiles, profiles, employerProfiles, isHydrated } = useData();
+  const {
+    accessRequests, setAccessRequests, updateAccessRequestStatus,
+    setProfiles, profiles, isHydrated,
+  } = useData();
   const [activeStatusFilter, setActiveStatusFilter] = useState<string>('All');
   const [activeTypeFilter, setActiveTypeFilter] = useState<string>('All');
+  const [viewing, setViewing] = useState<AccessRequest | null>(null);
+  const { toast } = useToast();
+  const pendingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
-  const updateStatus = useCallback((id: string, status: AccessRequest['status']) => {
-    const req = accessRequests.find((r) => r.id === id);
-    if (status === 'approved' && req) {
-      fetch('/api/approve-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: req.email,
-          full_name: req.full_name,
-          company: req.company,
-          request_type: req.request_type,
-          hiring_need: req.hiring_need,
-          access_request_id: id,
-        }),
-      }).catch(() => {});
+  useEffect(() => {
+    const timers = pendingTimers.current;
+    return () => {
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
+
+  const commitApproval = useCallback((req: AccessRequest) => {
+    fetch('/api/approve-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: req.email,
+        full_name: req.full_name,
+        company: req.company,
+        request_type: req.request_type,
+        hiring_need: req.hiring_need,
+        access_request_id: req.id,
+      }),
+    }).catch(() => {});
+
+    if (!profiles.some((p) => p.email === req.email)) {
+      const now = Date.now();
+      setProfiles([...profiles, {
+        id: `p-${now}`,
+        auth_user_id: `auth-${now}`,
+        full_name: req.full_name,
+        email: req.email,
+        role: req.request_type === 'employer' ? 'employer' : 'applicant',
+        company_name: req.company || null,
+        status: 'active',
+        created_at: new Date().toISOString(),
+      }]);
     }
+  }, [profiles, setProfiles]);
 
-    setAccessRequests((prev) => {
-      const r = prev.find((x) => x.id === id);
-      const next = prev.map((x) => x.id === id ? { ...x, status } : x);
+  const decide = useCallback((req: AccessRequest, status: 'approved' | 'rejected') => {
+    setAccessRequests((prev) => prev.map((r) => (r.id === req.id ? { ...r, status } : r)));
 
-      if (status === 'approved' && r) {
-        const now = Date.now();
-        const profileId = `p-${now}`;
-        const newProfiles = [...profiles];
-        if (!newProfiles.some((p) => p.email === r.email)) {
-          newProfiles.push({
-            id: profileId,
-            auth_user_id: `auth-${now}`,
-            full_name: r.full_name,
-            email: r.email,
-            role: r.request_type === 'employer' ? 'employer' : 'applicant',
-            company_name: r.company || null,
-            status: 'active',
-            created_at: new Date().toISOString(),
-          });
-        }
-        setProfiles(newProfiles);
+    const undo = () => {
+      clearTimeout(pendingTimers.current[req.id]);
+      delete pendingTimers.current[req.id];
+      setAccessRequests((prev) => prev.map((r) => (r.id === req.id ? { ...r, status: 'pending' } : r)));
+    };
 
-        if (r.request_type === 'employer') {
-          const newEmployers = [...employerProfiles];
-          if (!newEmployers.some((e) => e.user_id === profileId)) {
-            newEmployers.push({
-              id: `emp-${now}`,
-              user_id: profileId,
-              company_name: r.company || r.full_name,
-              contact_name: r.full_name,
-              summary: `Approved demo request for ${r.company || r.full_name}.`,
-              hiring_needs: r.hiring_need || 'Not specified',
-              status: 'active',
-              created_at: new Date().toISOString(),
-            });
-          }
-        }
-      }
-
-      return next;
+    toast({
+      title: status === 'approved' ? 'Request approved' : 'Request rejected',
+      description: `${req.full_name} — this takes effect in a few seconds.`,
+      action: (
+        <ToastAction altText="Undo" onClick={undo}>
+          Undo
+        </ToastAction>
+      ),
     });
-  }, [accessRequests, profiles, employerProfiles, setAccessRequests, setProfiles]);
+
+    pendingTimers.current[req.id] = setTimeout(() => {
+      delete pendingTimers.current[req.id];
+      updateAccessRequestStatus(req.id, status);
+      if (status === 'approved') {
+        commitApproval(req);
+      }
+    }, UNDO_WINDOW_MS);
+  }, [setAccessRequests, updateAccessRequestStatus, commitApproval, toast]);
 
   const filteredRequests = useMemo(() => {
     let result = accessRequests;
@@ -152,20 +168,20 @@ export default function AccessRequestsPage() {
       header: 'Actions',
       render: (item) => (
         <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setViewing(item)}>
+            <Eye className="w-4 h-4" />
+          </Button>
           {item.status === 'pending' ? (
             <>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Eye className="w-4 h-4" />
-              </Button>
               <Button
                 variant="ghost" size="sm" className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700"
-                onClick={() => updateStatus(item.id, 'approved')}
+                onClick={() => decide(item, 'approved')}
               >
                 <CircleCheck className="w-4 h-4" />
               </Button>
               <Button
                 variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600"
-                onClick={() => updateStatus(item.id, 'rejected')}
+                onClick={() => decide(item, 'rejected')}
               >
                 <CircleX className="w-4 h-4" />
               </Button>
@@ -234,6 +250,56 @@ export default function AccessRequestsPage() {
 
       {/* Table */}
       <DataTable columns={columns} data={filteredRequests} />
+
+      {/* Detail dialog */}
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent>
+          {viewing && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{viewing.full_name}</DialogTitle>
+                <DialogDescription>{viewing.email}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Type</span>
+                  <RoleBadge role={viewing.request_type} />
+                </div>
+                {viewing.company && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">Company</span>
+                    <span className="text-foreground">{viewing.company}</span>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Country</span>
+                  <span className="text-foreground">{viewing.country || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Role / Need</span>
+                  <span className="text-foreground text-right">{viewing.hiring_need || '—'}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Candidate of interest</span>
+                  <span className="text-foreground">{viewing.candidate_slug || 'General'}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground">Status</span>
+                  <RoleBadge role={viewing.status} />
+                </div>
+                {viewing.message && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Message</p>
+                    <p className="text-foreground bg-gray-50 rounded-lg p-3 leading-relaxed">
+                      {viewing.message}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

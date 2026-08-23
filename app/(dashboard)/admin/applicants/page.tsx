@@ -4,9 +4,13 @@ import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
-import { Eye, Check, Minus } from 'lucide-react';
+import { Eye, Check, Minus, FileText, Video } from 'lucide-react';
 
 type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
 
@@ -33,6 +37,7 @@ export default function ApplicantManagementPage() {
   const { talentProfiles, isHydrated } = useData();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
+  const [viewing, setViewing] = useState<TalentWithSkills | null>(null);
 
   const filteredProfiles = useMemo(() => {
     let result: TalentWithSkills[] = talentProfiles;
@@ -145,8 +150,8 @@ export default function ApplicantManagementPage() {
     {
       key: 'actions',
       header: 'Actions',
-      render: () => (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+      render: (item) => (
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setViewing(item)}>
           <Eye className="w-4 h-4" />
         </Button>
       ),
@@ -207,6 +212,53 @@ export default function ApplicantManagementPage() {
 
       {/* Table */}
       <DataTable columns={columns} data={filteredProfiles} />
+
+      {/* Detail dialog */}
+      <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
+        <DialogContent>
+          {viewing && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{viewing.display_name}</DialogTitle>
+                <DialogDescription>{viewing.title} · {viewing.years_experience} yrs experience</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                {viewing.summary && (
+                  <p className="text-foreground leading-relaxed">{viewing.summary}</p>
+                )}
+                {viewing.bio && (
+                  <div>
+                    <p className="text-muted-foreground mb-1">Bio</p>
+                    <p className="text-foreground bg-gray-50 rounded-lg p-3 leading-relaxed">{viewing.bio}</p>
+                  </div>
+                )}
+                {viewing.tech_stack?.length > 0 && (
+                  <div>
+                    <p className="text-muted-foreground mb-1.5">Tech stack</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewing.tech_stack.map((t) => (
+                        <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 pt-1">
+                  {viewing.resume_url && (
+                    <a href={viewing.resume_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[hsl(210,100%,45%)] hover:underline">
+                      <FileText className="w-4 h-4" /> Resume
+                    </a>
+                  )}
+                  {viewing.video_url && (
+                    <a href={viewing.video_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[hsl(210,100%,45%)] hover:underline">
+                      <Video className="w-4 h-4" /> Intro video
+                    </a>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

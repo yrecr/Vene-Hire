@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import {
   GitBranch, MessageSquare, TrendingUp, CalendarDays,
   Bell, Globe, Clock, Code2, CheckCircle2,
@@ -411,14 +412,13 @@ export default function ApplicantDashboardPage() {
                   />
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => updateTalentProfile({ ...talentProfile, video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ' })}
+                <Link
+                  href="/applicant/video"
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Upload className="w-3.5 h-3.5" />
-                  Upload Video
-                </button>
+                  Add Video
+                </Link>
               )}
             </div>
           </div>

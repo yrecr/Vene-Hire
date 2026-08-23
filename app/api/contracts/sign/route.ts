@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     // Ownership: the process's applicant must be this caller
     const { data: ownerCheck } = await supabase
       .from('selection_processes')
-      .select('talent_profiles!inner(user_id)')
+      .select('talent_profiles!inner(user_id, display_name)')
       .eq('id', processId)
       .single();
     const owner = (ownerCheck as any)?.talent_profiles;
@@ -97,7 +97,9 @@ export async function POST(req: NextRequest) {
 
     // 5. Upload signed PDF
     const modifiedPdfBytes = await pdfDoc.save();
-    const pdfPath = `contracts/${processId}-signed.pdf`;
+    const nameSlug = (owner?.display_name || 'contract')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const pdfPath = `contracts/${nameSlug}-${processId.slice(0, 8)}-signed.pdf`;
     const { error: pdfErr } = await supabase.storage
       .from('resumes')
       .upload(pdfPath, modifiedPdfBytes, { contentType: 'application/pdf', upsert: true });
