@@ -4,8 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { requireSession } from '@/lib/api-auth';
 import { dbError } from '@/lib/api-error';
 
-const DEFAULT_PASSWORD = 'Demo123!';
-
 export async function POST(req: NextRequest) {
   if (!supabaseAdmin) {
     return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 });
@@ -24,17 +22,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'email and full_name are required' }, { status: 400 });
   }
 
-  const userPassword = password || DEFAULT_PASSWORD;
+  // No password given => send a real invitation and let the user choose their own.
+  // An explicit password stays supported so an admin can still hand-create an account.
+  const shouldInvite = !password;
+  const userMetadata = { full_name, role: request_type === 'employer' ? 'employer' : 'applicant' };
 
   let authUserId: string;
   let profileId: string;
 
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password: userPassword,
-    email_confirm: true,
-    user_metadata: { full_name, role: request_type === 'employer' ? 'employer' : 'applicant' },
-  });
+  const { data: authData, error: authError } = shouldInvite
+    ? await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        data: userMetadata,
+        redirectTo: new URL('/welcome', req.nextUrl.origin).toString(),
+      })
+    : await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: userMetadata,
+      });
   if (authData?.user?.id) {
     authUserId = authData.user.id;
     profileId = crypto.randomUUID();
@@ -52,14 +58,18 @@ export async function POST(req: NextRequest) {
       return dbError('approve-request:profile', profileError);
     }
   } else {
-    // User already exists — look up existing profile
+    // Either the user already exists, or the invite/create genuinely failed.
+    // Only the first case is recoverable — otherwise surface the error instead of
+    // silently "approving" someone who can never sign in.
     const { data: existing } = await supabaseAdmin
       .from('profiles')
       .select('id, auth_user_id')
       .eq('email', email)
       .single();
     if (!existing) {
-      return NextResponse.json({ error: 'User exists but no profile found' }, { status: 500 });
+      return authError
+        ? dbError(shouldInvite ? 'approve-request:invite' : 'approve-request:create-user', authError)
+        : NextResponse.json({ error: 'User exists but no profile found' }, { status: 500 });
     }
     authUserId = existing.auth_user_id;
     profileId = existing.id;
@@ -142,5 +152,5 @@ export async function POST(req: NextRequest) {
     await supabaseAdmin.from('access_requests').update({ status: 'approved' }).eq('id', access_request_id);
   }
 
-  return NextResponse.json({ success: true, email, password: userPassword });
+  return NextResponse.json({ success: true, email, invited: shouldInvite });
 }
