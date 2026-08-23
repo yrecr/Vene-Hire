@@ -42,6 +42,7 @@ interface DataContextType {
   addMeetingLink: (requestId: string, url: string) => void;
   reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
   toggleShortlist: (applicantId: string) => Promise<void>;
+  updateAccessRequestStatus: (id: string, status: AccessRequest['status']) => Promise<void>;
   isShortlisted: (applicantId: string) => boolean;
   getAvailabilityForApplicant: (applicantId: string) => AvailabilitySlot[];
   getNotificationsForUser: (userId: string) => Notification[];
@@ -389,6 +390,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [shortlistedIds]);
 
+  const updateAccessRequestStatus = useCallback(async (id: string, status: AccessRequest['status']) => {
+    const prevRequest = accessRequests.find((r) => r.id === id);
+    if (!prevRequest) return;
+    setAccessRequestsState((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
+    try {
+      await api.upsertAccessRequest({ ...prevRequest, status });
+    } catch {
+      setAccessRequestsState((prev) => prev.map((r) => (r.id === id ? prevRequest : r)));
+    }
+  }, [accessRequests]);
+
   const isShortlisted = useCallback((applicantId: string) => shortlistedIds.includes(applicantId), [shortlistedIds]);
 
   const getAvailabilityForApplicant = useCallback((applicantId: string) => {
@@ -609,7 +621,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     vacancies, candidates, createVacancy,
     updateCandidateStatus: updateCandidateStatusFn,
     createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
-    toggleShortlist, isShortlisted, getAvailabilityForApplicant,
+    toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
     getApplicantById: findTalentById,
     getEmployerById: findEmployer,
@@ -627,7 +639,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     contractApprovalRequests,
     vacancies, candidates, createVacancy, updateCandidateStatusFn,
     createInterviewRequest, respondToInterview, setProcessStage, addMeetingLink, reportInterviewOutcome,
-    toggleShortlist, isShortlisted, getAvailabilityForApplicant,
+    toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,
     approveContractRequest, rejectContractRequest,
