@@ -12,6 +12,15 @@ import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
+import { TrendCard, DonutCard } from '@/components/dashboard-charts';
+import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
+
+const PROCESS_STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  hired: 'Hired',
+  on_hold: 'On Hold',
+  not_selected: 'Not Selected',
+};
 
 
 // --- English level color map ---
@@ -69,6 +78,12 @@ export default function ApplicantDashboardPage() {
   const activeProcesses = myProcesses.filter((p) => p.status === 'active');
   const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
   const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
+
+  const interviewsTrend = useMemo(() => bucketLast14Days(myInterviews, (i) => i.created_at), [myInterviews]);
+  const processStatusDistribution = useMemo(
+    () => countByStatus(myProcesses, (p) => p.status, PROCESS_STATUS_LABELS),
+    [myProcesses]
+  );
 
   if (!user || !talentProfile) {
     return (
@@ -128,6 +143,12 @@ export default function ApplicantDashboardPage() {
         <StatCard icon={MessageSquare} label="Pending Interviews" value={pendingInterviews.length} />
         <StatCard icon={CalendarDays} label="Total Interviews" value={myInterviews.length} />
         <StatCard icon={GitBranch} label="Total Processes" value={myProcesses.length} />
+      </div>
+
+      {/* ── Trends ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TrendCard title="Interview Requests (Last 14 Days)" data={interviewsTrend} />
+        <DonutCard title="My Processes by Status" data={processStatusDistribution} />
       </div>
 
       {/* ── Main grid ───────────────────────────────────────────── */}

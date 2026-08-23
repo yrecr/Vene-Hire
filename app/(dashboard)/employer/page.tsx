@@ -4,9 +4,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { Users, GitBranch, MessageSquare, Star, ArrowRight } from 'lucide-react';
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
+import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
+import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
 import Link from 'next/link';
+
+const PROCESS_STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  hired: 'Hired',
+  on_hold: 'On Hold',
+  not_selected: 'Not Selected',
+};
 
 export default function EmployerDashboard() {
   const { currentUser } = useAuth();
@@ -31,6 +40,22 @@ export default function EmployerDashboard() {
     [interviewRequests, employerId]
   );
 
+  const myInterviews = useMemo(
+    () => interviewRequests.filter((i) => i.employer_id === employerId),
+    [interviewRequests, employerId]
+  );
+
+  const myProcesses = useMemo(
+    () => selectionProcesses.filter((p) => p.employer_id === employerId),
+    [selectionProcesses, employerId]
+  );
+
+  const interviewsTrend = useMemo(() => bucketLast14Days(myInterviews, (i) => i.created_at), [myInterviews]);
+  const processStatusDistribution = useMemo(
+    () => countByStatus(myProcesses, (p) => p.status, PROCESS_STATUS_LABELS),
+    [myProcesses]
+  );
+
   const userNotifications = getNotificationsForUser(profileId ?? '');
   const recentNotifications = userNotifications.slice(0, 3);
 
@@ -48,6 +73,11 @@ export default function EmployerDashboard() {
         <StatCard icon={GitBranch} label="Active Processes" value={activeProcesses.length} />
         <StatCard icon={MessageSquare} label="Pending Interviews" value={pendingInterviews.length} />
         <StatCard icon={Star} label="Shortlisted" value={shortlistedIds.length} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TrendCard title="Interview Requests (Last 14 Days)" data={interviewsTrend} />
+        <DonutCard title="My Processes by Status" data={processStatusDistribution} />
       </div>
 
       <div>

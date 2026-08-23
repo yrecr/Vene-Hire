@@ -1,13 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Users, Building2, MessageSquare, GitBranch, CircleCheck as CheckCircle, ArrowRight, UserCog } from 'lucide-react';
 import { StatCard } from '@/components/stat-card';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
+import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { useData } from '@/lib/data-context';
+import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
 import type { AccessRequest } from '@/types';
+
+const PROCESS_STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  hired: 'Hired',
+  on_hold: 'On Hold',
+  not_selected: 'Not Selected',
+};
 
 const columns: DataTableColumn<AccessRequest>[] = [
   {
@@ -46,12 +56,16 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const { selectionProcesses, accessRequests, profiles, isHydrated } = useData();
   const totalApplicants = profiles.filter((p) => p.role === 'applicant').length;
   const totalEmployers = profiles.filter((p) => p.role === 'employer').length;
   const pendingRequests = accessRequests.filter((r) => r.status === 'pending').length;
   const activeProcesses = selectionProcesses.filter((p) => p.status === 'active').length;
   const hiredCount = selectionProcesses.filter((p) => p.status === 'hired').length;
+
+  const requestsTrend = bucketLast14Days(accessRequests, (r) => r.created_at);
+  const processStatusDistribution = countByStatus(selectionProcesses, (p) => p.status, PROCESS_STATUS_LABELS);
 
   if (!isHydrated) {
     return (
@@ -73,6 +87,12 @@ export default function AdminDashboardPage() {
         <StatCard icon={CheckCircle} label="Hired" value={hiredCount} />
       </div>
 
+      {/* Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TrendCard title="Access Requests (Last 14 Days)" data={requestsTrend} />
+        <DonutCard title="Processes by Status" data={processStatusDistribution} />
+      </div>
+
       {/* Recent Access Requests */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -83,7 +103,7 @@ export default function AdminDashboardPage() {
             </Button>
           </Link>
         </div>
-        <DataTable columns={columns} data={accessRequests.slice(0, 3)} />
+        <DataTable columns={columns} data={accessRequests.slice(0, 3)} onRowClick={() => router.push('/admin/requests')} />
       </div>
 
       {/* Quick Actions */}
