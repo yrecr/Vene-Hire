@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { mergeSupabaseCookies } from '@/lib/supabase-response';
 
 export async function GET(req: NextRequest) {
   const res = NextResponse.next();
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   const { data: { user: authUser } } = await supabase.auth.getUser();
   if (!authUser) {
-    return NextResponse.json({ user: null });
+    return mergeSupabaseCookies(res, NextResponse.json({ user: null }));
   }
 
   const { data: profile } = await supabase
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     .single();
 
   if (!profile) {
-    return NextResponse.json({ user: null });
+    return mergeSupabaseCookies(res, NextResponse.json({ user: null }));
   }
 
   const user: any = {
@@ -58,5 +59,5 @@ export async function GET(req: NextRequest) {
     if (ep) user.employer_profile_id = ep.id;
   }
 
-  return NextResponse.json({ user });
+  return mergeSupabaseCookies(res, NextResponse.json({ user }));
 }

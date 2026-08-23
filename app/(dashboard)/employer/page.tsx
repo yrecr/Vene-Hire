@@ -18,8 +18,8 @@ const PROCESS_STATUS_LABELS: Record<string, string> = {
 };
 
 export default function EmployerDashboard() {
-  const { currentUser } = useAuth();
-  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser, talentProfiles, employerProfiles } = useData();
+  const { currentUser, loading } = useAuth();
+  const { interviewRequests, selectionProcesses, notifications, shortlistedIds, getNotificationsForUser, talentProfiles, employerProfiles, isHydrated } = useData();
 
   const employerProfile = employerProfiles.find((e) => e.id === currentUser?.employer_profile_id);
   const employerId = employerProfile?.id ?? '';
@@ -58,6 +58,16 @@ export default function EmployerDashboard() {
 
   const userNotifications = getNotificationsForUser(profileId ?? '');
   const recentNotifications = userNotifications.slice(0, 3);
+
+  if (loading || !isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

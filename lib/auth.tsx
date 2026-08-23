@@ -14,16 +14,19 @@ export interface AuthUser {
 
 interface AuthContextType {
   currentUser: AuthUser | null;
+  loading: boolean;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   currentUser: null,
+  loading: true,
   logout: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/auth/me')
@@ -31,7 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         if (data?.user) setCurrentUser(data.user);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const logout = useCallback(async () => {
@@ -40,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );
