@@ -1,21 +1,10 @@
 import type {
   TalentProfile, TalentSkill, AccessRequest, Bootcamp, Enrollment, Resource,
   Profile, EmployerProfile, AvailabilitySlot, SelectionProcess,
-  InterviewRequest, Notification, DemoUser,
+  InterviewRequest, Notification, Vacancy, Candidate,
 } from '@/types';
 
-// ─── Demo Users ──────────────────────────────────────────
-export const demoUsers: DemoUser[] = [
-  { id: 'u-admin1', email: 'admin@demo.com', password: 'Demo123!', full_name: 'Admin User', role: 'admin', profile_id: 'p-admin1' },
-  { id: 'u-admin2', email: 'admin2@demo.com', password: 'Demo123!', full_name: 'Operations Admin', role: 'admin', profile_id: 'p-admin2' },
-  { id: 'u-sofia', email: 'sofia.backend@demo.com', password: 'Demo123!', full_name: 'Sofia Ramirez', role: 'applicant', profile_id: 'p-sofia', talent_profile_id: 'tp-sofia' },
-  { id: 'u-daniel', email: 'daniel.ai@demo.com', password: 'Demo123!', full_name: 'Daniel Torres', role: 'applicant', profile_id: 'p-daniel', talent_profile_id: 'tp-daniel' },
-  { id: 'u-camila', email: 'camila.csharp@demo.com', password: 'Demo123!', full_name: 'Camila Vega', role: 'applicant', profile_id: 'p-camila', talent_profile_id: 'tp-camila' },
-  { id: 'u-juan', email: 'juan.fullstack@demo.com', password: 'Demo123!', full_name: 'Juan Herrera', role: 'applicant', profile_id: 'p-juan', talent_profile_id: 'tp-juan' },
-  { id: 'u-acme', email: 'talent@acme.com', password: 'Demo123!', full_name: 'ACME Hiring Team', role: 'employer', profile_id: 'p-acme', employer_profile_id: 'ep-acme' },
-  { id: 'u-innova', email: 'hr@innovasoft.com', password: 'Demo123!', full_name: 'InnovaSoft Recruiting', role: 'employer', profile_id: 'p-innova', employer_profile_id: 'ep-innova' },
-  { id: 'u-next', email: 'hiring@nextlayer.com', password: 'Demo123!', full_name: 'NextLayer Talent Team', role: 'employer', profile_id: 'p-next', employer_profile_id: 'ep-next' },
-];
+// ponytail: demo users removed — auth is Supabase-only now
 
 // ─── Profiles ────────────────────────────────────────────
 export const mockProfiles: Profile[] = [
@@ -206,20 +195,19 @@ export const mockAvailabilitySlots: AvailabilitySlot[] = [
 
 // ─── Selection Processes ─────────────────────────────────
 export const mockSelectionProcesses: SelectionProcess[] = [
-  { id: 'sp1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', role_title: 'Senior Backend Engineer', current_stage: 'technical_interview', status: 'active', intro_interview_date: '2024-04-05T14:00:00Z', technical_interview_date: '2024-04-15T15:00:00Z', contract_status: null, notes: 'Strong intro interview. Moving to technical round.', created_at: '2024-04-01' },
-  { id: 'sp2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', role_title: 'AI / ML Engineer', current_stage: 'contract_signing', status: 'active', intro_interview_date: '2024-03-20T10:00:00Z', technical_interview_date: '2024-03-28T11:00:00Z', contract_status: 'under_review', notes: 'Excellent performance. Contract sent.', created_at: '2024-03-15' },
-  { id: 'sp3', applicant_id: 'tp-juan', employer_id: 'ep-acme', role_title: 'Full Stack Developer', current_stage: 'intro_interview', status: 'active', intro_interview_date: '2024-04-20T16:00:00Z', technical_interview_date: null, contract_status: null, notes: 'Intro interview scheduled.', created_at: '2024-04-10' },
-  { id: 'sp4', applicant_id: 'tp-camila', employer_id: 'ep-next', role_title: 'C# / .NET Developer', current_stage: 'intro_interview', status: 'on_hold', intro_interview_date: null, technical_interview_date: null, contract_status: null, notes: 'Process paused by employer.', created_at: '2024-04-05' },
-  { id: 'sp5', applicant_id: 'tp-valentina', employer_id: 'ep-innova', role_title: 'Frontend Developer', current_stage: 'technical_interview', status: 'not_selected', intro_interview_date: '2024-03-10T09:00:00Z', technical_interview_date: '2024-03-18T10:00:00Z', contract_status: null, notes: 'Good candidate but looking for more senior profile.', created_at: '2024-03-05' },
+  { id: 'sp1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', role_title: 'Senior Backend Engineer', current_stage: 'technical_interview', status: 'active', intro_interview_date: '2024-04-05T14:00:00Z', technical_interview_date: '2024-04-15T15:00:00Z', meeting_url: 'https://zoom.us/j/123456789?pwd=demo123', contract_status: null, contract_url: null, signature_url: null, notes: 'Strong intro interview. Moving to technical round.', created_at: '2024-04-01' },
+  { id: 'sp2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', role_title: 'AI / ML Engineer', current_stage: 'contract_signing', status: 'active', intro_interview_date: '2024-03-20T10:00:00Z', technical_interview_date: '2024-03-28T11:00:00Z', meeting_url: 'https://zoom.us/j/234567890?pwd=demo234', contract_status: 'under_review', contract_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', signature_url: '/signatures/daniel-signature.png', notes: 'Excellent performance. Contract sent and signed.', created_at: '2024-03-15' },
+  { id: 'sp5', applicant_id: 'tp-valentina', employer_id: 'ep-innova', role_title: 'Frontend Developer', current_stage: 'technical_interview', status: 'not_selected', intro_interview_date: '2024-03-10T09:00:00Z', technical_interview_date: '2024-03-18T10:00:00Z', meeting_url: 'https://zoom.us/j/456789012?pwd=demo456', contract_status: null, contract_url: null, signature_url: null, notes: 'Good candidate but looking for more senior profile.', created_at: '2024-03-05' },
+  { id: 'sp6', applicant_id: 'tp-camila', employer_id: 'ep-next', role_title: 'C# / .NET Developer', current_stage: 'contract_signing', status: 'active', intro_interview_date: '2024-04-10T14:00:00Z', technical_interview_date: '2024-04-22T15:00:00Z', meeting_url: 'https://zoom.us/j/567890123?pwd=demo567', contract_status: 'pending', contract_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', signature_url: null, notes: 'Great technical performance. Contract ready for signing.', created_at: '2024-04-20' },
 ];
 
 // ─── Interview Requests ──────────────────────────────────
 export const mockInterviewRequests: InterviewRequest[] = [
-  { id: 'ir1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', requested_date: '2024-04-22T14:00:00Z', status: 'scheduled', message: 'We would love to discuss the senior backend role with Sofia.', created_at: '2024-04-10' },
-  { id: 'ir2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', requested_date: '2024-04-25T10:00:00Z', status: 'completed', message: 'Interested in Daniel for our AI team.', created_at: '2024-03-10' },
-  { id: 'ir3', applicant_id: 'tp-juan', employer_id: 'ep-acme', requested_date: '2024-04-20T16:00:00Z', status: 'pending', message: 'Juan looks like a great fit for our fullstack position.', created_at: '2024-04-15' },
-  { id: 'ir4', applicant_id: 'tp-camila', employer_id: 'ep-next', requested_date: null, status: 'pending', message: 'Interested in Camila for .NET development work.', created_at: '2024-04-12' },
-  { id: 'ir5', applicant_id: 'tp-sofia', employer_id: 'ep-innova', requested_date: '2024-04-28T11:00:00Z', status: 'pending', message: 'Sofia has the backend skills we need.', created_at: '2024-04-18' },
+  { id: 'ir1', applicant_id: 'tp-sofia', employer_id: 'ep-acme', role_title: 'Senior Backend Engineer', requested_date: '2024-04-22T14:00:00Z', status: 'scheduled', message: 'We would love to discuss the senior backend role with Sofia.', meeting_url: 'https://zoom.us/j/123456789?pwd=demo123', created_at: '2024-04-10' },
+  { id: 'ir2', applicant_id: 'tp-daniel', employer_id: 'ep-innova', role_title: 'AI / ML Engineer', requested_date: '2024-04-25T10:00:00Z', status: 'completed', message: 'Interested in Daniel for our AI team.', meeting_url: 'https://zoom.us/j/234567890?pwd=demo234', created_at: '2024-03-10' },
+  { id: 'ir3', applicant_id: 'tp-juan', employer_id: 'ep-acme', role_title: 'Full Stack Developer', requested_date: '2024-04-20T16:00:00Z', status: 'pending', message: 'Juan looks like a great fit for our fullstack position.', meeting_url: null, created_at: '2024-04-15' },
+  { id: 'ir4', applicant_id: 'tp-camila', employer_id: 'ep-next', role_title: 'C# / .NET Developer', requested_date: null, status: 'pending', message: 'Interested in Camila for .NET development work.', meeting_url: null, created_at: '2024-04-12' },
+  { id: 'ir5', applicant_id: 'tp-sofia', employer_id: 'ep-innova', role_title: 'Backend Engineer', requested_date: '2024-04-28T11:00:00Z', status: 'pending', message: 'Sofia has the backend skills we need.', meeting_url: null, created_at: '2024-04-18' },
 ];
 
 // ─── Access Requests ─────────────────────────────────────
@@ -259,10 +247,84 @@ export const mockEnrollments: Enrollment[] = [
 ];
 
 export const mockResources: Resource[] = [
-  { id: 'r1', title: 'React Best Practices Guide', description: 'Comprehensive guide to writing clean React code.', file_path: '/resources/react-best-practices.pdf', visibility: 'student', bootcamp_id: 'bc1', created_at: '2024-04-05' },
-  { id: 'r2', title: 'Interview Preparation Handbook', description: 'Tips for technical interviews at international companies.', file_path: '/resources/interview-prep.pdf', visibility: 'student', bootcamp_id: null, created_at: '2024-03-01' },
-  { id: 'r3', title: 'Hiring Process Overview', description: 'Guide for clients on evaluating and onboarding talent.', file_path: '/resources/hiring-overview.pdf', visibility: 'client', bootcamp_id: null, created_at: '2024-02-15' },
+  { id: 'r1', title: 'React Best Practices Guide', description: 'Comprehensive guide to writing clean React code.', file_path: '/resources/react-best-practices.pdf', visibility: 'applicant', bootcamp_id: 'bc1', created_at: '2024-04-05' },
+  { id: 'r2', title: 'Interview Preparation Handbook', description: 'Tips for technical interviews at international companies.', file_path: '/resources/interview-prep.pdf', visibility: 'applicant', bootcamp_id: null, created_at: '2024-03-01' },
+  { id: 'r3', title: 'Hiring Process Overview', description: 'Guide for clients on evaluating and onboarding talent.', file_path: '/resources/hiring-overview.pdf', visibility: 'employer', bootcamp_id: null, created_at: '2024-02-15' },
   { id: 'r4', title: 'Platform Admin Guide', description: 'Admin documentation for managing the platform.', file_path: '/resources/admin-guide.pdf', visibility: 'admin', bootcamp_id: null, created_at: '2024-01-10' },
+];
+
+// ─── Vacancies & Candidates ──────────────────────────────
+export const mockVacancies: Vacancy[] = [
+  { id: 'vac-1', employer_id: 'ep-acme', title: 'Senior Backend Engineer', department: 'Engineering', location: 'Bogotá, Colombia', employment_type: 'Full-time', work_mode: 'Remote', status: 'Open', published_at: '2026-06-01', created_at: '2026-06-01' },
+  { id: 'vac-2', employer_id: 'ep-acme', title: 'Full Stack Developer', department: 'Engineering', location: 'Bogotá, Colombia', employment_type: 'Full-time', work_mode: 'Hybrid', status: 'Open', published_at: '2026-06-10', created_at: '2026-06-10' },
+  { id: 'vac-3', employer_id: 'ep-innova', title: 'AI / ML Engineer', department: 'AI', location: 'Remote', employment_type: 'Full-time', work_mode: 'Remote', status: 'Open', published_at: '2026-05-15', created_at: '2026-05-15' },
+  { id: 'vac-4', employer_id: 'ep-next', title: 'C# / .NET Developer', department: 'Engineering', location: 'Santiago, Chile', employment_type: 'Full-time', work_mode: 'Remote', status: 'Open', published_at: '2026-04-01', created_at: '2026-04-01' },
+];
+
+export const mockCandidates: Candidate[] = [
+  {
+    id: 'cand-1', vacancy_id: 'vac-1', name: 'Sofia Ramirez', initials: 'SR', score: 92,
+    manual_status: 'Interview', ai_status: 'Advance', applied_at: '2026-06-02', created_at: '2026-06-02',
+    profile_summary: 'Backend engineer con 4 años de experiencia en APIs y microservicios. Fuerte en Python, Node.js y cloud.',
+    ai_reasoning: 'Perfil altamente alineado con los requisitos técnicos. Experiencia comprobada en sistemas distribuidos y alto rendimiento.',
+    strengths: ['Arquitectura de microservicios', 'Optimización de rendimiento', 'Liderazgo técnico'],
+    improvement_areas: ['Experiencia en Kubernetes limitada', 'Sin exposición a sistemas legacy'],
+    ai_model: 'deepseek-chat', ai_response_time: '2.3s', ai_total_tokens: 1240,
+  },
+  {
+    id: 'cand-2', vacancy_id: 'vac-1', name: 'Juan Herrera', initials: 'JH', score: 78,
+    manual_status: 'Received', ai_status: 'Advance', applied_at: '2026-06-05', created_at: '2026-06-05',
+    profile_summary: 'Full stack developer con 4 años de experiencia. Versátil en React, Node.js y cloud.',
+    ai_reasoning: 'Buena base técnica aunque con menos profundidad en backend que otros candidatos. Potencial de crecimiento.',
+    strengths: ['Versatilidad técnica', 'Experiencia full stack', 'Rápido aprendizaje'],
+    improvement_areas: ['Poca experiencia en sistemas de alta concurrencia', 'Sin experiencia en liderazgo'],
+    ai_model: 'deepseek-chat', ai_response_time: '1.9s', ai_total_tokens: 980,
+  },
+  {
+    id: 'cand-3', vacancy_id: 'vac-1', name: 'Camila Vega', initials: 'CV', score: 85,
+    manual_status: 'Received', ai_status: 'Hold', applied_at: '2026-06-03', created_at: '2026-06-03',
+    profile_summary: 'Desarrollador C#/.NET con 3 años de experiencia en aplicaciones empresariales y Azure.',
+    ai_reasoning: 'Perfil sólido pero centrado en stack .NET. Potencial para migrar si hay disposición.',
+    strengths: ['Arquitectura empresarial', 'Azure cloud', 'Bases de datos SQL'],
+    improvement_areas: ['Stack limitado a tecnologías Microsoft', 'Sin experiencia en Python/Node.js'],
+    ai_model: 'deepseek-chat', ai_response_time: '2.1s', ai_total_tokens: 1100,
+  },
+  {
+    id: 'cand-4', vacancy_id: 'vac-1', name: 'Diego Ramirez', initials: 'DR', score: 65,
+    manual_status: 'Received', ai_status: 'Reject', applied_at: '2026-06-07', created_at: '2026-06-07',
+    profile_summary: 'DevOps specialist con 5 años de experiencia en infraestructura cloud y CI/CD.',
+    ai_reasoning: 'Perfil desalineado. Experiencia en DevOps no backend. Score bajo por falta de match técnico.',
+    strengths: ['Infraestructura cloud', 'CI/CD', 'Container orchestration'],
+    improvement_areas: ['Sin experiencia en backend engineering', 'No cumple requisitos técnicos del rol'],
+    ai_model: 'deepseek-chat', ai_response_time: '1.7s', ai_total_tokens: 870,
+  },
+  {
+    id: 'cand-5', vacancy_id: 'vac-2', name: 'Juan Herrera', initials: 'JH', score: 88,
+    manual_status: 'Received', ai_status: 'Advance', applied_at: '2026-06-12', created_at: '2026-06-12',
+    profile_summary: 'Full stack developer con experiencia en React, Node.js, TypeScript, PostgreSQL y GraphQL.',
+    ai_reasoning: 'Excelente match para el rol full stack. Stack técnico completo y experiencia comprobada.',
+    strengths: ['React + TypeScript avanzado', 'Node.js/GraphQL', 'Arquitectura frontend'],
+    improvement_areas: ['Sin experiencia en testing E2E', 'Poca exposición a mobile'],
+    ai_model: 'deepseek-chat', ai_response_time: '2.0s', ai_total_tokens: 1050,
+  },
+  {
+    id: 'cand-6', vacancy_id: 'vac-2', name: 'Valentina Lopez', initials: 'VL', score: 82,
+    manual_status: 'Received', ai_status: 'Advance', applied_at: '2026-06-14', created_at: '2026-06-14',
+    profile_summary: 'Frontend developer con 3 años en React, TypeScript, Next.js y Tailwind.',
+    ai_reasoning: 'Buen perfil frontend. Fortaleza en UI/UX. Requiere apoyo en backend.',
+    strengths: ['UI/UX', 'React/Next.js avanzado', 'Accesibilidad web'],
+    improvement_areas: ['Sin experiencia backend', 'Stack limitado a frontend'],
+    ai_model: 'deepseek-chat', ai_response_time: '1.8s', ai_total_tokens: 920,
+  },
+  {
+    id: 'cand-7', vacancy_id: 'vac-2', name: 'Ana Martinez', initials: 'AM', score: 71,
+    manual_status: 'Received', ai_status: 'Hold', applied_at: '2026-06-15', created_at: '2026-06-15',
+    profile_summary: 'Frontend engineer con enfoque en diseño de sistemas y componentes reutilizables.',
+    ai_reasoning: 'Perfil creativo con buen ojo para diseño. Score medio por falta de experiencia full stack.',
+    strengths: ['Design systems', 'Storybook', 'Figma a código'],
+    improvement_areas: ['Sin experiencia backend', 'Poca experiencia en producción'],
+    ai_model: 'deepseek-chat', ai_response_time: '2.2s', ai_total_tokens: 1010,
+  },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────

@@ -6,21 +6,17 @@ import { DashboardHeader } from '@/components/dashboard-header';
 import {
   LayoutDashboard,
   Users,
-  Star,
   GitBranch,
   MessageSquare,
-  Bell,
-  Building2,
+  Briefcase,
 } from 'lucide-react';
 
 const employerLinks: SidebarLink[] = [
   { href: '/employer', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/employer/vacancies', label: 'Vacantes', icon: Briefcase },
   { href: '/employer/applicants', label: 'Browse Applicants', icon: Users },
-  { href: '/employer/shortlist', label: 'Shortlist', icon: Star },
   { href: '/employer/processes', label: 'Active Processes', icon: GitBranch },
   { href: '/employer/requests', label: 'Interviews', icon: MessageSquare },
-  { href: '/employer/notifications', label: 'Notifications', icon: Bell },
-  { href: '/employer/company', label: 'Company', icon: Building2 },
 ];
 
 export default function EmployerLayout({ children }: { children: React.ReactNode }) {

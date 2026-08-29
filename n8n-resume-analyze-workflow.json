@@ -1,0 +1,177 @@
+{
+  "name": "Resume CV Analysis",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "resume-analyze",
+        "options": {
+          "responseMode": "onReceived",
+          "responseData": "json",
+          "responseJSON": "{\"status\": \"processing\"}"
+        }
+      }
+    },
+    {
+      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "name": "Download PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.resume_url }}",
+        "sendQuery": false,
+        "sendBody": false,
+        "sendHeaders": false,
+        "options": {
+          "response": {
+            "responseFormat": "file"
+          }
+        }
+      }
+    },
+    {
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Extract Text from PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        600,
+        400
+      ],
+      "parameters": {
+        "operation": "extract",
+        "inputBinaryFieldName": "data",
+        "options": {}
+      }
+    },
+    {
+      "id": "d4e5f6a7-b8c9-0123-defa-123456789013",
+      "name": "Build AI Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Retrieve the extracted CV text from the previous node\nconst cvText = $input.first().json.text || $input.first().json.data?.text || '';\n\nif (!cvText.trim()) {\n  throw new Error('No text could be extracted from the PDF (scanned document?).');\n}\n\nconst systemPrompt = `You are a technical recruiter analyzing a CV. Extract all technical skills and technologies mentioned, and rate proficiency 0-100 based on evidence in the CV (years of experience, projects, certifications, usage context).\n\nReturn ONLY a JSON array of objects with fields: skill_name (string), score (number 0-100), display_order (number starting from 1).\n\nScoring guide:\n- 90+: expert / architect — deeply demonstrated\n- 70-89: strong / advanced — regular use with clear depth\n- 50-69: intermediate — listed with projects or experience\n- 30-49: beginner — mentioned, some exposure\n- below 30: listed but no depth shown\n\nInclude ALL technologies found. Prioritize programming languages, frameworks, tools, databases, cloud platforms, and methodologies.`;\n\nreturn [{\n  json: {\n    model: 'deepseek-chat',\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: `CV TEXT:\\n${cvText.slice(0, 15000)}` }\n    ],\n    temperature: 0.3,\n    max_tokens: 2000\n  }\n}];"
+      }
+    },
+    {
+      "id": "e5f6a7b8-c9d0-1234-efab-123456789014",
+      "name": "DeepSeek API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredential",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": false,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "sendHeaders": false,
+        "options": {}
+      },
+      "credentials": {
+        "genericCredential": {
+          "id": "deepseek-credential-id",
+          "name": "DeepSeek API Key"
+        }
+      }
+    },
+    {
+      "id": "f6a7b8c9-d0e1-2345-fabc-123456789015",
+      "name": "Parse & Save to Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2.1,
+      "position": [
+        1500,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Get webhook data (talent_profile_id)\nconst webhookItem = $('Webhook').first();\nconst talentProfileId = webhookItem.json.talent_profile_id;\n\n// Parse DeepSeek response\nconst aiResponse = $input.first().json;\nconst content = aiResponse.choices?.[0]?.message?.content;\n\nif (!content) {\n  throw new Error('AI returned empty response');\n}\n\nconst jsonMatch = content.match(/\\[[\\s\\S]*?\\]/);\nif (!jsonMatch) {\n  throw new Error('AI response was not valid JSON');\n}\n\nconst skills = JSON.parse(jsonMatch[0]);\n\nif (!skills.length) {\n  throw new Error('No skills detected in CV');\n}\n\n// Clamp scores 0-100\nskills.forEach(function(s, i) {\n  s.score = Math.max(0, Math.min(100, Math.round(s.score)));\n  s.display_order = i + 1;\n});\n\nconst techStack = skills.map(function(s) { return s.skill_name; });\n\n// --- Write to Supabase via REST API ---\nconst supabaseUrl = $env.SUPABASE_URL || $env.NEXT_PUBLIC_SUPABASE_URL;\nconst supabaseKey = $env.SUPABASE_SERVICE_KEY || $env.SUPABASE_SERVICE_ROLE_KEY;\n\nif (!supabaseUrl || !supabaseKey) {\n  throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY must be set as n8n environment variables');\n}\n\nconst headers = {\n  'apikey': supabaseKey,\n  'Authorization': 'Bearer ' + supabaseKey,\n  'Content-Type': 'application/json'\n};\n\n// 1. Delete existing skills\nconst deleteResp = await fetch(\n  supabaseUrl + '/rest/v1/talent_skills?talent_profile_id=eq.' + encodeURIComponent(talentProfileId),\n  { method: 'DELETE', headers }\n);\n\nif (!deleteResp.ok && deleteResp.status !== 204) {\n  const err = await deleteResp.text();\n  if (deleteResp.status !== 406) {\n    throw new Error('Failed to delete existing skills: ' + err);\n  }\n}\n\n// 2. Update tech_stack on talent_profiles\nconst updateResp = await fetch(\n  supabaseUrl + '/rest/v1/talent_profiles?id=eq.' + encodeURIComponent(talentProfileId),\n  {\n    method: 'PATCH',\n    headers,\n    body: JSON.stringify({ tech_stack: techStack })\n  }\n);\n\nif (!updateResp.ok) {\n  const err = await updateResp.text();\n  throw new Error('Failed to update tech_stack: ' + err);\n}\n\n// 3. Insert new skills\nconst skillRows = skills.map(function(s) {\n  return {\n    talent_profile_id: talentProfileId,\n    skill_name: s.skill_name,\n    score: s.score,\n    display_order: s.display_order\n  };\n});\n\nconst insertResp = await fetch(\n  supabaseUrl + '/rest/v1/talent_skills',\n  {\n    method: 'POST',\n    headers: { ...headers, 'Prefer': 'return=minimal' },\n    body: JSON.stringify(skillRows)\n  }\n);\n\nif (!insertResp.ok) {\n  const err = await insertResp.text();\n  throw new Error('Failed to insert skills: ' + err);\n}\n\nreturn [{\n  json: {\n    success: true,\n    talent_profile_id: talentProfileId,\n    skill_count: skills.length,\n    tech_stack: techStack\n  }\n}];"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Download PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Text from PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text from PDF": {
+      "main": [
+        [
+          {
+            "node": "Build AI Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Payload": {
+      "main": [
+        [
+          {
+            "node": "DeepSeek API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek API": {
+      "main": [
+        [
+          {
+            "node": "Parse & Save to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "active": false
+}

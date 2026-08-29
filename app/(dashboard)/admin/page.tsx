@@ -1,19 +1,23 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Users, Building2, MessageSquare, GitBranch, CircleCheck as CheckCircle, ArrowRight, UserCog } from 'lucide-react';
 import { StatCard } from '@/components/stat-card';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockProfiles, mockAccessRequests, mockSelectionProcesses } from '@/data/mock';
+import { TrendCard, DonutCard } from '@/components/dashboard-charts';
+import { useData } from '@/lib/data-context';
+import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
 import type { AccessRequest } from '@/types';
 
-const totalApplicants = mockProfiles.filter((p) => p.role === 'applicant').length;
-const totalEmployers = mockProfiles.filter((p) => p.role === 'employer').length;
-const pendingRequests = mockAccessRequests.filter((r) => r.status === 'pending').length;
-const activeProcesses = mockSelectionProcesses.filter((p) => p.status === 'active').length;
-const hiredCount = mockSelectionProcesses.filter((p) => p.status === 'hired').length;
+const PROCESS_STATUS_LABELS: Record<string, string> = {
+  active: 'Active',
+  hired: 'Hired',
+  on_hold: 'On Hold',
+  not_selected: 'Not Selected',
+};
 
 const columns: DataTableColumn<AccessRequest>[] = [
   {
@@ -52,15 +56,41 @@ const columns: DataTableColumn<AccessRequest>[] = [
 ];
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
+  const { selectionProcesses, accessRequests, profiles, isHydrated } = useData();
+  const totalApplicants = profiles.filter((p) => p.role === 'applicant').length;
+  const totalEmployers = profiles.filter((p) => p.role === 'employer').length;
+  const pendingRequests = accessRequests.filter((r) => r.status === 'pending').length;
+  const activeProcesses = selectionProcesses.filter((p) => p.status === 'active').length;
+  const hiredCount = selectionProcesses.filter((p) => p.status === 'hired').length;
+
+  const requestsTrend = bucketLast14Days(accessRequests, (r) => r.created_at);
+  const processStatusDistribution = countByStatus(selectionProcesses, (p) => p.status, PROCESS_STATUS_LABELS);
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard icon={Users} label="Total Applicants" value={totalApplicants} />
         <StatCard icon={Building2} label="Total Employers" value={totalEmployers} />
         <StatCard icon={MessageSquare} label="Pending Requests" value={pendingRequests} />
         <StatCard icon={GitBranch} label="Active Processes" value={activeProcesses} />
         <StatCard icon={CheckCircle} label="Hired" value={hiredCount} />
+      </div>
+
+      {/* Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <TrendCard title="Access Requests (Last 14 Days)" data={requestsTrend} />
+        <DonutCard title="Processes by Status" data={processStatusDistribution} />
       </div>
 
       {/* Recent Access Requests */}
@@ -73,7 +103,7 @@ export default function AdminDashboardPage() {
             </Button>
           </Link>
         </div>
-        <DataTable columns={columns} data={mockAccessRequests.slice(0, 3)} />
+        <DataTable columns={columns} data={accessRequests.slice(0, 3)} onRowClick={() => router.push('/admin/requests')} />
       </div>
 
       {/* Quick Actions */}

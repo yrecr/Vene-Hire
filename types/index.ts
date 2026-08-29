@@ -3,7 +3,7 @@ export interface Profile {
   auth_user_id: string;
   full_name: string;
   email: string;
-  role: 'admin' | 'client' | 'student' | 'applicant' | 'employer';
+  role: 'admin' | 'applicant' | 'employer';
   company_name: string | null;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
@@ -69,7 +69,10 @@ export interface SelectionProcess {
   status: 'active' | 'hired' | 'not_selected' | 'on_hold';
   intro_interview_date: string | null;
   technical_interview_date: string | null;
+  meeting_url?: string | null;
   contract_status: 'pending' | 'under_review' | 'signed' | null;
+  contract_url: string | null;
+  signature_url: string | null;
   notes: string;
   created_at: string;
   applicant?: TalentProfile;
@@ -80,10 +83,14 @@ export interface InterviewRequest {
   id: string;
   applicant_id: string;
   employer_id: string;
+  role_title: string;
   requested_date: string | null;
   status: 'pending' | 'accepted' | 'declined' | 'scheduled' | 'completed';
   message: string;
   created_at: string;
+  meeting_url?: string | null;
+  outcome?: 'passed' | 'failed' | null;
+  outcome_notes?: string;
   applicant?: TalentProfile;
   employer?: EmployerProfile;
 }
@@ -111,6 +118,9 @@ export interface Notification {
   type: 'info' | 'interview' | 'process' | 'contract' | 'request';
   read: boolean;
   created_at: string;
+  metadata?: {
+    join_url?: string;
+  };
 }
 
 export interface Bootcamp {
@@ -138,8 +148,51 @@ export interface Resource {
   title: string;
   description: string;
   file_path: string;
-  visibility: 'all' | 'admin' | 'client' | 'student';
+  visibility: 'all' | 'admin' | 'employer' | 'applicant';
   bootcamp_id: string | null;
+  created_at: string;
+}
+
+export interface ContractApprovalRequest {
+  id: string;
+  process_id: string;
+  employer_id: string;
+  applicant_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export interface Vacancy {
+  id: string;
+  employer_id: string;
+  title: string;
+  department: string;
+  location: string;
+  employment_type: 'Full-time' | 'Part-time' | 'Freelance';
+  work_mode: 'Remote' | 'Hybrid' | 'On-site';
+  status: 'Open' | 'Closed';
+  published_at: string;
+  created_at: string;
+}
+
+export interface Candidate {
+  id: string;
+  vacancy_id: string;
+  name: string;
+  initials: string;
+  score: number;
+  manual_status: 'Received' | 'Interview' | 'Offer';
+  ai_status: 'Advance' | 'Hold' | 'Reject';
+  applied_at: string;
+  profile_summary: string;
+  ai_reasoning: string;
+  strengths: string[];
+  improvement_areas: string[];
+  ai_model: string;
+  ai_response_time: string;
+  ai_total_tokens: number;
   created_at: string;
 }
 

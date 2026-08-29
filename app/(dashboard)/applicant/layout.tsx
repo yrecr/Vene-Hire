@@ -3,14 +3,10 @@
 import { useState } from 'react';
 import { DashboardSidebar, type SidebarLink } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
-import { LayoutDashboard, User, FileText, Video, Calendar, MessageSquare, GitBranch, Signature as FileSignature } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, GitBranch, FileSignature } from 'lucide-react';
 
 const applicantLinks: SidebarLink[] = [
   { href: '/applicant', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/applicant/profile', label: 'My Profile', icon: User },
-  { href: '/applicant/resume', label: 'My Resume', icon: FileText },
-  { href: '/applicant/video', label: 'My Video', icon: Video },
-  { href: '/applicant/availability', label: 'Availability', icon: Calendar },
   { href: '/applicant/interviews', label: 'Interviews', icon: MessageSquare },
   { href: '/applicant/processes', label: 'Processes', icon: GitBranch },
   { href: '/applicant/contract', label: 'Contract', icon: FileSignature },

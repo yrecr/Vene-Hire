@@ -1,24 +1,77 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockTalentProfiles } from '@/data/mock';
+import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
-import { Eye, Check, Minus } from 'lucide-react';
+import { Eye, Check, Minus, Download } from 'lucide-react';
 
 type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
+
+function calcCompletion(p: TalentProfile): number {
+  const checks = [
+    p.display_name.length > 0,
+    p.title.length > 0,
+    (p.summary?.length ?? 0) > 2,
+    (p.bio?.length ?? 0) > 0,
+    (p.tech_stack?.length ?? 0) > 0,
+    (p.tech_stack?.length ?? 0) > 0,
+    p.english_level !== 'Basic',
+    (p.resume_url?.length ?? 0) > 0,
+    (p.video_url?.length ?? 0) > 0,
+    p.availability_status !== 'In Training',
+  ];
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}
 
 const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
 const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
+function csvEscape(value: string | number | boolean): string {
+  const str = String(value);
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function exportApplicantsCsv(rows: TalentWithSkills[]) {
+  const headers = [
+    'display_name', 'slug', 'title', 'english_level', 'availability_status',
+    'years_experience', 'tech_stack', 'public_visible', 'featured', 'created_at',
+  ];
+  const lines = [
+    headers.join(','),
+    ...rows.map((r) => [
+      csvEscape(r.display_name),
+      csvEscape(r.slug),
+      csvEscape(r.title),
+      csvEscape(r.english_level),
+      csvEscape(r.availability_status),
+      csvEscape(r.years_experience),
+      csvEscape(r.tech_stack?.join('; ') ?? ''),
+      csvEscape(r.public_visible),
+      csvEscape(r.featured),
+      csvEscape(r.created_at),
+    ].join(',')),
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `applicants-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function ApplicantManagementPage() {
+  const { talentProfiles, isHydrated } = useData();
+  const router = useRouter();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
 
   const filteredProfiles = useMemo(() => {
-    let result: TalentWithSkills[] = mockTalentProfiles;
+    let result: TalentWithSkills[] = talentProfiles;
 
     if (visibilityFilter === 'Visible') {
       result = result.filter((p) => p.public_visible);
@@ -33,7 +86,7 @@ export default function ApplicantManagementPage() {
     }
 
     return result;
-  }, [visibilityFilter, featuredFilter]);
+  }, [talentProfiles, visibilityFilter, featuredFilter]);
 
   const columns: DataTableColumn<TalentWithSkills>[] = [
     {
@@ -89,18 +142,18 @@ export default function ApplicantManagementPage() {
             <div
               className="h-full rounded-full transition-all"
               style={{
-                width: `${item.profile_completion}%`,
+                width: `${calcCompletion(item)}%`,
                 backgroundColor:
-                  item.profile_completion >= 80
+                  calcCompletion(item) >= 80
                     ? 'hsl(152, 69%, 40%)'
-                    : item.profile_completion >= 60
+                    : calcCompletion(item) >= 60
                     ? 'hsl(38, 92%, 50%)'
                     : 'hsl(0, 84%, 60%)',
               }}
             />
           </div>
           <span className="text-xs text-muted-foreground whitespace-nowrap">
-            {item.profile_completion}%
+            {calcCompletion(item)}%
           </span>
         </div>
       ),
@@ -128,22 +181,38 @@ export default function ApplicantManagementPage() {
     {
       key: 'actions',
       header: 'Actions',
-      render: () => (
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+      render: (item) => (
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/admin/applicants/${item.id}`)}>
           <Eye className="w-4 h-4" />
         </Button>
       ),
     },
   ];
 
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
-        <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
-          {mockTalentProfiles.length}
-        </span>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
+            {talentProfiles.length}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApplicantsCsv(filteredProfiles)}>
+          <Download className="w-4 h-4" />
+          Export CSV
+        </Button>
       </div>
 
       {/* Filters */}

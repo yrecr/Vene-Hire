@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
+import { NotificationCenter } from '@/components/notification-center';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -13,6 +17,9 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const { currentUser, logout } = useAuth();
+  const { notifications } = useData();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -33,9 +40,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] flex items-center justify-center transition-transform group-hover:scale-105">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo.png" alt="VeneHire" className="w-9 h-9 object-contain transition-transform group-hover:scale-105" />
             <span className="text-xl font-bold text-foreground tracking-tight">
               Vene<span className="gradient-text">Hire</span>
             </span>
@@ -54,16 +59,44 @@ export function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost" size="sm" className="text-sm font-medium">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/request-demo">
-              <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
-                Request a Demo
-              </Button>
-            </Link>
+            {currentUser ? (
+              <>
+                <Link href={`/${currentUser.role}`}>
+                  <Button variant="outline" size="sm" className="text-sm font-medium">
+                    Dashboard
+                  </Button>
+                </Link>
+                <NotificationCenter
+                  notifications={notifications.filter((n) => n.user_id === currentUser.profile_id)}
+                  role={currentUser.role}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => { logout(); router.push('/'); }}
+                >
+                  <LogOut className="w-[18px] h-[18px]" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" size="sm" className="text-sm font-medium">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/request-sign-up?type=applicant">
+                  <Button variant="outline" size="sm" className="text-sm font-medium">
+                    Apply as Talent
+                  </Button>
+                </Link>
+                <Link href="/request-sign-up">
+                  <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
+                    Request a Demo
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -89,16 +122,42 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <Link href="/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full" size="sm">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href="/request-demo" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
-                  Request a Demo
-                </Button>
-              </Link>
+              {currentUser ? (
+                <>
+                  <Link href={`/${currentUser.role}`} onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                    onClick={() => { logout(); router.push('/'); setMobileOpen(false); }}
+                  >
+                    <LogOut className="w-[18px] h-[18px] mr-2" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/request-sign-up?type=applicant" onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full" size="sm">
+                      Apply as Talent
+                    </Button>
+                  </Link>
+                  <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
+                      Request a Demo
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockBootcamps } from '@/data/mock';
+import { useData } from '@/lib/data-context';
 import { Plus, Calendar, Users } from 'lucide-react';
 
 const studentCounts: Record<string, number> = {
@@ -12,20 +12,40 @@ const studentCounts: Record<string, number> = {
 };
 
 export default function BootcampsPage() {
+  const { bootcamps, isHydrated } = useData();
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Bootcamps</h2>
-        <Button size="sm" className="gap-2">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-foreground">Bootcamps</h2>
+          <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+            Coming soon
+          </span>
+        </div>
+        <Button size="sm" className="gap-2" disabled title="Bootcamp management is coming in a future update">
           <Plus className="w-4 h-4" />
           Create Bootcamp
         </Button>
       </div>
+      <p className="text-sm text-muted-foreground -mt-4">
+        This module isn&apos;t operational yet — it&apos;ll be enabled in a future update.
+      </p>
 
       {/* Bootcamp Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockBootcamps.map((bootcamp) => (
+        {bootcamps.map((bootcamp) => (
           <div
             key={bootcamp.id}
             className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col"

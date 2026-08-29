@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
-import { mockTalentProfiles } from '@/data/mock';
+import { useData } from '@/lib/data-context';
 import { Plus, Pencil, Eye, Check, Minus } from 'lucide-react';
 import type { TalentProfile, TalentSkill } from '@/types';
 
@@ -115,6 +115,18 @@ const columns: DataTableColumn<TalentWithSkills>[] = [
 ];
 
 export default function TalentProfilesPage() {
+  const { talentProfiles, isHydrated } = useData();
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,7 +139,7 @@ export default function TalentProfilesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={mockTalentProfiles} />
+      <DataTable columns={columns} data={talentProfiles} />
     </div>
   );
 }

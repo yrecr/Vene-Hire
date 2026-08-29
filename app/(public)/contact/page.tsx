@@ -128,7 +128,7 @@ export default function ContactPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Looking to request a demo instead?
                 </p>
-                <Link href="/request-demo">
+                <Link href="/request-sign-up">
                   <Button
                     variant="outline"
                     className="border-gray-200 hover:bg-gray-50"

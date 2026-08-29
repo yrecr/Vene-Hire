@@ -1,8 +1,9 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { DemoAuthProvider } from '@/lib/demo-auth';
-import { RoleSwitcher } from '@/components/role-switcher';
+import { AuthProvider } from '@/lib/auth';
+import { DataProvider } from '@/lib/data-context';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,12 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={inter.className}>
-        <DemoAuthProvider>
-          {children}
-          <RoleSwitcher />
-        </DemoAuthProvider>
+        <AuthProvider>
+          <DataProvider>
+            {children}
+            <Toaster />
+          </DataProvider>
+        </AuthProvider>
       </body>
     </html>
   );

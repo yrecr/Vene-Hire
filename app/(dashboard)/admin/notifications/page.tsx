@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { getNotificationsForUser } from '@/data/mock';
+import { useData } from '@/lib/data-context';
 import {
   Bell,
   MessageSquare,
@@ -21,6 +21,7 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 export default function AdminNotificationsPage() {
+  const { getNotificationsForUser, isHydrated } = useData();
   const initialNotifications = getNotificationsForUser('p-admin1');
   const [notifications, setNotifications] = useState(initialNotifications);
 
@@ -40,6 +41,16 @@ export default function AdminNotificationsPage() {
       minute: '2-digit',
     });
   };
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

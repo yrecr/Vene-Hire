@@ -39,7 +39,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
             <p className="text-xs text-muted-foreground truncate">{talent.title}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-4 min-h-[3rem]">
           {talent.tech_stack.slice(0, 3).map((tech) => (
             <span key={tech} className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-600 rounded-full">
               {tech}
@@ -84,7 +84,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
           {talent.summary}
         </p>
 
-        <div className="flex flex-wrap gap-1.5 mb-5">
+        <div className="flex flex-wrap gap-1.5 mb-5 min-h-[5rem]">
           {talent.tech_stack.slice(0, 5).map((tech) => (
             <Badge key={tech} variant="secondary" className="text-xs font-medium bg-gray-50 hover:bg-gray-100 text-gray-700 border-0">
               {tech}

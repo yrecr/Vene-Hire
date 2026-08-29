@@ -8,11 +8,12 @@ import {
   FileText,
   Info,
   CheckCheck,
+  Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/empty-state';
-import { useDemoAuth } from '@/lib/demo-auth';
-import { getNotificationsForUser } from '@/data/mock';
+import { useAuth } from '@/lib/auth';
+import { useData } from '@/lib/data-context';
 import type { LucideIcon } from 'lucide-react';
 
 function getNotificationIcon(type: string): LucideIcon {
@@ -46,7 +47,8 @@ function getNotificationIconColor(type: string): string {
 }
 
 export default function EmployerNotificationsPage() {
-  const { currentUser } = useDemoAuth();
+  const { currentUser } = useAuth();
+  const { getNotificationsForUser } = useData();
   const profileId = currentUser?.profile_id || 'p-acme';
   const notifications = getNotificationsForUser(profileId);
 
@@ -107,6 +109,7 @@ export default function EmployerNotificationsPage() {
             const Icon = getNotificationIcon(notification.type);
             const iconColor = getNotificationIconColor(notification.type);
             const isRead = readState[notification.id];
+            const joinUrl = notification.metadata?.join_url;
 
             return (
               <div
@@ -140,6 +143,17 @@ export default function EmployerNotificationsPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">
                     {notification.message}
                   </p>
+                  {joinUrl && (
+                    <a
+                      href={joinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      Join Meeting
+                    </a>
+                  )}
                   <p className="text-xs text-muted-foreground mt-1">
                     {new Date(notification.created_at).toLocaleDateString(
                       'en-US',
