@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
-import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate } from '@/types';
+import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent } from '@/types';
 
 let _sb: ReturnType<typeof createBrowserClient> | null = null;
 function sb() {
@@ -326,4 +326,33 @@ export async function upsertResource(resource: Pick<Resource, 'id' | 'visibility
     body: JSON.stringify(resource),
   });
   if (!res.ok) throw new Error(`Failed to upsert resource: ${await res.text()}`);
+}
+
+// ─── Timesheets ──────────────────────────────────────
+export async function fetchTimesheets(): Promise<Timesheet[]> {
+  const { data } = await sb().from('timesheets').select('*');
+  return data ?? [];
+}
+
+export async function fetchTimesheetEvents(): Promise<TimesheetEvent[]> {
+  const { data } = await sb().from('timesheet_events').select('*');
+  return data ?? [];
+}
+
+export async function submitTimesheet(processId: string, month: string, days: TimesheetDay[]): Promise<Timesheet> {
+  const res = await fetch('/api/timesheets/submit', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ process_id: processId, month, days }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to submit timesheet');
+  return (await res.json()).timesheet;
+}
+
+export async function reviewTimesheet(timesheetId: string, decision: 'approved' | 'rejected', comment?: string): Promise<Timesheet> {
+  const res = await fetch('/api/timesheets/review', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ timesheet_id: timesheetId, decision, comment }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to review timesheet');
+  return (await res.json()).timesheet;
 }

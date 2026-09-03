@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import type {
   TalentProfile, InterviewRequest, SelectionProcess, Notification, AvailabilitySlot,
   EmployerProfile, Profile, AccessRequest, TalentSkill, Bootcamp, Enrollment, Resource,
-  ContractApprovalRequest, Vacancy, Candidate,
+  ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent,
 } from '@/types';
 import * as api from './supabase-service';
 import { mockEmployerProfiles } from '@/data/mock';
@@ -42,6 +42,11 @@ interface DataContextType {
   respondToInterview: (requestId: string, status: 'accepted' | 'declined') => void;
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
   updateProcessStatus: (processId: string, status: 'active' | 'on_hold' | 'not_selected') => Promise<void>;
+  updateProcessHourlyRate: (processId: string, hourlyRate: number) => Promise<void>;
+  timesheets: Timesheet[];
+  timesheetEvents: TimesheetEvent[];
+  submitTimesheet: (processId: string, month: string, days: TimesheetDay[]) => Promise<void>;
+  reviewTimesheet: (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => Promise<void>;
   addMeetingLink: (requestId: string, url: string) => void;
   reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
   toggleShortlist: (applicantId: string) => Promise<void>;
@@ -85,10 +90,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [contractApprovalRequests, setContractApprovalRequests] = useState<ContractApprovalRequest[]>([]);
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
+  const [timesheetEvents, setTimesheetEvents] = useState<TimesheetEvent[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrateFromSupabase = useCallback(async () => {
     try {
-      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand, sl] = await Promise.allSettled([
+      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand, sl, ts, te] = await Promise.allSettled([
         api.fetchTalentProfiles(),
         api.fetchProfiles(),
         api.fetchEmployerProfiles(),
@@ -104,6 +111,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.fetchVacancies(),
         api.fetchCandidates(),
         api.fetchShortlistedIds(),
+        api.fetchTimesheets(),
+        api.fetchTimesheetEvents(),
       ]);
 
       // Replace seed data with real Supabase data to avoid duplicates
@@ -122,6 +131,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (vac.status === 'fulfilled' && vac.value.length) setVacancies(vac.value);
       if (cand.status === 'fulfilled' && cand.value.length) setCandidates(cand.value);
       if (sl.status === 'fulfilled' && sl.value.length) setShortlistedIds(sl.value);
+      if (ts.status === 'fulfilled' && ts.value.length) setTimesheets(ts.value);
+      if (te.status === 'fulfilled' && te.value.length) setTimesheetEvents(te.value);
     } catch {
       // Supabase unavailable
     } finally {
@@ -225,6 +236,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           role_title: request.role_title, current_stage: 'intro_interview', status: 'active',
           intro_interview_date: request.requested_date, technical_interview_date: null,
           meeting_url: null, contract_status: null, contract_url: null, signature_url: null,
+          hourly_rate: null,
           notes: 'Process started from interview request acceptance.',
           created_at: new Date().toISOString(),
         };
@@ -325,6 +337,60 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
     }
   }, [selectionProcesses]);
+
+  const updateProcessHourlyRate = useCallback(async (processId: string, hourlyRate: number) => {
+    const prevProcess = selectionProcesses.find((p) => p.id === processId);
+    if (!prevProcess) return;
+    const updated: SelectionProcess = { ...prevProcess, hourly_rate: hourlyRate };
+    setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
+    try {
+      await api.upsertSelectionProcess(updated);
+    } catch {
+      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    }
+  }, [selectionProcesses]);
+
+  const submitTimesheet = useCallback(async (processId: string, month: string, days: TimesheetDay[]) => {
+    const timesheet = await api.submitTimesheet(processId, month, days);
+    setTimesheets((prev) => {
+      const exists = prev.some((t) => t.id === timesheet.id);
+      return exists ? prev.map((t) => (t.id === timesheet.id ? timesheet : t)) : [...prev, timesheet];
+    });
+
+    const process = selectionProcesses.find((p) => p.id === processId);
+    const applicant = process ? findTalentById(process.applicant_id) : undefined;
+    const empUserId = process ? findEmployerUserId(process.employer_id) : undefined;
+    if (empUserId) {
+      const n: Notification = {
+        id: crypto.randomUUID(), user_id: empUserId,
+        title: 'Hours submitted for review',
+        message: `${applicant?.display_name || 'Your engineer'} submitted their hours for ${month} — ${timesheet.total_hours}h total.`,
+        type: 'process', read: false, created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [...prev, n]);
+      api.upsertNotification(n).catch(() => {});
+    }
+  }, [selectionProcesses, findTalentById, findEmployerUserId]);
+
+  const reviewTimesheet = useCallback(async (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => {
+    const timesheet = await api.reviewTimesheet(timesheetId, decision, comment);
+    setTimesheets((prev) => prev.map((t) => (t.id === timesheetId ? timesheet : t)));
+
+    const process = selectionProcesses.find((p) => p.id === timesheet.process_id);
+    const applicantUserId = process ? findTalentById(process.applicant_id)?.user_id : undefined;
+    if (applicantUserId) {
+      const n: Notification = {
+        id: crypto.randomUUID(), user_id: applicantUserId,
+        title: decision === 'approved' ? 'Hours approved' : 'Hours need corrections',
+        message: decision === 'approved'
+          ? `Your hours for ${timesheet.month} were approved. A billing statement was generated.`
+          : `Your hours for ${timesheet.month} were sent back for corrections: ${comment}`,
+        type: 'process', read: false, created_at: new Date().toISOString(),
+      };
+      setNotifications((prev) => [...prev, n]);
+      api.upsertNotification(n).catch(() => {});
+    }
+  }, [selectionProcesses, findTalentById]);
 
   /** Find the selection process this interview request belongs to (by stage, matching the role_title convention used for technical interviews). */
   const findProcessForRequest = useCallback((request: InterviewRequest) => {
@@ -653,7 +719,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     contractApprovalRequests,
     vacancies, candidates, createVacancy,
     updateCandidateStatus: updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, addMeetingLink, reportInterviewOutcome,
+    timesheets, timesheetEvents, submitTimesheet, reviewTimesheet,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
     getApplicantById: findTalentById,
@@ -668,11 +735,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }), [
     isHydrated, talentProfiles, profiles, employerProfiles, accessRequests,
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
-    availabilitySlots, bootcamps, enrollments, resources,
+    availabilitySlots, bootcamps, enrollments, resources, timesheets, timesheetEvents,
     createResource, updateResourceVisibility,
     contractApprovalRequests,
     vacancies, candidates, createVacancy, updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, addMeetingLink, reportInterviewOutcome,
+    submitTimesheet, reviewTimesheet,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
     updateAvailabilitySlots, initiateContract, requestContractApproval,

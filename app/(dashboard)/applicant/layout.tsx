@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { DashboardSidebar, type SidebarLink } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
-import { LayoutDashboard, MessageSquare, GitBranch, FileSignature } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, GitBranch, FileSignature, Clock } from 'lucide-react';
 
 const applicantLinks: SidebarLink[] = [
   { href: '/applicant', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/applicant/interviews', label: 'Interviews', icon: MessageSquare },
   { href: '/applicant/processes', label: 'Processes', icon: GitBranch },
+  { href: '/applicant/timesheet', label: 'My Hours', icon: Clock },
   { href: '/applicant/contract', label: 'Contract', icon: FileSignature },
 ];
 
