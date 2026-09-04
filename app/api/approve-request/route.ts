@@ -29,6 +29,21 @@ export async function POST(req: NextRequest) {
 
   let authUserId: string;
   let profileId: string;
+  // Only set when THIS request created the account, so we never delete a
+  // pre-existing user while recovering from a later failure.
+  let createdAuthUserId: string | null = null;
+
+  /**
+   * Account creation spans four writes (auth user, profile, role profile,
+   * access request). Without this, a failure halfway through leaves an auth
+   * user that can sign in but has no profile — a dead account only fixable by
+   * hand in the Supabase panel.
+   */
+  const rollback = async () => {
+    if (!createdAuthUserId) return;
+    await supabaseAdmin!.from('profiles').delete().eq('auth_user_id', createdAuthUserId);
+    await supabaseAdmin!.auth.admin.deleteUser(createdAuthUserId);
+  };
 
   const { data: authData, error: authError } = shouldInvite
     ? await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -43,6 +58,7 @@ export async function POST(req: NextRequest) {
       });
   if (authData?.user?.id) {
     authUserId = authData.user.id;
+    createdAuthUserId = authUserId;
     profileId = crypto.randomUUID();
     const { error: profileError } = await supabaseAdmin.from('profiles').insert({
       id: profileId,
@@ -55,6 +71,7 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     });
     if (profileError) {
+      await rollback();
       return dbError('approve-request:profile', profileError);
     }
   } else {
@@ -105,6 +122,7 @@ export async function POST(req: NextRequest) {
         created_at: new Date().toISOString(),
       });
       if (tpError) {
+        await rollback();
         return dbError('approve-request:talent_profile', tpError);
       }
     } else {
@@ -130,12 +148,21 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     });
     if (empError) {
+      await rollback();
       return dbError('approve-request:employer_profile', empError);
     }
   }
 
   if (access_request_id) {
-    await supabaseAdmin.from('access_requests').update({ status: 'approved' }).eq('id', access_request_id);
+    // If this silently fails the account exists but the request stays "pending",
+    // inviting an admin to approve it a second time.
+    const { error: reqError } = await supabaseAdmin
+      .from('access_requests')
+      .update({ status: 'approved' })
+      .eq('id', access_request_id);
+    if (reqError) {
+      return dbError('approve-request:access_request', reqError);
+    }
   }
 
   return NextResponse.json({ success: true, email, invited: shouldInvite });

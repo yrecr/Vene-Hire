@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     );
 
     const { employerProfileId } = await resolveActorIds(supabase, caller);
-    const owns = vacancies.every((v) => v.employer_id === employerProfileId);
+    // Both sides must be present: `undefined === undefined` would let a caller
+    // with no employer profile overwrite any vacancy by id.
+    const owns = !!employerProfileId && vacancies.every((v) => v.employer_id === employerProfileId);
     if (!owns) {
       return NextResponse.json({ error: 'Forbidden: not your vacancy' }, { status: 403 });
     }

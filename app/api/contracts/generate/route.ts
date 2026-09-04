@@ -108,9 +108,14 @@ export async function POST(req: NextRequest) {
 
     const { data: urlData } = supabase.storage.from('resumes').getPublicUrl(path);
 
-    await supabase.from('selection_processes')
+    // Unchecked, the PDF would exist in Storage while the process still shows no
+    // contract — and nobody would find out until someone reloaded the page.
+    const { error: procErr } = await supabase.from('selection_processes')
       .update({ contract_url: urlData.publicUrl })
       .eq('id', process_id);
+    if (procErr) {
+      return dbError('contracts/generate:process_update', procErr);
+    }
 
     return NextResponse.json({ url: urlData.publicUrl });
   } catch (err) {
