@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye, DollarSign, Pencil, Check, ClipboardCheck } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -27,12 +28,14 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles } = useData();
+  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
+  const [rateInput, setRateInput] = useState('');
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -79,6 +82,11 @@ export default function EmployerProcessesPage() {
         r.role_title === `Technical Interview - ${process.role_title}`
     ),
     [interviewRequests]
+  );
+
+  const latestTimesheetFor = useCallback(
+    (process: SelectionProcess) => timesheets.find((t) => t.process_id === process.id && (t.status === 'submitted' || t.status === 'approved')),
+    [timesheets]
   );
 
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
@@ -190,6 +198,82 @@ export default function EmployerProcessesPage() {
                         {s === 'active' ? 'Active' : s === 'on_hold' ? 'On Hold' : 'Not Selected'}
                       </button>
                     ))}
+                  </div>
+                )}
+
+                {process.status === 'hired' && (
+                  <div className="flex items-center gap-2 mb-3 text-sm">
+                    <DollarSign className="w-4 h-4 text-muted-foreground" />
+                    {editingRateId === process.id ? (
+                      <>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={rateInput}
+                          onChange={(e) => setRateInput(e.target.value)}
+                          placeholder="Hourly rate (USD)"
+                          className="h-8 w-36 text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            const rate = parseFloat(rateInput);
+                            if (!isNaN(rate) && rate >= 0) updateProcessHourlyRate(process.id, rate);
+                            setEditingRateId(null);
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground">
+                          Hourly rate:{' '}
+                          <span className="font-medium text-foreground">
+                            {process.hourly_rate != null ? `$${process.hourly_rate.toFixed(2)}/hr` : 'Not set'}
+                          </span>
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            setEditingRateId(process.id);
+                            setRateInput(process.hourly_rate != null ? String(process.hourly_rate) : '');
+                          }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {latestTimesheetFor(process) && (
+                  <div className={`flex items-center justify-between gap-2 mb-3 text-sm rounded-lg px-3 py-2 ${
+                    latestTimesheetFor(process)!.status === 'approved'
+                      ? 'bg-emerald-50 border border-emerald-100 text-emerald-800'
+                      : 'bg-blue-50 border border-blue-100 text-blue-800'
+                  }`}>
+                    <span className="flex items-center gap-1.5">
+                      <ClipboardCheck className="w-4 h-4" />
+                      {latestTimesheetFor(process)!.status === 'approved'
+                        ? `Hours approved for ${latestTimesheetFor(process)!.month} — ${latestTimesheetFor(process)!.total_hours}h`
+                        : `Hours submitted for ${latestTimesheetFor(process)!.month} — pending admin review`}
+                    </span>
+                    {latestTimesheetFor(process)!.invoice_url && (
+                      <a
+                        href={latestTimesheetFor(process)!.invoice_url!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline font-medium flex-shrink-0"
+                      >
+                        View invoice
+                      </a>
+                    )}
                   </div>
                 )}
 

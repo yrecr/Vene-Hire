@@ -13,6 +13,8 @@ const roleStyles: Record<string, string> = {
   enrolled: 'bg-blue-50 text-blue-700 border-blue-200',
   in_progress: 'bg-amber-50 text-amber-700 border-amber-200',
   dropped: 'bg-red-50 text-red-700 border-red-200',
+  submitted: 'bg-amber-50 text-amber-700 border-amber-200',
+  draft: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
 interface RoleBadgeProps {

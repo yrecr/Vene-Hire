@@ -12,6 +12,7 @@ import {
   GitBranch,
   BookOpen,
   FolderOpen,
+  Clock,
 } from 'lucide-react';
 
 const adminLinks: SidebarLink[] = [
@@ -21,6 +22,7 @@ const adminLinks: SidebarLink[] = [
   { href: '/admin/applicants', label: 'Applicants', icon: Users },
   { href: '/admin/employers', label: 'Employers', icon: Building2 },
   { href: '/admin/processes', label: 'Processes', icon: GitBranch },
+  { href: '/admin/timesheets', label: 'Hours & Billing', icon: Clock },
   { href: '/admin/bootcamps', label: 'Bootcamps', icon: BookOpen },
   { href: '/admin/resources', label: 'Resources', icon: FolderOpen },
 ];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Building2, Pencil, Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,20 @@ export function EmployerProfileSettings() {
   const [hiringNeeds, setHiringNeeds] = useState(
     employerProfile?.hiring_needs || ''
   );
+  const [paymentMethod, setPaymentMethod] = useState(employerProfile?.payment_method || '');
+  const [paymentDetails, setPaymentDetails] = useState(employerProfile?.payment_details || '');
+
+  // employerProfile arrives asynchronously (data-context hydrates after mount) —
+  // resync local fields once it loads, but never clobber an in-progress edit.
+  useEffect(() => {
+    if (isEditing || !employerProfile) return;
+    setCompanyName(employerProfile.company_name || '');
+    setContactName(employerProfile.contact_name || '');
+    setSummary(employerProfile.summary || '');
+    setHiringNeeds(employerProfile.hiring_needs || '');
+    setPaymentMethod(employerProfile.payment_method || '');
+    setPaymentDetails(employerProfile.payment_details || '');
+  }, [employerProfile, isEditing]);
 
   const handleSave = async () => {
     if (!employerProfile) return;
@@ -39,6 +53,8 @@ export function EmployerProfileSettings() {
       contact_name: contactName,
       summary,
       hiring_needs: hiringNeeds,
+      payment_method: paymentMethod || null,
+      payment_details: paymentDetails || null,
     }).eq('id', employerProfile.id);
     setSaving(false);
     setIsEditing(false);
@@ -49,6 +65,8 @@ export function EmployerProfileSettings() {
     setContactName(employerProfile?.contact_name || '');
     setSummary(employerProfile?.summary || '');
     setHiringNeeds(employerProfile?.hiring_needs || '');
+    setPaymentMethod(employerProfile?.payment_method || '');
+    setPaymentDetails(employerProfile?.payment_details || '');
     setIsEditing(false);
   };
 
@@ -180,6 +198,48 @@ export function EmployerProfileSettings() {
               </p>
             )}
           </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground mb-1.5 block">
+              Payment Method
+            </label>
+            {isEditing ? (
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
+              >
+                <option value="">Not set</option>
+                <option value="deal">DEAL</option>
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="other">Other</option>
+              </select>
+            ) : (
+              <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 capitalize">
+                {employerProfile?.payment_method?.replace('_', ' ') || 'Not set'}
+              </p>
+            )}
+          </div>
+
+          {(isEditing || paymentDetails) && (
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">
+                Payment Details
+                <span className="text-muted-foreground font-normal"> (optional)</span>
+              </label>
+              {isEditing ? (
+                <Input
+                  value={paymentDetails}
+                  onChange={(e) => setPaymentDetails(e.target.value)}
+                  placeholder="e.g. bank name, account details, or notes"
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5">
+                  {paymentDetails}
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">

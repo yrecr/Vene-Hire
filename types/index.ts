@@ -48,6 +48,8 @@ export interface EmployerProfile {
   summary: string;
   hiring_needs: string;
   status: 'active' | 'inactive' | 'pending';
+  payment_method: string | null;
+  payment_details: string | null;
   created_at: string;
 }
 
@@ -73,10 +75,39 @@ export interface SelectionProcess {
   contract_status: 'pending' | 'under_review' | 'signed' | null;
   contract_url: string | null;
   signature_url: string | null;
+  hourly_rate: number | null;
   notes: string;
   created_at: string;
   applicant?: TalentProfile;
   employer?: EmployerProfile;
+}
+
+export interface TimesheetDay {
+  date: string;
+  hours: number;
+  note?: string;
+}
+
+export interface Timesheet {
+  id: string;
+  process_id: string;
+  month: string;
+  days: TimesheetDay[];
+  total_hours: number;
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  invoice_url: string | null;
+  created_at: string;
+  updated_at: string;
+  process?: SelectionProcess;
+}
+
+export interface TimesheetEvent {
+  id: string;
+  timesheet_id: string;
+  event_type: 'submitted' | 'approved' | 'rejected';
+  actor_profile_id: string | null;
+  comment: string | null;
+  created_at: string;
 }
 
 export interface InterviewRequest {
