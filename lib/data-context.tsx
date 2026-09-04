@@ -9,6 +9,7 @@ import type {
 } from '@/types';
 import * as api from './supabase-service';
 import { mockEmployerProfiles } from '@/data/mock';
+import { getApplicantCompletionPercent, APPLICANT_PUBLISH_THRESHOLD } from '@/lib/profile-completion';
 
 interface NewInterviewData {
   applicant_id: string;
@@ -694,8 +695,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [candidates]);
 
   const updateTalentProfileFn = useCallback(async (profile: TalentProfile & { skills: TalentSkill[] }): Promise<void> => {
-    await api.upsertTalentProfile(profile as TalentProfile & { skills: TalentSkill[] });
-    setTalentProfiles((prev) => prev.map((t) => t.id === profile.id ? profile : t));
+    // Auto-publish once the profile is complete enough — never un-publish automatically.
+    const toSave = !profile.public_visible && getApplicantCompletionPercent(profile) >= APPLICANT_PUBLISH_THRESHOLD
+      ? { ...profile, public_visible: true }
+      : profile;
+    await api.upsertTalentProfile(toSave as TalentProfile & { skills: TalentSkill[] });
+    setTalentProfiles((prev) => prev.map((t) => t.id === toSave.id ? toSave : t));
   }, []);
 
   const createResource = useCallback(async (formData: FormData): Promise<void> => {

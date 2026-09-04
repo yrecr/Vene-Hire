@@ -14,6 +14,7 @@ import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
 import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
+import { getApplicantCompletionItems, getCompletionPercent } from '@/lib/profile-completion';
 
 const PROCESS_STATUS_LABELS: Record<string, string> = {
   active: 'Active',
@@ -107,19 +108,8 @@ export default function ApplicantDashboardPage() {
     );
   }
 
-  const completionItems = [
-    { label: 'Full Name', done: talentProfile.display_name.length > 0 },
-    { label: 'Professional Title', done: talentProfile.title.length > 0 },
-    { label: 'Summary', done: (talentProfile.summary?.length ?? 0) > 2 },
-    { label: 'Bio', done: (talentProfile.bio?.length ?? 0) > 0 },
-    { label: 'Tech Stack', done: (talentProfile.tech_stack?.length ?? 0) > 0 },
-    { label: 'Skills Assessment', done: (talentProfile.tech_stack?.length ?? 0) > 0 },
-    { label: 'English Level', done: talentProfile.english_level !== 'Basic' },
-    { label: 'Resume', done: (talentProfile.resume_url?.length ?? 0) > 0 },
-    { label: 'Video', done: (talentProfile.video_url?.length ?? 0) > 0 },
-    { label: 'Availability', done: talentProfile.availability_status !== 'In Training' },
-  ];
-  const completion = Math.round((completionItems.filter((i) => i.done).length / completionItems.length) * 100);
+  const completionItems = getApplicantCompletionItems(talentProfile);
+  const completion = getCompletionPercent(completionItems);
 
   return (
     <div className="space-y-8">
@@ -278,7 +268,13 @@ export default function ApplicantDashboardPage() {
         <div className="space-y-6">
 
           {/* Profile Completion */}
-          <ProfileCompletionCard completion={completion} items={completionItems} />
+          <ProfileCompletionCard
+            completion={completion}
+            items={completionItems}
+            href="/applicant/settings"
+            ctaLabel="Complete your profile"
+            message="A complete profile gets you more opportunities to land an employer."
+          />
 
           {/* Notifications */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5">

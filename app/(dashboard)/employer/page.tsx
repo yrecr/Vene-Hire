@@ -5,9 +5,11 @@ import { Users, GitBranch, MessageSquare, Star, ArrowRight } from 'lucide-react'
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { TrendCard, DonutCard } from '@/components/dashboard-charts';
+import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
+import { getEmployerCompletionItems, getCompletionPercent } from '@/lib/profile-completion';
 import Link from 'next/link';
 
 const PROCESS_STATUS_LABELS: Record<string, string> = {
@@ -58,6 +60,8 @@ export default function EmployerDashboard() {
 
   const userNotifications = getNotificationsForUser(profileId ?? '');
   const recentNotifications = userNotifications.slice(0, 3);
+  const completionItems = employerProfile ? getEmployerCompletionItems(employerProfile) : [];
+  const completion = getCompletionPercent(completionItems);
 
   if (loading || !isHydrated) {
     return (
@@ -89,6 +93,16 @@ export default function EmployerDashboard() {
         <TrendCard title="Interview Requests (Last 14 Days)" data={interviewsTrend} />
         <DonutCard title="My Processes by Status" data={processStatusDistribution} />
       </div>
+
+      {completion < 100 && (
+        <ProfileCompletionCard
+          completion={completion}
+          items={completionItems}
+          href="/employer/settings"
+          ctaLabel="Complete your company profile"
+          message="A complete company profile helps you attract better-matched talent."
+        />
+      )}
 
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>

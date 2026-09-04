@@ -8,23 +8,12 @@ import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
 import type { TalentProfile, TalentSkill } from '@/types';
 import { Eye, Check, Minus, Download } from 'lucide-react';
+import { getApplicantCompletionPercent } from '@/lib/profile-completion';
 
 type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
 
-function calcCompletion(p: TalentProfile): number {
-  const checks = [
-    p.display_name.length > 0,
-    p.title.length > 0,
-    (p.summary?.length ?? 0) > 2,
-    (p.bio?.length ?? 0) > 0,
-    (p.tech_stack?.length ?? 0) > 0,
-    (p.tech_stack?.length ?? 0) > 0,
-    p.english_level !== 'Basic',
-    (p.resume_url?.length ?? 0) > 0,
-    (p.video_url?.length ?? 0) > 0,
-    p.availability_status !== 'In Training',
-  ];
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+function calcCompletion(p: TalentWithSkills): number {
+  return getApplicantCompletionPercent(p);
 }
 
 const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;

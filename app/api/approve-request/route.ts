@@ -88,15 +88,15 @@ export async function POST(req: NextRequest) {
         user_id: profileId,
         slug: email.split('@')[0],
         display_name: full_name,
-        title: full_name.split(' ')[0] + ' — Aspiring Software Engineer',
-        summary: `${full_name} is a motivated software engineer ready to contribute to production teams.`,
-        bio: `${full_name} is an aspiring engineer looking to join a production team.`,
-        tech_stack: ['Python', 'JavaScript', 'SQL'],
-        english_level: 'Intermediate',
-        availability_status: 'Available',
-        years_experience: 1,
+        title: '',
+        summary: '',
+        bio: '',
+        tech_stack: [],
+        english_level: 'Basic',
+        availability_status: 'In Training',
+        years_experience: 0,
         featured: false,
-        public_visible: true,
+        public_visible: false,
         video_url: null,
         profile_image_url: null,
         resume_url: null,
@@ -106,20 +106,6 @@ export async function POST(req: NextRequest) {
       });
       if (tpError) {
         return dbError('approve-request:talent_profile', tpError);
-      }
-      // Insert default skills
-      const defaultSkills = ['Python', 'JavaScript', 'SQL', 'Git', 'Communication'];
-      const { error: skError } = await supabaseAdmin.from('talent_skills').insert(
-        defaultSkills.map((name, i) => ({
-          id: crypto.randomUUID(),
-          talent_profile_id: tpId,
-          skill_name: name,
-          score: 50,
-          display_order: i,
-        }))
-      );
-      if (skError) {
-        return dbError('approve-request:talent_skills', skError);
       }
     } else {
       const { error: tpUpdateError } = await supabaseAdmin
