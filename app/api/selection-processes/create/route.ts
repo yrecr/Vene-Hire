@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { SelectionProcess } from '@/types';
-import { requireSession, resolveActorIds } from '@/lib/api-auth';
+import { requireSession, resolveActorIds, ownsRow } from '@/lib/api-auth';
 import { dbError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
       { auth: { persistSession: false } }
     );
 
-    const { employerProfileId, talentProfileId } = await resolveActorIds(supabase, caller);
-    const owns = processes.every((p) => p.employer_id === employerProfileId || p.applicant_id === talentProfileId);
+    const ids = await resolveActorIds(supabase, caller);
+    const owns = processes.every((p) => ownsRow(p, ids));
     if (!owns) {
       return NextResponse.json({ error: 'Forbidden: not your selection process' }, { status: 403 });
     }

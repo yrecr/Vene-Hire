@@ -41,3 +41,23 @@ export async function resolveActorIds(supabaseAdmin: any, profile: AuthedProfile
   ]);
   return { employerProfileId: emp?.id as string | undefined, talentProfileId: talent?.id as string | undefined };
 }
+
+export type ActorIds = { employerProfileId?: string; talentProfileId?: string };
+
+/**
+ * True only when the row genuinely belongs to this caller.
+ *
+ * The naive `row.employer_id === employerProfileId` check passes when BOTH sides
+ * are undefined — so a caller with no talent profile could upsert ANY row by id
+ * just by omitting `applicant_id` from the body. Both sides must be present and
+ * equal for ownership to hold.
+ */
+export function ownsRow(
+  row: { employer_id?: string | null; applicant_id?: string | null },
+  ids: ActorIds
+): boolean {
+  return (
+    (!!ids.employerProfileId && row.employer_id === ids.employerProfileId) ||
+    (!!ids.talentProfileId && row.applicant_id === ids.talentProfileId)
+  );
+}

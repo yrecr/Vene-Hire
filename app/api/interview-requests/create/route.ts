@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import type { InterviewRequest } from '@/types';
-import { requireSession, resolveActorIds } from '@/lib/api-auth';
+import { requireSession, resolveActorIds, ownsRow } from '@/lib/api-auth';
 import { dbError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
       { auth: { persistSession: false } }
     );
 
-    const { employerProfileId, talentProfileId } = await resolveActorIds(supabase, caller);
-    const owns = requests.every((r) => r.employer_id === employerProfileId || r.applicant_id === talentProfileId);
+    const ids = await resolveActorIds(supabase, caller);
+    const owns = requests.every((r) => ownsRow(r, ids));
     if (!owns) {
       return NextResponse.json({ error: 'Forbidden: not your interview request' }, { status: 403 });
     }

@@ -56,9 +56,12 @@ export async function POST(req: NextRequest) {
       .eq('id', processId).single();
     if (pErr || !process?.contract_url) {
       // No contract URL — just save signature without PDF overlay
-      await supabase.from('selection_processes')
+      const { error: sigOnlyErr } = await supabase.from('selection_processes')
         .update({ signature_url: sigUrlData.publicUrl, contract_status: 'under_review' })
         .eq('id', processId);
+      if (sigOnlyErr) {
+        return dbError('contracts/sign:signature_only_update', sigOnlyErr);
+      }
       return NextResponse.json({ signature_url: sigUrlData.publicUrl });
     }
 
@@ -109,13 +112,18 @@ export async function POST(req: NextRequest) {
     const { data: pdfUrlData } = supabase.storage.from('resumes').getPublicUrl(pdfPath);
 
     // 6. Update DB with all new URLs and status
-    await supabase.from('selection_processes')
+    // The applicant just signed: if this update is lost the contract silently
+    // never reaches the admin for review.
+    const { error: finalErr } = await supabase.from('selection_processes')
       .update({
         contract_url: pdfUrlData.publicUrl,
         signature_url: sigUrlData.publicUrl,
         contract_status: 'under_review',
       })
       .eq('id', processId);
+    if (finalErr) {
+      return dbError('contracts/sign:process_update', finalErr);
+    }
 
     return NextResponse.json({
       signature_url: sigUrlData.publicUrl,

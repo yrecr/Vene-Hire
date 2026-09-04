@@ -75,6 +75,23 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | null>(null);
 
+/** A background write we can't roll back — at least make the failure visible. */
+function logBackgroundFailure(err: unknown) {
+  console.error('[data-context] background write failed:', err);
+}
+
+/**
+ * Undo an optimistic update when the write actually fails. Without this the UI
+ * keeps showing a change that was never saved, and the user only finds out on
+ * the next reload.
+ */
+function persist(save: Promise<unknown>, rollback: () => void, tag: string) {
+  save.catch((err) => {
+    console.error(`[data-context] ${tag} failed, rolling back:`, err);
+    rollback();
+  });
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [interviewRequests, setInterviewRequests] = useState<InterviewRequest[]>([]);
   const [selectionProcesses, setSelectionProcesses] = useState<SelectionProcess[]>([]);
@@ -203,7 +220,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'interview', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n1]);
-      api.upsertNotification(n1).catch(() => {});
+      api.upsertNotification(n1).catch(logBackgroundFailure);
     }
     const empUserId = findEmployerUserId(data.employer_id);
     if (empUserId) {
@@ -214,7 +231,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'interview', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n2]);
-      api.upsertNotification(n2).catch(() => {});
+      api.upsertNotification(n2).catch(logBackgroundFailure);
     }
   }, [findTalentById, findEmployer, findEmployerUserId]);
 
@@ -222,7 +239,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setInterviewRequests((prev) => prev.map((req) => req.id === requestId ? { ...req, status } : req));
     const request = interviewRequests.find((r) => r.id === requestId);
     if (request) {
-      api.upsertInterviewRequest({ ...request, status }).catch(() => {});
+      persist(
+        api.upsertInterviewRequest({ ...request, status }),
+        () => setInterviewRequests((prev) => prev.map((r) => (r.id === requestId ? request : r))),
+        'respondToInterview'
+      );
     }
     if (status === 'accepted' && request) {
       const isTechnical = request.role_title.startsWith('Technical Interview - ');
@@ -242,7 +263,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
           created_at: new Date().toISOString(),
         };
         setSelectionProcesses((prev) => [...prev, newProcess]);
-        api.upsertSelectionProcess(newProcess).catch(() => {});
+        persist(
+          api.upsertSelectionProcess(newProcess),
+          () => setSelectionProcesses((prev) => prev.filter((p) => p.id !== newProcess.id)),
+          'respondToInterview:process'
+        );
       }
       const applicant = findTalentById(request.applicant_id);
       const employer = findEmployer(request.employer_id);
@@ -255,7 +280,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'interview', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
+        api.upsertNotification(n).catch(logBackgroundFailure);
       }
       const empUserId = findEmployerUserId(request.employer_id);
       if (empUserId) {
@@ -266,7 +291,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'process', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
+        api.upsertNotification(n).catch(logBackgroundFailure);
       }
     } else if (status === 'declined' && request) {
       const applicant = findTalentById(request.applicant_id);
@@ -279,7 +304,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'interview', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
+        api.upsertNotification(n).catch(logBackgroundFailure);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -292,7 +317,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const process = selectionProcesses.find((p) => p.id === processId);
     if (!process) return;
     const updatedProcess: SelectionProcess = { ...process, current_stage: stage, technical_interview_date: date, notes: process.notes || 'Technical interview scheduled.' };
-    api.upsertSelectionProcess(updatedProcess).catch(() => {});
+    persist(
+      api.upsertSelectionProcess(updatedProcess),
+      () => setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? process : p))),
+      'setProcessStage'
+    );
     const techInterviewReq: InterviewRequest = {
       id: crypto.randomUUID(), applicant_id: process.applicant_id, employer_id: process.employer_id,
       role_title: `Technical Interview - ${process.role_title}`, requested_date: date,
@@ -300,7 +329,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       created_at: new Date().toISOString(),
     };
     setInterviewRequests((prev) => [...prev, techInterviewReq]);
-    api.upsertInterviewRequest(techInterviewReq).catch(() => {});
+    persist(
+      api.upsertInterviewRequest(techInterviewReq),
+      () => setInterviewRequests((prev) => prev.filter((r) => r.id !== techInterviewReq.id)),
+      'setProcessStage:techInterview'
+    );
     const applicant = findTalentById(process.applicant_id);
     const employer = findEmployer(process.employer_id);
     const applicantUserId2 = applicant?.user_id;
@@ -313,7 +346,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'process', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
     if (empUserId4) {
       const n: Notification = {
@@ -323,7 +356,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'process', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
@@ -357,7 +390,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const exists = prev.some((t) => t.id === timesheet.id);
       return exists ? prev.map((t) => (t.id === timesheet.id ? timesheet : t)) : [...prev, timesheet];
     });
-    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(() => {});
+    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(logBackgroundFailure);
 
     const process = selectionProcesses.find((p) => p.id === processId);
     const applicant = process ? findTalentById(process.applicant_id) : undefined;
@@ -372,14 +405,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
       }));
     if (adminNotifications.length) {
       setNotifications((prev) => [...prev, ...adminNotifications]);
-      api.upsertNotifications(adminNotifications).catch(() => {});
+      api.upsertNotifications(adminNotifications).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const reviewTimesheet = useCallback(async (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => {
     const timesheet = await api.reviewTimesheet(timesheetId, decision, comment);
     setTimesheets((prev) => prev.map((t) => (t.id === timesheetId ? timesheet : t)));
-    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(() => {});
+    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(logBackgroundFailure);
 
     const process = selectionProcesses.find((p) => p.id === timesheet.process_id);
     const applicantUserId = process ? findTalentById(process.applicant_id)?.user_id : undefined;
@@ -393,7 +426,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'process', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById]);
 
@@ -411,13 +444,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setInterviewRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, meeting_url: url, status: 'scheduled' } : r));
     const request = interviewRequests.find((r) => r.id === requestId);
     if (!request) return;
-    api.upsertInterviewRequest({ ...request, meeting_url: url, status: 'scheduled' }).catch(() => {});
+    persist(
+      api.upsertInterviewRequest({ ...request, meeting_url: url, status: 'scheduled' }),
+      () => setInterviewRequests((prev) => prev.map((r) => (r.id === requestId ? request : r))),
+      'addMeetingLink'
+    );
 
     const process = findProcessForRequest(request);
     if (process) {
       const updatedProcess = { ...process, meeting_url: url };
       setSelectionProcesses((prev) => prev.map((p) => p.id === process.id ? updatedProcess : p));
-      api.upsertSelectionProcess(updatedProcess).catch(() => {});
+      persist(
+        api.upsertSelectionProcess(updatedProcess),
+        () => setSelectionProcesses((prev) => prev.map((p) => (p.id === process.id ? process : p))),
+        'addMeetingLink:process'
+      );
     }
 
     const applicant = findTalentById(request.applicant_id);
@@ -431,7 +472,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         metadata: { join_url: url },
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [interviewRequests, findProcessForRequest, findTalentById]);
 
@@ -439,14 +480,22 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setInterviewRequests((prev) => prev.map((r) => r.id === requestId ? { ...r, outcome, outcome_notes: notes, status: 'completed' } : r));
     const request = interviewRequests.find((r) => r.id === requestId);
     if (!request) return;
-    api.upsertInterviewRequest({ ...request, outcome, outcome_notes: notes, status: 'completed' }).catch(() => {});
+    persist(
+      api.upsertInterviewRequest({ ...request, outcome, outcome_notes: notes, status: 'completed' }),
+      () => setInterviewRequests((prev) => prev.map((r) => (r.id === requestId ? request : r))),
+      'reportInterviewOutcome'
+    );
 
     if (outcome === 'failed') {
       const process = findProcessForRequest(request);
       if (process) {
         const updatedProcess: SelectionProcess = { ...process, status: 'not_selected' };
         setSelectionProcesses((prev) => prev.map((p) => p.id === process.id ? updatedProcess : p));
-        api.upsertSelectionProcess(updatedProcess).catch(() => {});
+        persist(
+          api.upsertSelectionProcess(updatedProcess),
+          () => setSelectionProcesses((prev) => prev.map((p) => (p.id === process.id ? process : p))),
+          'reportInterviewOutcome:process'
+        );
       }
     }
 
@@ -462,7 +511,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'interview', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [interviewRequests, findProcessForRequest, findTalentById]);
 
@@ -496,8 +545,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateAvailabilitySlots = useCallback((applicantId: string, slots: AvailabilitySlot[]) => {
     setAvailabilitySlots((prev) => {
       const oldForApplicant = prev.filter((s) => s.applicant_id === applicantId);
-      api.deleteAvailabilitySlots(oldForApplicant.map((s) => s.id)).catch(() => {});
-      api.upsertAvailabilitySlots(slots).catch(() => {});
+      api.deleteAvailabilitySlots(oldForApplicant.map((s) => s.id)).catch(logBackgroundFailure);
+      api.upsertAvailabilitySlots(slots).catch(logBackgroundFailure);
       const other = prev.filter((s) => s.applicant_id !== applicantId);
       return [...other, ...slots];
     });
@@ -518,7 +567,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (req) setContractApprovalRequests((prev) => [...prev, req]);
     const updatedProcess: SelectionProcess = { ...process, current_stage: 'contract_signing' as const };
     setSelectionProcesses((prev) => prev.map((p) => p.id === processId ? updatedProcess : p));
-    api.upsertSelectionProcess(updatedProcess).catch(() => {});
+    persist(
+      api.upsertSelectionProcess(updatedProcess),
+      () => setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? process : p))),
+      'requestContractApproval'
+    );
     const n: Notification = {
       id: crypto.randomUUID(), user_id: 'p-admin1',
       title: 'Contract Approval Requested',
@@ -526,7 +579,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       type: 'request', read: false, created_at: new Date().toISOString(),
     };
     setNotifications((prev) => [...prev, n]);
-    api.upsertNotification(n).catch(() => {});
+    api.upsertNotification(n).catch(logBackgroundFailure);
   }, [selectionProcesses, findTalentById, findEmployer]);
 
   const initiateContract = requestContractApprovalFn;
@@ -558,7 +611,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'contract', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
     const appUserId = applicant?.user_id;
     if (appUserId) {
@@ -569,7 +622,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'contract', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
@@ -595,7 +648,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'request', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
@@ -622,7 +675,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'contract', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, adminNotif]);
-        api.upsertNotification(adminNotif).catch(() => {});
+        api.upsertNotification(adminNotif).catch(logBackgroundFailure);
       }
     }
   }, [selectionProcesses, findTalentById, findEmployer]);
@@ -645,7 +698,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'contract', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
+        api.upsertNotification(n).catch(logBackgroundFailure);
       }
       const appUserId = applicant?.user_id;
       if (appUserId) {
@@ -656,7 +709,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           type: 'contract', read: false, created_at: new Date().toISOString(),
         };
         setNotifications((prev) => [...prev, n]);
-        api.upsertNotification(n).catch(() => {});
+        api.upsertNotification(n).catch(logBackgroundFailure);
       }
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);

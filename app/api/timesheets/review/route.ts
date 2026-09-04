@@ -229,6 +229,14 @@ export async function POST(req: NextRequest) {
   if (!timesheet) {
     return NextResponse.json({ error: 'Timesheet not found' }, { status: 404 });
   }
+  // Two admin tabs reviewing the same timesheet would otherwise both generate an
+  // invoice and both write an audit event.
+  if (timesheet.status !== 'submitted') {
+    return NextResponse.json(
+      { error: `This timesheet was already ${timesheet.status}` },
+      { status: 409 }
+    );
+  }
 
   const process = timesheet.selection_processes;
   let invoice_url: string | null = timesheet.invoice_url;
