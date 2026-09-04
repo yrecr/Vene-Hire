@@ -1,9 +1,41 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { requireSession, resolveActorIds } from '@/lib/api-auth';
+import { PDFDocument, PDFFont, rgb, StandardFonts } from 'pdf-lib';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { requireSession } from '@/lib/api-auth';
 import { dbError } from '@/lib/api-error';
+import { groupDaysByWeek } from '@/lib/timesheet-utils';
+import type { TimesheetDay } from '@/types';
+
+const PAGE_WIDTH = 612;
+const PAGE_HEIGHT = 792;
+const MARGIN = 50;
+const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  deal: 'DEAL',
+  bank_transfer: 'Bank transfer',
+  other: 'Other',
+};
+
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let line = '';
+  for (const word of words) {
+    const candidate = line ? `${line} ${word}` : word;
+    if (font.widthOfTextAtSize(candidate, size) > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = candidate;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,52 +46,158 @@ const supabase = createClient(
 async function generateInvoicePdf(opts: {
   companyName: string;
   workerName: string;
+  roleTitle: string;
+  month: string;
+  days: TimesheetDay[];
   totalHours: number;
   hourlyRate: number;
   timesheetId: string;
+  paymentMethod: string | null;
+  paymentDetails: string | null;
 }): Promise<Uint8Array> {
-  const { companyName, workerName, totalHours, hourlyRate, timesheetId } = opts;
+  const { companyName, workerName, roleTitle, month, days, totalHours, hourlyRate, timesheetId, paymentMethod, paymentDetails } = opts;
   const amount = totalHours * hourlyRate;
 
   const doc = await PDFDocument.create();
-  const page = doc.addPage([612, 792]);
+  let page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const logoBytes = readFileSync(join(process.cwd(), 'public', 'logo.png'));
+  const logoImage = await doc.embedPng(logoBytes);
 
-  let y = 720;
-  const draw = (text: string, opts: { size?: number; bold?: boolean; x?: number } = {}) => {
-    page.drawText(text, {
-      x: opts.x ?? 50, y, size: opts.size ?? 12,
-      font: opts.bold ? bold : font, color: rgb(0, 0, 0),
-    });
-    y -= (opts.size ?? 12) + 8;
+  const reportNo = `VH-${new Date().getFullYear()}-${timesheetId.slice(0, 4)}`;
+  const issueDate = new Date();
+  const [monthYear, monthNum] = month.split('-').map(Number);
+  const periodStart = new Date(monthYear, monthNum - 1, 1);
+  const periodEnd = new Date(monthYear, monthNum, 0);
+  const fmt = (d: Date) => d.toLocaleDateString('en-GB');
+
+  let y = PAGE_HEIGHT - MARGIN;
+
+  const newPage = () => {
+    page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    y = PAGE_HEIGHT - MARGIN;
   };
 
-  draw('VeneHire', { size: 20, bold: true });
-  draw('Billing Statement', { size: 14 });
-  y -= 8;
-  draw('_'.repeat(80));
-  y -= 12;
+  const ensureSpace = (needed: number) => {
+    if (y - needed < MARGIN) newPage();
+  };
 
-  draw(`Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, { size: 10 });
-  y -= 8;
+  const draw = (text: string, opts: { size?: number; bold?: boolean; x?: number; color?: ReturnType<typeof rgb> } = {}) => {
+    const size = opts.size ?? 10;
+    ensureSpace(size + 6);
+    page.drawText(text, {
+      x: opts.x ?? MARGIN, y, size,
+      font: opts.bold ? bold : font, color: opts.color ?? rgb(0.1, 0.1, 0.1),
+    });
+    y -= size + 6;
+  };
 
-  draw('BILL TO', { size: 12, bold: true });
-  draw(companyName, { size: 11 });
-  y -= 8;
+  const rule = () => {
+    ensureSpace(10);
+    page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_WIDTH - MARGIN, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
+    y -= 14;
+  };
 
-  draw('WORKER', { size: 12, bold: true });
-  draw(workerName, { size: 11 });
-  y -= 8;
+  const sectionHeader = (title: string) => {
+    ensureSpace(28);
+    y -= 6;
+    draw(title, { size: 11, bold: true, color: rgb(0.02, 0.28, 0.55) });
+    rule();
+  };
 
-  draw('SUMMARY', { size: 12, bold: true });
-  draw(`Hours worked: ${totalHours.toFixed(2)}`, { size: 11 });
-  draw(`Hourly rate: $${hourlyRate.toFixed(2)}`, { size: 11 });
-  draw(`Total amount due: $${amount.toFixed(2)}`, { size: 13, bold: true });
+  const field = (label: string, value: string, x: number, width: number) => {
+    page.drawText(label, { x, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
+    page.drawText(value, { x, y: y - 12, size: 10, font: bold, color: rgb(0.1, 0.1, 0.1) });
+  };
+
+  const fieldRow = (pairs: [string, string][]) => {
+    ensureSpace(30);
+    const colWidth = CONTENT_WIDTH / pairs.length;
+    pairs.forEach(([label, value], i) => field(label, value, MARGIN + i * colWidth, colWidth));
+    y -= 30;
+  };
+
+  // ── Header ──
+  page.drawImage(logoImage, { x: MARGIN, y: y - 34, width: 34, height: 34 });
+  page.drawText('VeneHire', { x: MARGIN + 42, y: y - 12, size: 18, font: bold, color: rgb(0.1, 0.1, 0.1) });
+  page.drawText('A Venesoft company', { x: MARGIN + 42, y: y - 26, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
+  y -= 46;
+  draw('SERVICE REPORT & BILLING SUMMARY', { size: 13, bold: true });
+  rule();
+
+  fieldRow([
+    ['REPORT NO.', reportNo],
+    ['ISSUE DATE', fmt(issueDate)],
+  ]);
+  fieldRow([
+    ['SERVICE PERIOD', `${fmt(periodStart)} - ${fmt(periodEnd)}`],
+    ['PAYMENT DUE', fmt(issueDate)],
+  ]);
+
+  // ── Client & service details ──
+  sectionHeader('CLIENT & SERVICE DETAILS');
+  draw(`Client: ${companyName}`);
+  draw(`Assigned Professional: ${workerName}`);
+  draw(`Role: ${roleTitle}`);
+  draw(`Project / Service: ${roleTitle}`);
+  wrapText(`Service Description: Software development and engineering services for ${roleTitle}.`, font, 10, CONTENT_WIDTH)
+    .forEach((line) => draw(line));
+
+  // ── Work summary ──
+  sectionHeader('WORK SUMMARY');
+  const cols = [MARGIN, MARGIN + 90, MARGIN + 310, MARGIN + 380];
+  ensureSpace(20);
+  page.drawText('Week', { x: cols[0], y, size: 9, font: bold });
+  page.drawText('Description', { x: cols[1], y, size: 9, font: bold });
+  page.drawText('Hours', { x: cols[2], y, size: 9, font: bold });
+  page.drawText('Notes', { x: cols[3], y, size: 9, font: bold });
   y -= 16;
+  groupDaysByWeek(days).forEach(({ week, days: weekDays }) => {
+    ensureSpace(16);
+    const weekTotal = weekDays.reduce((sum, d) => sum + (Number(d.hours) || 0), 0);
+    page.drawText(`Week ${week}`, { x: cols[0], y, size: 9, font });
+    page.drawText('Development work', { x: cols[1], y, size: 9, font });
+    page.drawText(`${weekTotal}h`, { x: cols[2], y, size: 9, font });
+    page.drawText('-', { x: cols[3], y, size: 9, font });
+    y -= 16;
+  });
+  y -= 6;
 
-  draw('_'.repeat(80));
-  draw(`Statement ID: ${timesheetId.slice(0, 8)}`, { size: 9 });
+  // ── Billing summary ──
+  sectionHeader('BILLING SUMMARY');
+  draw(`Total Hours: ${totalHours.toFixed(2)} h`);
+  draw(`Agreed Commercial Rate: $${hourlyRate.toFixed(2)} / hour`);
+  draw('Additional / Approved Charges: $0.00');
+  ensureSpace(20);
+  draw(`TOTAL AMOUNT DUE: $${amount.toFixed(2)}`, { size: 13, bold: true, color: rgb(0.02, 0.28, 0.55) });
+
+  // ── Payment information ──
+  sectionHeader('PAYMENT INFORMATION');
+  draw('Beneficiary: Venesoft C.A.');
+  draw(`Bank / Platform: ${paymentMethod ? PAYMENT_METHOD_LABELS[paymentMethod] ?? paymentMethod : 'Not provided'}`);
+  draw(`Account: ${paymentDetails || 'Not provided'}`);
+  draw('Currency: USD');
+  draw(`Payment Reference: ${reportNo}`);
+  draw('Payment Terms: Due upon receipt');
+
+  // ── Notes ──
+  sectionHeader('NOTES');
+  wrapText(
+    'This document summarizes the services provided during the indicated period and the corresponding commercial amount payable to Venesoft/VeneHire. Internal compensation arrangements with assigned professionals are confidential and are not part of this client billing summary. Applicable taxes, withholdings and legal obligations will be handled according to the corresponding contractual and legal requirements.',
+    font, 9, CONTENT_WIDTH
+  ).forEach((line) => draw(line, { size: 9, color: rgb(0.4, 0.4, 0.4) }));
+
+  // ── Signatures ──
+  ensureSpace(60);
+  y -= 20;
+  const sigY = y;
+  page.drawLine({ start: { x: MARGIN, y: sigY }, end: { x: MARGIN + 200, y: sigY }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
+  page.drawLine({ start: { x: MARGIN + 280, y: sigY }, end: { x: MARGIN + 480, y: sigY }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
+  page.drawText('Prepared by', { x: MARGIN, y: sigY - 12, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText('Venesoft C.A.', { x: MARGIN, y: sigY - 24, size: 10, font: bold });
+  page.drawText('Client acknowledgement (optional)', { x: MARGIN + 280, y: sigY - 12, size: 8, font, color: rgb(0.5, 0.5, 0.5) });
+  page.drawText(companyName, { x: MARGIN + 280, y: sigY - 24, size: 10, font: bold });
 
   return doc.save();
 }
@@ -78,7 +216,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'A comment is required when rejecting' }, { status: 400 });
   }
 
-  const { employerProfileId } = await resolveActorIds(supabase, caller);
+  if (caller.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden: admins only' }, { status: 403 });
+  }
 
   const { data: timesheet } = await supabase
     .from('timesheets')
@@ -86,8 +226,8 @@ export async function POST(req: NextRequest) {
     .eq('id', timesheet_id)
     .single();
 
-  if (!timesheet || timesheet.selection_processes.employer_id !== employerProfileId) {
-    return NextResponse.json({ error: 'Forbidden: not your process' }, { status: 403 });
+  if (!timesheet) {
+    return NextResponse.json({ error: 'Timesheet not found' }, { status: 404 });
   }
 
   const process = timesheet.selection_processes;
@@ -100,9 +240,14 @@ export async function POST(req: NextRequest) {
     const pdfBytes = await generateInvoicePdf({
       companyName: process.employer_profiles.company_name || 'N/A',
       workerName: process.talent_profiles.display_name || 'N/A',
+      roleTitle: process.role_title || 'N/A',
+      month: timesheet.month,
+      days: timesheet.days,
       totalHours: timesheet.total_hours,
       hourlyRate: process.hourly_rate,
       timesheetId: timesheet.id,
+      paymentMethod: process.employer_profiles.payment_method,
+      paymentDetails: process.employer_profiles.payment_details,
     });
     const nameSlug = (process.talent_profiles.display_name || 'invoice')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');

@@ -356,25 +356,29 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const exists = prev.some((t) => t.id === timesheet.id);
       return exists ? prev.map((t) => (t.id === timesheet.id ? timesheet : t)) : [...prev, timesheet];
     });
+    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(() => {});
 
     const process = selectionProcesses.find((p) => p.id === processId);
     const applicant = process ? findTalentById(process.applicant_id) : undefined;
-    const empUserId = process ? findEmployerUserId(process.employer_id) : undefined;
-    if (empUserId) {
-      const n: Notification = {
-        id: crypto.randomUUID(), user_id: empUserId,
+    const employer = process ? findEmployer(process.employer_id) : undefined;
+    const adminNotifications: Notification[] = profiles
+      .filter((p) => p.role === 'admin')
+      .map((admin) => ({
+        id: crypto.randomUUID(), user_id: admin.id,
         title: 'Hours submitted for review',
-        message: `${applicant?.display_name || 'Your engineer'} submitted their hours for ${month} — ${timesheet.total_hours}h total.`,
+        message: `${applicant?.display_name || 'An engineer'} submitted hours for ${month} (${employer?.company_name || 'client'}) — ${timesheet.total_hours}h total.`,
         type: 'process', read: false, created_at: new Date().toISOString(),
-      };
-      setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(() => {});
+      }));
+    if (adminNotifications.length) {
+      setNotifications((prev) => [...prev, ...adminNotifications]);
+      api.upsertNotifications(adminNotifications).catch(() => {});
     }
-  }, [selectionProcesses, findTalentById, findEmployerUserId]);
+  }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const reviewTimesheet = useCallback(async (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => {
     const timesheet = await api.reviewTimesheet(timesheetId, decision, comment);
     setTimesheets((prev) => prev.map((t) => (t.id === timesheetId ? timesheet : t)));
+    api.fetchTimesheetEvents().then(setTimesheetEvents).catch(() => {});
 
     const process = selectionProcesses.find((p) => p.id === timesheet.process_id);
     const applicantUserId = process ? findTalentById(process.applicant_id)?.user_id : undefined;

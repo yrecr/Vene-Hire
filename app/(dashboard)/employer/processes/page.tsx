@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye, DollarSign, Pencil, Check, ClipboardCheck, CircleCheck as CheckCircle2, CircleX } from 'lucide-react';
+import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye, DollarSign, Pencil, Check, ClipboardCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import type { Timesheet } from '@/types';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
@@ -31,8 +28,7 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets, reviewTimesheet } = useData();
-  const { toast } = useToast();
+  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -40,9 +36,6 @@ export default function EmployerProcessesPage() {
   const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
   const [editingRateId, setEditingRateId] = useState<string | null>(null);
   const [rateInput, setRateInput] = useState('');
-  const [reviewingTimesheet, setReviewingTimesheet] = useState<Timesheet | null>(null);
-  const [rejectComment, setRejectComment] = useState('');
-  const [reviewing, setReviewing] = useState(false);
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -91,29 +84,10 @@ export default function EmployerProcessesPage() {
     [interviewRequests]
   );
 
-  const pendingTimesheetFor = useCallback(
-    (process: SelectionProcess) => timesheets.find((t) => t.process_id === process.id && t.status === 'submitted'),
+  const latestTimesheetFor = useCallback(
+    (process: SelectionProcess) => timesheets.find((t) => t.process_id === process.id && (t.status === 'submitted' || t.status === 'approved')),
     [timesheets]
   );
-
-  const handleReview = useCallback(async (decision: 'approved' | 'rejected') => {
-    if (!reviewingTimesheet) return;
-    if (decision === 'rejected' && !rejectComment.trim()) {
-      toast({ title: 'Add a comment', description: 'Let them know what to correct before rejecting.', variant: 'destructive' });
-      return;
-    }
-    setReviewing(true);
-    try {
-      await reviewTimesheet(reviewingTimesheet.id, decision, rejectComment.trim() || undefined);
-      toast({ title: decision === 'approved' ? 'Hours approved' : 'Sent back for corrections' });
-      setReviewingTimesheet(null);
-      setRejectComment('');
-    } catch (err) {
-      toast({ title: 'Could not review hours', description: err instanceof Error ? err.message : 'Try again.', variant: 'destructive' });
-    } finally {
-      setReviewing(false);
-    }
-  }, [reviewingTimesheet, rejectComment, reviewTimesheet, toast]);
 
   const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
     if (stageKey === 'technical_interview' && interviewRequests.some(
@@ -278,15 +252,28 @@ export default function EmployerProcessesPage() {
                   </div>
                 )}
 
-                {pendingTimesheetFor(process) && (
-                  <div className="flex items-center justify-between gap-2 mb-3 text-sm bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-                    <span className="flex items-center gap-1.5 text-blue-800">
+                {latestTimesheetFor(process) && (
+                  <div className={`flex items-center justify-between gap-2 mb-3 text-sm rounded-lg px-3 py-2 ${
+                    latestTimesheetFor(process)!.status === 'approved'
+                      ? 'bg-emerald-50 border border-emerald-100 text-emerald-800'
+                      : 'bg-blue-50 border border-blue-100 text-blue-800'
+                  }`}>
+                    <span className="flex items-center gap-1.5">
                       <ClipboardCheck className="w-4 h-4" />
-                      Hours submitted for {pendingTimesheetFor(process)!.month} — {pendingTimesheetFor(process)!.total_hours}h
+                      {latestTimesheetFor(process)!.status === 'approved'
+                        ? `Hours approved for ${latestTimesheetFor(process)!.month} — ${latestTimesheetFor(process)!.total_hours}h`
+                        : `Hours submitted for ${latestTimesheetFor(process)!.month} — pending admin review`}
                     </span>
-                    <Button size="sm" variant="outline" onClick={() => setReviewingTimesheet(pendingTimesheetFor(process)!)}>
-                      Review
-                    </Button>
+                    {latestTimesheetFor(process)!.invoice_url && (
+                      <a
+                        href={latestTimesheetFor(process)!.invoice_url!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline font-medium flex-shrink-0"
+                      >
+                        View invoice
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -466,60 +453,6 @@ export default function EmployerProcessesPage() {
             <Button onClick={handleInitiateContract} className="gap-2">
               <FileSignature className="w-4 h-4" />
               Send Approval Request
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!reviewingTimesheet} onOpenChange={(open) => { if (!open) { setReviewingTimesheet(null); setRejectComment(''); } }}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Review Reported Hours</DialogTitle>
-            <DialogDescription>
-              {reviewingTimesheet && `${reviewingTimesheet.month} — ${reviewingTimesheet.total_hours}h total`}
-            </DialogDescription>
-          </DialogHeader>
-
-          {reviewingTimesheet && (
-            <div className="grid grid-cols-4 gap-2">
-              {reviewingTimesheet.days.map((d) => (
-                <div key={d.date} className="text-center bg-gray-50 rounded-lg py-2">
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">{d.hours}h</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Comment (required if rejecting)</label>
-            <Textarea
-              value={rejectComment}
-              onChange={(e) => setRejectComment(e.target.value)}
-              placeholder="e.g. Add the hours missing on Tuesday"
-              rows={3}
-            />
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              className="gap-1.5 border-red-200 text-red-700 hover:bg-red-50"
-              onClick={() => handleReview('rejected')}
-              disabled={reviewing}
-            >
-              <CircleX className="w-4 h-4" />
-              Reject
-            </Button>
-            <Button
-              className="gap-1.5"
-              onClick={() => handleReview('approved')}
-              disabled={reviewing}
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              Approve
             </Button>
           </DialogFooter>
         </DialogContent>

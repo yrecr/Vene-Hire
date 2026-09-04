@@ -5,8 +5,10 @@ import { Clock, FileText, Send, CircleCheck as CheckCircle2, CircleX } from 'luc
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { Timesheet } from '@/types';
@@ -14,8 +16,12 @@ import type { Timesheet } from '@/types';
 const EVENT_ICON = { submitted: Send, approved: CheckCircle2, rejected: CircleX } as const;
 
 export default function AdminTimesheetsPage() {
-  const { timesheets, timesheetEvents, selectionProcesses, getApplicantById, getEmployerById, profiles, isHydrated } = useData();
+  const { timesheets, timesheetEvents, selectionProcesses, getApplicantById, getEmployerById, getProcessById, profiles, reviewTimesheet, isHydrated } = useData();
+  const { toast } = useToast();
   const [viewing, setViewing] = useState<Timesheet | null>(null);
+  const [reviewing, setReviewing] = useState<Timesheet | null>(null);
+  const [rejectComment, setRejectComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const rows = useMemo(() => {
     return [...timesheets].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).map((t) => {
@@ -37,6 +43,30 @@ export default function AdminTimesheetsPage() {
       }));
   }, [viewing, timesheetEvents, profiles]);
 
+  const handleReview = async (decision: 'approved' | 'rejected') => {
+    if (!reviewing) return;
+    if (decision === 'rejected' && !rejectComment.trim()) {
+      toast({ title: 'Add a comment', description: 'Let the engineer know what to correct before rejecting.', variant: 'destructive' });
+      return;
+    }
+    const process = getProcessById(reviewing.process_id);
+    if (decision === 'approved' && process?.hourly_rate == null) {
+      toast({ title: 'Set an hourly rate first', description: 'The employer needs to set an hourly rate for this process before hours can be approved.', variant: 'destructive' });
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await reviewTimesheet(reviewing.id, decision, rejectComment.trim() || undefined);
+      toast({ title: decision === 'approved' ? 'Hours approved' : 'Sent back for corrections' });
+      setReviewing(null);
+      setRejectComment('');
+    } catch (err) {
+      toast({ title: 'Could not review hours', description: err instanceof Error ? err.message : 'Try again.', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const columns: DataTableColumn<(typeof rows)[number]>[] = [
     { key: 'applicant', header: 'Applicant', render: (r) => <span className="font-medium text-foreground">{r.applicantName}</span> },
     { key: 'company', header: 'Company', render: (r) => <span className="text-muted-foreground">{r.companyName}</span> },
@@ -56,9 +86,16 @@ export default function AdminTimesheetsPage() {
       key: 'actions',
       header: 'Actions',
       render: (r) => (
-        <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>
-          History
-        </Button>
+        <div className="flex items-center gap-1">
+          {r.status === 'submitted' && (
+            <Button size="sm" onClick={() => setReviewing(r)}>
+              Review
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>
+            History
+          </Button>
+        </div>
       ),
     },
   ];
@@ -126,6 +163,64 @@ export default function AdminTimesheetsPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!reviewing} onOpenChange={(open) => { if (!open) { setReviewing(null); setRejectComment(''); } }}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Review Reported Hours</DialogTitle>
+            <DialogDescription>
+              {reviewing && (() => {
+                const p = getProcessById(reviewing.process_id);
+                const applicantName = p ? getApplicantById(p.applicant_id)?.display_name : undefined;
+                return `${applicantName || 'Unknown'} — ${reviewing.month} — ${reviewing.total_hours}h total`;
+              })()}
+            </DialogDescription>
+          </DialogHeader>
+
+          {reviewing && (
+            <div className="grid grid-cols-4 gap-2">
+              {reviewing.days.map((d) => (
+                <div key={d.date} className="text-center bg-gray-50 rounded-lg py-2">
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">{d.hours}h</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-foreground">Comment (required if rejecting)</label>
+            <Textarea
+              value={rejectComment}
+              onChange={(e) => setRejectComment(e.target.value)}
+              placeholder="e.g. Add the hours missing on Tuesday"
+              rows={3}
+            />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              className="gap-1.5 border-red-200 text-red-700 hover:bg-red-50"
+              onClick={() => handleReview('rejected')}
+              disabled={submitting}
+            >
+              <CircleX className="w-4 h-4" />
+              Reject
+            </Button>
+            <Button
+              className="gap-1.5"
+              onClick={() => handleReview('approved')}
+              disabled={submitting}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              Approve
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -1,25 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Clock, Send, CircleCheck as CheckCircle2, CircleAlert as AlertCircle, Hourglass } from 'lucide-react';
+import { Clock, Send, CircleCheck as CheckCircle2, CircleAlert as AlertCircle, Hourglass, Plus, Minus } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { TimesheetDay } from '@/types';
+import { groupDaysByWeek } from '@/lib/timesheet-utils';
 
 const DEFAULT_DAILY_HOURS = 8;
 
 function monthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function isoWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
 }
 
 /** Weekdays (Mon-Fri) of the given month, defaulted to 8h each. */
@@ -35,16 +28,6 @@ function defaultDaysForMonth(monthStr: string): TimesheetDay[] {
     date.setDate(date.getDate() + 1);
   }
   return days;
-}
-
-function groupByWeek(days: TimesheetDay[]): { week: number; days: TimesheetDay[] }[] {
-  const weeks = new Map<number, TimesheetDay[]>();
-  days.forEach((d) => {
-    const w = isoWeek(new Date(d.date + 'T00:00:00'));
-    if (!weeks.has(w)) weeks.set(w, []);
-    weeks.get(w)!.push(d);
-  });
-  return Array.from(weeks.entries()).map(([week, days]) => ({ week, days })).sort((a, b) => a.week - b.week);
 }
 
 export default function ApplicantTimesheetPage() {
@@ -89,8 +72,10 @@ export default function ApplicantTimesheetPage() {
     ? [...timesheetEvents].filter((e) => e.timesheet_id === existingTimesheet.id && e.event_type === 'rejected').sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
     : undefined;
 
-  const updateHours = (date: string, hours: number) => {
-    setDays((prev) => prev.map((d) => (d.date === date ? { ...d, hours } : d)));
+  const adjustHours = (date: string, delta: number) => {
+    setDays((prev) => prev.map((d) => (
+      d.date === date ? { ...d, hours: Math.max(0, Math.min(24, Math.round((d.hours + delta) * 100) / 100)) } : d
+    )));
   };
 
   const handleSubmit = async () => {
@@ -189,26 +174,46 @@ export default function ApplicantTimesheetPage() {
         </div>
 
         <div className="space-y-3">
-          {groupByWeek(days).map(({ week, days: weekDays }) => (
+          {groupDaysByWeek(days).map(({ week, days: weekDays }) => (
             <div key={week} className="grid grid-cols-[80px_repeat(5,1fr)] gap-2 items-center">
               <span className="text-xs text-muted-foreground">Week {week}</span>
-              {weekDays.map((d) => (
-                <div key={d.date} className="flex flex-col items-center gap-1">
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.25"
-                    min="0"
-                    max="24"
-                    value={d.hours}
-                    disabled={isLocked}
-                    onChange={(e) => updateHours(d.date, parseFloat(e.target.value) || 0)}
-                    className="w-16 text-center rounded-lg border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] disabled:bg-gray-50 disabled:text-muted-foreground"
-                  />
-                </div>
-              ))}
+              {weekDays.map((d) => {
+                const isZero = d.hours === 0;
+                return (
+                  <div key={d.date} className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}
+                    </span>
+                    <div
+                      className={`flex items-center justify-between gap-1 w-full rounded-lg px-1 py-1 ${
+                        isZero ? 'bg-gray-50' : 'bg-[hsl(210,100%,45%)]/10'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-label="Subtract 0.25 hours"
+                        disabled={isLocked}
+                        onClick={() => adjustHours(d.date, -0.25)}
+                        className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full border border-[hsl(210,100%,45%)]/30 text-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,45%)]/10 disabled:opacity-0 disabled:pointer-events-none"
+                      >
+                        <Minus className="w-2.5 h-2.5" />
+                      </button>
+                      <span className={`text-xs font-semibold ${isZero ? 'text-muted-foreground' : 'text-[hsl(210,100%,38%)]'}`}>
+                        {d.hours}h
+                      </span>
+                      <button
+                        type="button"
+                        aria-label="Add 0.25 hours"
+                        disabled={isLocked}
+                        onClick={() => adjustHours(d.date, 0.25)}
+                        className="w-5 h-5 flex-shrink-0 flex items-center justify-center rounded-full border border-[hsl(210,100%,45%)]/30 text-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,45%)]/10 disabled:opacity-0 disabled:pointer-events-none"
+                      >
+                        <Plus className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
