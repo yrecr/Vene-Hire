@@ -124,7 +124,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -134,6 +134,10 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
 
     if (!requiredOk) {
       setError('Please fill in all required fields.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      setError('Please enter a valid email address.');
       return;
     }
 
@@ -155,16 +159,23 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
       reviewed_by: null,
     };
 
-    supabase.from('access_requests').insert({
+    // Awaited and checked — previously fire-and-forget, so a failed insert here
+    // told the candidate "submitted" while the admin never saw the request.
+    const { error: insertError } = await supabase.from('access_requests').insert({
       request_type: entry.request_type, full_name: entry.full_name,
       company: entry.company, email: entry.email, country: entry.country,
       hiring_need: entry.hiring_need, candidate_slug: entry.candidate_slug,
       message: entry.message, status: entry.status, created_at: entry.created_at,
-    }).then(() => {}, () => {});
-
-    setAccessRequests((prev) => [entry, ...prev]);
+    });
 
     setIsSubmitting(false);
+
+    if (insertError) {
+      setError('Something went wrong submitting your request. Please try again.');
+      return;
+    }
+
+    setAccessRequests((prev) => [entry, ...prev]);
     setIsSubmitted(true);
   };
 

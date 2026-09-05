@@ -139,7 +139,7 @@ export default function TalentProfilesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={talentProfiles} />
+      <DataTable columns={columns} data={talentProfiles} pageSize={10} emptyMessage="No talent profiles yet." />
     </div>
   );
 }

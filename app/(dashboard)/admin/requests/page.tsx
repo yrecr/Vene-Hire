@@ -249,7 +249,7 @@ export default function AccessRequestsPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={filteredRequests} />
+      <DataTable columns={columns} data={filteredRequests} pageSize={10} emptyMessage="No access requests match these filters." />
 
       {/* Detail dialog */}
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>

@@ -171,7 +171,7 @@ export default function ResourcesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={resources} />
+      <DataTable columns={columns} data={resources} pageSize={10} emptyMessage="No resources uploaded yet." />
 
       {/* Upload dialog */}
       <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetForm(); }}>

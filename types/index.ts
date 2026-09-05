@@ -141,6 +141,16 @@ export interface AccessRequest {
   reviewed_by: string | null;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: 'new' | 'read';
+  created_at: string;
+}
+
 export interface Notification {
   id: string;
   user_id: string;
