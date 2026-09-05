@@ -28,7 +28,7 @@ function tabToStatus(tab: FilterTab): string | null {
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets } = useData();
+  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, updateProcessContractEndDate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets } = useData();
   const [activeTab, setActiveTab] = useState<FilterTab>('All');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -36,6 +36,8 @@ export default function EmployerProcessesPage() {
   const [contractProcess, setContractProcess] = useState<SelectionProcess | null>(null);
   const [editingRateId, setEditingRateId] = useState<string | null>(null);
   const [rateInput, setRateInput] = useState('');
+  const [editingEndDateId, setEditingEndDateId] = useState<string | null>(null);
+  const [endDateInput, setEndDateInput] = useState('');
 
   const schedulingApplicant = schedulingProcess ? getApplicantById(schedulingProcess.applicant_id) : null;
   const schedulingSlots = schedulingApplicant
@@ -243,6 +245,64 @@ export default function EmployerProcessesPage() {
                           onClick={() => {
                             setEditingRateId(process.id);
                             setRateInput(process.hourly_rate != null ? String(process.hourly_rate) : '');
+                          }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {process.status === 'hired' && (
+                  <div className="flex items-center gap-2 mb-3 text-sm">
+                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      Working since{' '}
+                      <span className="font-medium text-foreground">
+                        {process.contract_start_date
+                          ? new Date(process.contract_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          : 'unknown'}
+                      </span>
+                    </span>
+                    <span className="text-muted-foreground">·</span>
+                    {editingEndDateId === process.id ? (
+                      <>
+                        <Input
+                          type="date"
+                          value={endDateInput}
+                          onChange={(e) => setEndDateInput(e.target.value)}
+                          className="h-8 w-40 text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            updateProcessContractEndDate(process.id, endDateInput || null);
+                            setEditingEndDateId(null);
+                          }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-muted-foreground">
+                          {process.contract_end_date ? 'Ends' : 'No end date set'}{' '}
+                          {process.contract_end_date && (
+                            <span className="font-medium text-foreground">
+                              {new Date(process.contract_end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          )}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            setEditingEndDateId(process.id);
+                            setEndDateInput(process.contract_end_date || '');
                           }}
                         >
                           <Pencil className="w-3.5 h-3.5" />
