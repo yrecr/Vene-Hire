@@ -5,6 +5,7 @@ import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { PageLoading } from '@/components/page-loading';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
+import { DeleteAccountDialog } from '@/components/delete-account-dialog';
 import type { Profile } from '@/types';
 import { Plus, Search, Pencil, Trash2, X, Save } from 'lucide-react';
 import { useData } from '@/lib/data-context';
@@ -17,6 +18,7 @@ export default function UserManagementPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Profile>>({});
+  const [deleting, setDeleting] = useState<Profile | null>(null);
 
   useEffect(() => { setLocalProfiles(contextProfiles); }, [contextProfiles]);
 
@@ -52,9 +54,12 @@ export default function UserManagementPage() {
     setEditData({});
   }, [editId, editData, profiles]);
 
-  const deleteUser = useCallback((id: string) => {
+  const deleteUser = useCallback(async (id: string) => {
+    // Not optimistic: this is a real, irreversible network call that can fail
+    // (e.g. the "last remaining admin" guard) — the row should only disappear
+    // once the account is actually gone.
+    await api.deleteAccount(id);
     sync(profiles.filter((p) => p.id !== id));
-    api.deleteProfile(id).catch(() => {});
   }, [profiles]);
 
   const columns: DataTableColumn<Profile>[] = [
@@ -140,7 +145,7 @@ export default function UserManagementPage() {
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => startEdit(item)}>
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => { if (confirm('Delete this user?')) deleteUser(item.id); }}>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => setDeleting(item)}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -185,6 +190,16 @@ export default function UserManagementPage() {
       </div>
 
       <DataTable columns={columns} data={filtered} pageSize={10} emptyMessage="No users match your search." />
+
+      {deleting && (
+        <DeleteAccountDialog
+          open={!!deleting}
+          onOpenChange={(open) => !open && setDeleting(null)}
+          targetLabel={`${deleting.full_name}'s account`}
+          confirmText={deleting.email}
+          onConfirm={() => deleteUser(deleting.id)}
+        />
+      )}
     </div>
   );
 }
