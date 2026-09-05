@@ -32,8 +32,15 @@ export async function upsertProfile(profile: Profile): Promise<void> {
   await sb().from('profiles').upsert(profile, { onConflict: 'id' });
 }
 
-export async function deleteProfile(id: string): Promise<void> {
-  await sb().from('profiles').delete().eq('id', id);
+// ponytail: route through /api/delete-account to use service_role key —
+// deleting the Supabase Auth user cascades to profiles and everything
+// downstream, instead of leaving an orphaned Auth user (see route for why).
+export async function deleteAccount(profileId?: string): Promise<void> {
+  const res = await fetch('/api/delete-account', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ profile_id: profileId }),
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Failed to delete account');
 }
 
 // ─── Talent Profiles ─────────────────────────────────

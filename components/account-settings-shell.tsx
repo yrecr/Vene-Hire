@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth';
-import { CircleCheck, CircleAlert } from 'lucide-react';
+import { deleteAccount } from '@/lib/supabase-service';
+import { DeleteAccountDialog } from '@/components/delete-account-dialog';
+import { CircleCheck, CircleAlert, TriangleAlert } from 'lucide-react';
 
 const TABS = ['profile', 'system', 'security', 'about'] as const;
 type Tab = typeof TABS[number];
@@ -173,6 +175,43 @@ function SecurityTab() {
           {loading ? 'Updating...' : 'Update Password'}
         </Button>
       </form>
+
+      <DangerZone />
+    </div>
+  );
+}
+
+function DangerZone() {
+  const { currentUser, logout } = useAuth();
+  const [open, setOpen] = useState(false);
+
+  if (!currentUser?.email) return null;
+
+  const handleDelete = async () => {
+    await deleteAccount();
+    await logout();
+    window.location.href = '/';
+  };
+
+  return (
+    <div className="mt-8 pt-6 border-t border-gray-100">
+      <h3 className="font-semibold text-red-600 flex items-center gap-2 mb-1">
+        <TriangleAlert className="w-4 h-4" />
+        Danger Zone
+      </h3>
+      <p className="text-sm text-muted-foreground mb-3">
+        Permanently delete your account and everything tied to it. This cannot be undone.
+      </p>
+      <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setOpen(true)}>
+        Delete my account
+      </Button>
+      <DeleteAccountDialog
+        open={open}
+        onOpenChange={setOpen}
+        targetLabel="your account"
+        confirmText={currentUser.email}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
