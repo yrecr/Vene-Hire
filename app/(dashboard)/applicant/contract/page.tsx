@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useRef, useState, useCallback } from 'react';
-import { Signature as FileSignature, Clock, CircleCheck as CheckCircle2, Eye, FileDown, Pen, Upload } from 'lucide-react';
+import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { Signature as FileSignature, Clock, CircleCheck as CheckCircle2, Eye, FileDown, Pen, Upload, Eraser } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
@@ -100,6 +100,90 @@ function getContractMessage(contractStatus: string | null) {
   return 'A contract is being prepared for you. Please check back soon.';
 }
 
+/**
+ * Draw-to-sign pad using the native Pointer Events API (mouse, touch, and pen
+ * all fire the same events) — no signature-pad dependency needed. Canvas
+ * starts fully transparent so toBlob('image/png') already matches the
+ * transparent-background format removeBg() produces for uploaded images.
+ */
+function SignaturePad({ onConfirm }: { onConfirm: (blob: Blob) => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawingRef = useRef(false);
+  const [hasDrawn, setHasDrawn] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // Backing store at 2x for crisp strokes on high-DPI screens; CSS size stays logical.
+    const ctx = canvas.getContext('2d')!;
+    canvas.width = canvas.clientWidth * 2;
+    canvas.height = canvas.clientHeight * 2;
+    ctx.scale(2, 2);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#1e293b';
+  }, []);
+
+  const pointFromEvent = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const ctx = canvasRef.current!.getContext('2d')!;
+    const { x, y } = pointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    drawingRef.current = true;
+    setHasDrawn(true);
+    canvasRef.current!.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!drawingRef.current) return;
+    const ctx = canvasRef.current!.getContext('2d')!;
+    const { x, y } = pointFromEvent(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => { drawingRef.current = false; };
+
+  const clear = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasDrawn(false);
+  };
+
+  const confirm = () => {
+    canvasRef.current!.toBlob((b) => { if (b) onConfirm(b); }, 'image/png');
+  };
+
+  return (
+    <div className="space-y-3">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-40 rounded-xl border border-gray-200 bg-white touch-none cursor-crosshair"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={stopDrawing}
+        onPointerLeave={stopDrawing}
+      />
+      <div className="flex gap-3">
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={clear} disabled={!hasDrawn}>
+          <Eraser className="w-3.5 h-3.5" />
+          Clear
+        </Button>
+        <Button size="sm" className="bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]" disabled={!hasDrawn} onClick={confirm}>
+          Use this signature
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ContractCard({ process, employer, signContract }: {
   process: SelectionProcess;
   employer: EmployerProfile | null;
@@ -110,6 +194,12 @@ function ContractCard({ process, employer, signContract }: {
   const blobRef = useRef<Blob | null>(null);
   const [signing, setSigning] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [mode, setMode] = useState<'upload' | 'draw'>('upload');
+
+  const handleDrawn = useCallback((blob: Blob) => {
+    blobRef.current = blob;
+    setPreviewUrl(URL.createObjectURL(blob));
+  }, []);
 
   const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -230,10 +320,31 @@ function ContractCard({ process, employer, signContract }: {
               </div>
             </div>
           ) : (
-            <Button variant="outline" className="w-full py-8 border-dashed" onClick={() => fileRef.current?.click()}>
-              <Upload className="w-5 h-5 mr-2" />
-              Select signature image
-            </Button>
+            <div className="space-y-3">
+              <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+                <button
+                  onClick={() => setMode('upload')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'upload' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Upload image
+                </button>
+                <button
+                  onClick={() => setMode('draw')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'draw' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Draw signature
+                </button>
+              </div>
+
+              {mode === 'upload' ? (
+                <Button variant="outline" className="w-full py-8 border-dashed" onClick={() => fileRef.current?.click()}>
+                  <Upload className="w-5 h-5 mr-2" />
+                  Select signature image
+                </Button>
+              ) : (
+                <SignaturePad onConfirm={handleDrawn} />
+              )}
+            </div>
           )}
         </div>
       )}
