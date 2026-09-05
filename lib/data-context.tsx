@@ -5,7 +5,7 @@ import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import type {
   TalentProfile, InterviewRequest, SelectionProcess, Notification, AvailabilitySlot,
   EmployerProfile, Profile, AccessRequest, TalentSkill, Bootcamp, Enrollment, Resource,
-  ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent,
+  ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent, ContactMessage,
 } from '@/types';
 import * as api from './supabase-service';
 import { mockEmployerProfiles } from '@/data/mock';
@@ -48,6 +48,8 @@ interface DataContextType {
   timesheetEvents: TimesheetEvent[];
   submitTimesheet: (processId: string, month: string, days: TimesheetDay[]) => Promise<void>;
   reviewTimesheet: (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => Promise<void>;
+  contactMessages: ContactMessage[];
+  markContactMessageRead: (id: string) => Promise<void>;
   addMeetingLink: (requestId: string, url: string) => void;
   reportInterviewOutcome: (requestId: string, outcome: 'passed' | 'failed', notes: string) => void;
   toggleShortlist: (applicantId: string) => Promise<void>;
@@ -110,10 +112,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
   const [timesheetEvents, setTimesheetEvents] = useState<TimesheetEvent[]>([]);
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([]);
   const [isHydrated, setIsHydrated] = useState(false);
   const hydrateFromSupabase = useCallback(async () => {
     try {
-      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand, sl, ts, te] = await Promise.allSettled([
+      const [tp, p, ep, ar, ir, sp, n, av, bc, en, re, car, vac, cand, sl, ts, te, cm] = await Promise.allSettled([
         api.fetchTalentProfiles(),
         api.fetchProfiles(),
         api.fetchEmployerProfiles(),
@@ -131,6 +134,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         api.fetchShortlistedIds(),
         api.fetchTimesheets(),
         api.fetchTimesheetEvents(),
+        api.fetchContactMessages(),
       ]);
 
       // Replace seed data with real Supabase data to avoid duplicates
@@ -151,6 +155,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (sl.status === 'fulfilled' && sl.value.length) setShortlistedIds(sl.value);
       if (ts.status === 'fulfilled' && ts.value.length) setTimesheets(ts.value);
       if (te.status === 'fulfilled' && te.value.length) setTimesheetEvents(te.value);
+      if (cm.status === 'fulfilled' && cm.value.length) setContactMessages(cm.value);
     } catch {
       // Supabase unavailable
     } finally {
@@ -525,6 +530,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [shortlistedIds]);
 
+  const markContactMessageRead = useCallback(async (id: string) => {
+    const prev = contactMessages.find((m) => m.id === id);
+    if (!prev || prev.status === 'read') return;
+    setContactMessages((list) => list.map((m) => (m.id === id ? { ...m, status: 'read' } : m)));
+    try {
+      await api.markContactMessageRead(id);
+    } catch {
+      setContactMessages((list) => list.map((m) => (m.id === id ? prev : m)));
+    }
+  }, [contactMessages]);
+
   const updateAccessRequestStatus = useCallback(async (id: string, status: AccessRequest['status']) => {
     const prevRequest = accessRequests.find((r) => r.id === id);
     if (!prevRequest) return;
@@ -783,6 +799,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     updateCandidateStatus: updateCandidateStatusFn,
     createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, addMeetingLink, reportInterviewOutcome,
     timesheets, timesheetEvents, submitTimesheet, reviewTimesheet,
+    contactMessages, markContactMessageRead,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotificationsForUser: getNotifsForUser,
     getApplicantById: findTalentById,
@@ -798,6 +815,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     isHydrated, talentProfiles, profiles, employerProfiles, accessRequests,
     interviewRequests, selectionProcesses, notifications, shortlistedIds,
     availabilitySlots, bootcamps, enrollments, resources, timesheets, timesheetEvents,
+    contactMessages, markContactMessageRead,
     createResource, updateResourceVisibility,
     contractApprovalRequests,
     vacancies, candidates, createVacancy, updateCandidateStatusFn,

@@ -125,7 +125,7 @@ export default function AdminTimesheetsPage() {
           <p className="text-sm text-muted-foreground">No hours have been reported yet.</p>
         </div>
       ) : (
-        <DataTable columns={columns} data={rows} />
+        <DataTable columns={columns} data={rows} pageSize={10} emptyMessage="No timesheets submitted yet." />
       )}
 
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>

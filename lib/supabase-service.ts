@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
-import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent } from '@/types';
+import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent, ContactMessage } from '@/types';
 
 let _sb: ReturnType<typeof createBrowserClient> | null = null;
 function sb() {
@@ -92,6 +92,16 @@ export async function fetchAccessRequests(): Promise<AccessRequest[]> {
 
 export async function upsertAccessRequest(req: AccessRequest): Promise<void> {
   await sb().from('access_requests').upsert(req, { onConflict: 'id' });
+}
+
+// ─── Contact Messages ────────────────────────────────
+export async function fetchContactMessages(): Promise<ContactMessage[]> {
+  const { data } = await sb().from('contact_messages').select('*');
+  return data ?? [];
+}
+
+export async function markContactMessageRead(id: string): Promise<void> {
+  await sb().from('contact_messages').update({ status: 'read' }).eq('id', id);
 }
 
 // ─── Selection Processes ─────────────────────────────

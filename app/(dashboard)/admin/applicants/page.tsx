@@ -237,7 +237,7 @@ export default function ApplicantManagementPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={filteredProfiles} />
+      <DataTable columns={columns} data={filteredProfiles} pageSize={10} emptyMessage="No applicants match these filters." />
     </div>
   );
 }

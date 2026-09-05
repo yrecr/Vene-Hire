@@ -84,7 +84,7 @@ export default function EmployerManagementPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={employerProfiles} />
+      <DataTable columns={columns} data={employerProfiles} pageSize={10} emptyMessage="No employers yet." />
     </div>
   );
 }

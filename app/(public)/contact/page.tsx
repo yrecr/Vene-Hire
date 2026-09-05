@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/lib/supabase';
 import {
   Mail,
   MapPin,
@@ -13,7 +14,11 @@ import {
   Send,
   ArrowRight,
   MessageSquare,
+  CircleCheck as CheckCircle2,
+  CircleAlert as AlertCircle,
 } from 'lucide-react';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const contactInfo = [
   {
@@ -43,6 +48,9 @@ export default function ContactPage() {
     subject: '',
     message: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -53,10 +61,29 @@ export default function ContactPage() {
     }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: integrate with backend / API
-    console.log('Form submitted:', formData);
+    setError(null);
+
+    if (!EMAIL_RE.test(formData.email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error: insertError } = await supabase.from('contact_messages').insert({
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      subject: formData.subject.trim(),
+      message: formData.message.trim(),
+    });
+    setIsSubmitting(false);
+
+    if (insertError) {
+      setError('Something went wrong sending your message. Please try again.');
+      return;
+    }
+    setIsSubmitted(true);
   };
 
   return (
@@ -156,6 +183,19 @@ export default function ContactPage() {
                   </div>
                 </div>
 
+                {isSubmitted ? (
+                  <div className="flex flex-col items-center text-center py-10">
+                    <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
+                      <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-foreground mb-1">
+                      Message sent
+                    </h4>
+                    <p className="text-sm text-muted-foreground max-w-sm">
+                      Thanks for reaching out — our team will get back to you within 24 hours.
+                    </p>
+                  </div>
+                ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
@@ -208,14 +248,23 @@ export default function ContactPage() {
                     />
                   </div>
 
+                  {error && (
+                    <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
                   <Button
                     type="submit"
                     size="lg"
+                    disabled={isSubmitting}
                     className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base h-12"
                   >
-                    Send Message <Send className="w-4 h-4 ml-2" />
+                    {isSubmitting ? 'Sending...' : <>Send Message <Send className="w-4 h-4 ml-2" /></>}
                   </Button>
                 </form>
+                )}
               </div>
             </div>
           </div>

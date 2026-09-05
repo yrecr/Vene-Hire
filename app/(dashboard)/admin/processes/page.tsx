@@ -157,7 +157,7 @@ export default function ProcessesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={filteredProcesses} />
+      <DataTable columns={columns} data={filteredProcesses} pageSize={10} emptyMessage="No selection processes match these filters." />
     </div>
   );
 }

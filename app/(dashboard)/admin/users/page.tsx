@@ -187,7 +187,7 @@ export default function UserManagementPage() {
         />
       </div>
 
-      <DataTable columns={columns} data={filtered} />
+      <DataTable columns={columns} data={filtered} pageSize={10} emptyMessage="No users match your search." />
     </div>
   );
 }
@@ -199,6 +199,10 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
 
   const handleCreate = async () => {
     if (!data.full_name.trim() || !data.email.trim()) return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
+      setCreateError('Please enter a valid email address.');
+      return;
+    }
     setCreating(true);
     setCreateError('');
 
