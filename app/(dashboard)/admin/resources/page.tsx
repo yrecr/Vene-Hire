@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
+import { PageLoading } from '@/components/page-loading';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
@@ -146,11 +147,7 @@ export default function ResourcesPage() {
 
   if (!isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 

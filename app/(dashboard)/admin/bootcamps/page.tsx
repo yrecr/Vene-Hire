@@ -3,6 +3,7 @@
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
+import { PageLoading } from '@/components/page-loading';
 import { Plus, Calendar, Users } from 'lucide-react';
 
 const studentCounts: Record<string, number> = {
@@ -16,11 +17,7 @@ export default function BootcampsPage() {
 
   if (!isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 

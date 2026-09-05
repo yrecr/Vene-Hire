@@ -588,15 +588,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       () => setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? process : p))),
       'requestContractApproval'
     );
-    const n: Notification = {
-      id: crypto.randomUUID(), user_id: 'p-admin1',
-      title: 'Contract Approval Requested',
-      message: `${employer?.company_name || 'An employer'} requests to initiate contract for ${applicant?.display_name || 'candidate'} in ${process.role_title}.`,
-      type: 'request', read: false, created_at: new Date().toISOString(),
-    };
-    setNotifications((prev) => [...prev, n]);
-    api.upsertNotification(n).catch(logBackgroundFailure);
-  }, [selectionProcesses, findTalentById, findEmployer]);
+    // Notify every admin, not one hardcoded id — the seed demo admin's id doesn't
+    // exist for a real production admin account.
+    const adminNotifs: Notification[] = profiles
+      .filter((p) => p.role === 'admin')
+      .map((admin) => ({
+        id: crypto.randomUUID(), user_id: admin.id,
+        title: 'Contract Approval Requested',
+        message: `${employer?.company_name || 'An employer'} requests to initiate contract for ${applicant?.display_name || 'candidate'} in ${process.role_title}.`,
+        type: 'request', read: false, created_at: new Date().toISOString(),
+      }));
+    if (adminNotifs.length) {
+      setNotifications((prev) => [...prev, ...adminNotifs]);
+      api.upsertNotifications(adminNotifs).catch(logBackgroundFailure);
+    }
+  }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const initiateContract = requestContractApprovalFn;
   const requestContractApproval = requestContractApprovalFn;
@@ -684,17 +690,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (process) {
         const applicant = findTalentById(process.applicant_id);
         const employer = findEmployer(process.employer_id);
-        const adminNotif: Notification = {
-          id: crypto.randomUUID(), user_id: 'p-admin1',
-          title: 'Contract Signed by Applicant',
-          message: `${applicant?.display_name || 'Applicant'} has signed the contract for ${process.role_title}. Please review and verify.`,
-          type: 'contract', read: false, created_at: new Date().toISOString(),
-        };
-        setNotifications((prev) => [...prev, adminNotif]);
-        api.upsertNotification(adminNotif).catch(logBackgroundFailure);
+        const adminNotifs: Notification[] = profiles
+          .filter((p) => p.role === 'admin')
+          .map((admin) => ({
+            id: crypto.randomUUID(), user_id: admin.id,
+            title: 'Contract Signed by Applicant',
+            message: `${applicant?.display_name || 'Applicant'} has signed the contract for ${process.role_title}. Please review and verify.`,
+            type: 'contract', read: false, created_at: new Date().toISOString(),
+          }));
+        if (adminNotifs.length) {
+          setNotifications((prev) => [...prev, ...adminNotifs]);
+          api.upsertNotifications(adminNotifs).catch(logBackgroundFailure);
+        }
       }
     }
-  }, [selectionProcesses, findTalentById, findEmployer]);
+  }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const verifyContract = useCallback(async (processId: string) => {
     await api.verifyContract(processId);

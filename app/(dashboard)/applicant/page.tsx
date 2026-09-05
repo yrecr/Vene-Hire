@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
 import { getApplicantCompletionItems, getCompletionPercent } from '@/lib/profile-completion';
+import { PageLoading } from '@/components/page-loading';
 
 const PROCESS_STATUS_LABELS: Record<string, string> = {
   active: 'Active',
@@ -89,11 +90,7 @@ export default function ApplicantDashboardPage() {
 
   if (loading || !isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 
