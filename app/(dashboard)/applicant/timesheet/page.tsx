@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import type { TimesheetDay } from '@/types';
 import { groupDaysByWeek } from '@/lib/timesheet-utils';
+import { PageLoading } from '@/components/page-loading';
 
 const DEFAULT_DAILY_HOURS = 8;
 
@@ -93,11 +94,7 @@ export default function ApplicantTimesheetPage() {
 
   if (loading || !isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 
@@ -173,7 +170,10 @@ export default function ApplicantTimesheetPage() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        {/* Fixed 6-column grid (label + 5 weekdays) doesn't reflow on narrow
+            screens — scroll it horizontally instead of squeezing the pills. */}
+        <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0">
+        <div className="space-y-3 min-w-[560px]">
           {groupDaysByWeek(days).map(({ week, days: weekDays }) => (
             <div key={week} className="grid grid-cols-[80px_repeat(5,1fr)] gap-2 items-center">
               <span className="text-xs text-muted-foreground">Week {week}</span>
@@ -216,6 +216,7 @@ export default function ApplicantTimesheetPage() {
               })}
             </div>
           ))}
+        </div>
         </div>
 
         {!isLocked && (

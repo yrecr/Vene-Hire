@@ -9,6 +9,7 @@ import { ProfileCompletionCard } from '@/components/profile-completion-card';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
+import { PageLoading } from '@/components/page-loading';
 import { getEmployerCompletionItems, getCompletionPercent } from '@/lib/profile-completion';
 import Link from 'next/link';
 
@@ -65,11 +66,7 @@ export default function EmployerDashboard() {
 
   if (loading || !isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 

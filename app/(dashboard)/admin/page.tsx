@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { useData } from '@/lib/data-context';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
+import { PageLoading } from '@/components/page-loading';
 import type { AccessRequest } from '@/types';
 
 const PROCESS_STATUS_LABELS: Record<string, string> = {
@@ -69,11 +70,7 @@ export default function AdminDashboardPage() {
 
   if (!isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 

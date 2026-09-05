@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
+import { PageLoading } from '@/components/page-loading';
 import {
   Bell,
   MessageSquare,
@@ -21,8 +23,12 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 export default function AdminNotificationsPage() {
+  const { currentUser } = useAuth();
   const { getNotificationsForUser, isHydrated } = useData();
-  const initialNotifications = getNotificationsForUser('p-admin1');
+  // 'p-admin1' fallback matches the demo seed admin — mirrors the same pattern
+  // used in employer/notifications so a real (non-demo) admin account isn't
+  // stuck seeing an always-empty inbox.
+  const initialNotifications = getNotificationsForUser(currentUser?.profile_id || 'p-admin1');
   const [notifications, setNotifications] = useState(initialNotifications);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -44,11 +50,7 @@ export default function AdminNotificationsPage() {
 
   if (!isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 

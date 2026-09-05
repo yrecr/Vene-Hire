@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
+import { PageLoading } from '@/components/page-loading';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
@@ -180,11 +181,7 @@ export default function ApplicantManagementPage() {
 
   if (!isHydrated) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
+      <PageLoading />
     );
   }
 
