@@ -3,12 +3,12 @@
 import { useMemo } from 'react';
 import {
   GitBranch, MessageSquare, TrendingUp, CalendarDays,
-  Bell, Globe, Clock, CheckCircle2, Video,
+  Globe, Clock,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { StatCard } from '@/components/stat-card';
-import { ProfileCompletionCard } from '@/components/profile-completion-card';
+import { ProfileCompletionBubble } from '@/components/profile-completion-bubble';
 import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,6 @@ export default function ApplicantDashboardPage() {
   const {
     interviewRequests,
     selectionProcesses,
-    getNotificationsForUser,
     respondToInterview,
     talentProfiles,
     getEmployerById,
@@ -80,7 +79,6 @@ export default function ApplicantDashboardPage() {
 
   const activeProcesses = myProcesses.filter((p) => p.status === 'active');
   const pendingInterviews = myInterviews.filter((i) => i.status === 'pending');
-  const notifications = getNotificationsForUser(user?.profile_id ?? '').slice(0, 4);
 
   const interviewsTrend = useMemo(() => bucketLast14Days(myInterviews, (i) => i.created_at), [myInterviews]);
   const processStatusDistribution = useMemo(
@@ -149,11 +147,12 @@ export default function ApplicantDashboardPage() {
         <DonutCard title="My Processes by Status" data={processStatusDistribution} />
       </div>
 
-      {/* ── Main grid ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* LEFT: processes + interviews */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* ── Main content ────────────────────────────────────────── */}
+      {/* Notifications and Past Processes used to live here as sidebar
+          widgets — both were pure duplicates of the bell (global) and
+          /applicant/processes (which already lists every non-active
+          process), so they're gone rather than moved. */}
+      <div className="space-y-6">
 
           {/* Active Processes */}
           <section>
@@ -259,85 +258,16 @@ export default function ApplicantDashboardPage() {
             )}
           </section>
 
-        </div>
-
-        {/* RIGHT: sidebar */}
-        <div className="space-y-6">
-
-          {/* Profile Completion */}
-          <ProfileCompletionCard
-            completion={completion}
-            items={completionItems}
-            href="/applicant/settings"
-            ctaLabel="Complete your profile"
-            message="A complete profile gets you more opportunities to land an employer."
-          />
-
-          {/* Notifications */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-            <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-              <Bell className="w-4 h-4" />
-              Notifications
-              {notifications.filter((n) => !n.read).length > 0 && (
-                <span className="ml-auto text-xs bg-[hsl(210,100%,45%)] text-white rounded-full px-2 py-0.5">
-                  {notifications.filter((n) => !n.read).length}
-                </span>
-              )}
-            </h3>
-
-            {notifications.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No notifications.</p>
-            ) : (
-              <div className="space-y-3">
-                {notifications.map((notif) => (
-                  <div key={notif.id} className="flex items-start gap-2">
-                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.read ? 'bg-gray-300' : 'bg-[hsl(210,100%,45%)]'}`} />
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">{notif.title}</p>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{notif.message}</p>
-                      {notif.metadata?.join_url && (
-                        <a
-                          href={notif.metadata.join_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 mt-1 px-2 py-1 rounded-md bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
-                        >
-                          <Video className="w-3 h-3" />
-                          Join Meeting
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* All Processes (historical) */}
-          {myProcesses.filter((p) => p.status !== 'active').length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <h3 className="font-semibold text-foreground flex items-center gap-2 mb-4">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                Past Processes
-              </h3>
-              <div className="space-y-2">
-                {myProcesses.filter((p) => p.status !== 'active').map((p) => {
-                  const employer = getEmployerById(p.employer_id);
-                  return (
-                    <div key={p.id} className="flex items-center justify-between">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{p.role_title}</p>
-                        <p className="text-xs text-muted-foreground">{employer?.company_name}</p>
-                      </div>
-                      <ProcessStatusBadge status={p.status} />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
+
+      <ProfileCompletionBubble
+        completion={completion}
+        items={completionItems}
+        href="/applicant/settings"
+        ctaLabel="Complete your profile"
+        message="A complete profile gets you more opportunities to land an employer."
+        storageKey="venehire-profile-bubble-applicant"
+      />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Users, GitBranch, MessageSquare, Star, ArrowRight } from 'lucide-react'
 import { StatCard } from '@/components/stat-card';
 import { Button } from '@/components/ui/button';
 import { TrendCard, DonutCard } from '@/components/dashboard-charts';
-import { ProfileCompletionCard } from '@/components/profile-completion-card';
+import { ProfileCompletionBubble } from '@/components/profile-completion-bubble';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
@@ -91,15 +91,14 @@ export default function EmployerDashboard() {
         <DonutCard title="My Processes by Status" data={processStatusDistribution} />
       </div>
 
-      {completion < 100 && (
-        <ProfileCompletionCard
-          completion={completion}
-          items={completionItems}
-          href="/employer/settings"
-          ctaLabel="Complete your company profile"
-          message="A complete company profile helps you attract better-matched talent."
-        />
-      )}
+      <ProfileCompletionBubble
+        completion={completion}
+        items={completionItems}
+        href="/employer/settings"
+        ctaLabel="Complete your company profile"
+        message="A complete company profile helps you attract better-matched talent."
+        storageKey="venehire-profile-bubble-employer"
+      />
 
       <div>
         <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
