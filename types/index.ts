@@ -76,6 +76,8 @@ export interface SelectionProcess {
   contract_url: string | null;
   signature_url: string | null;
   hourly_rate: number | null;
+  contract_start_date: string | null;
+  contract_end_date: string | null;
   notes: string;
   created_at: string;
   applicant?: TalentProfile;

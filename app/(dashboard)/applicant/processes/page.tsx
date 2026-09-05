@@ -194,6 +194,14 @@ export default function ApplicantProcessesPage() {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
+                {process.status === 'hired' && process.contract_start_date && (
+                  <p className="text-xs text-muted-foreground">
+                    Working since {new Date(process.contract_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {process.contract_end_date && (
+                      <> · Ends {new Date(process.contract_end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
+                    )}
+                  </p>
+                )}
               </div>
             );
           })}

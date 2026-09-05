@@ -34,7 +34,11 @@ export async function POST(req: NextRequest) {
 
     const { error } = await supabase
       .from('selection_processes')
-      .update({ contract_status: 'signed', status: 'hired' })
+      .update({
+        contract_status: 'signed',
+        status: 'hired',
+        contract_start_date: new Date().toISOString().slice(0, 10),
+      })
       .eq('id', process_id);
 
     if (error) {

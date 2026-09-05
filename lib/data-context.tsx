@@ -44,6 +44,7 @@ interface DataContextType {
   setProcessStage: (processId: string, stage: 'technical_interview', date: string) => void;
   updateProcessStatus: (processId: string, status: 'active' | 'on_hold' | 'not_selected') => Promise<void>;
   updateProcessHourlyRate: (processId: string, hourlyRate: number) => Promise<void>;
+  updateProcessContractEndDate: (processId: string, endDate: string | null) => Promise<void>;
   timesheets: Timesheet[];
   timesheetEvents: TimesheetEvent[];
   submitTimesheet: (processId: string, month: string, days: TimesheetDay[]) => Promise<void>;
@@ -263,7 +264,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           role_title: request.role_title, current_stage: 'intro_interview', status: 'active',
           intro_interview_date: request.requested_date, technical_interview_date: null,
           meeting_url: null, contract_status: null, contract_url: null, signature_url: null,
-          hourly_rate: null,
+          hourly_rate: null, contract_start_date: null, contract_end_date: null,
           notes: 'Process started from interview request acceptance.',
           created_at: new Date().toISOString(),
         };
@@ -381,6 +382,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const prevProcess = selectionProcesses.find((p) => p.id === processId);
     if (!prevProcess) return;
     const updated: SelectionProcess = { ...prevProcess, hourly_rate: hourlyRate };
+    setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
+    try {
+      await api.upsertSelectionProcess(updated);
+    } catch {
+      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    }
+  }, [selectionProcesses]);
+
+  const updateProcessContractEndDate = useCallback(async (processId: string, endDate: string | null) => {
+    const prevProcess = selectionProcesses.find((p) => p.id === processId);
+    if (!prevProcess) return;
+    const updated: SelectionProcess = { ...prevProcess, contract_end_date: endDate };
     setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
     try {
       await api.upsertSelectionProcess(updated);
@@ -708,8 +721,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const verifyContract = useCallback(async (processId: string) => {
     await api.verifyContract(processId);
+    const startDate = new Date().toISOString().slice(0, 10);
     setSelectionProcesses((prev) => prev.map((p) =>
-      p.id === processId ? { ...p, contract_status: 'signed', status: 'hired' } : p
+      p.id === processId ? { ...p, contract_status: 'signed', status: 'hired', contract_start_date: startDate } : p
     ));
     const process = selectionProcesses.find((p) => p.id === processId);
     if (process) {
@@ -814,7 +828,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     contractApprovalRequests,
     vacancies, candidates, createVacancy,
     updateCandidateStatus: updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, updateProcessContractEndDate, addMeetingLink, reportInterviewOutcome,
     timesheets, timesheetEvents, submitTimesheet, reviewTimesheet,
     contactMessages, markContactMessageRead,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
@@ -836,7 +850,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     createResource, updateResourceVisibility,
     contractApprovalRequests,
     vacancies, candidates, createVacancy, updateCandidateStatusFn,
-    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, addMeetingLink, reportInterviewOutcome,
+    createInterviewRequest, respondToInterview, setProcessStage, updateProcessStatus, updateProcessHourlyRate, updateProcessContractEndDate, addMeetingLink, reportInterviewOutcome,
     submitTimesheet, reviewTimesheet,
     toggleShortlist, updateAccessRequestStatus, isShortlisted, getAvailabilityForApplicant,
     getNotifsForUser, findTalentById, findEmployer,
