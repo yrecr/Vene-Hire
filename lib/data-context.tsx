@@ -713,6 +713,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ));
     const process = selectionProcesses.find((p) => p.id === processId);
     if (process) {
+      // Mirrors the server-side update in contracts/verify — takes the
+      // applicant off Browse Applicants without waiting for a refetch.
+      setTalentProfiles((prev) => prev.map((t) =>
+        t.id === process.applicant_id ? { ...t, availability_status: 'Hired' } : t
+      ));
+    }
+    if (process) {
       const applicant = findTalentById(process.applicant_id);
       const employer = findEmployer(process.employer_id);
       const empUserId = findEmployerUserId(process.employer_id);

@@ -49,6 +49,9 @@ export default function EmployerApplicantsPage() {
   const filteredApplicants = useMemo(() => {
     return talentProfiles
       .filter((t) => t.public_visible)
+      // Hired (by anyone) means off the market — showing them here just
+      // invites a duplicate hire that confuses whose hours belong to whom.
+      .filter((t) => t.availability_status !== 'Hired')
       .filter((t) => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();

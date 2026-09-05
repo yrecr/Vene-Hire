@@ -216,7 +216,11 @@ export default function TalentProfilePage() {
             Get in touch to learn more about this candidate or explore our full talent pool for your hiring needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {isEmployer && employerId ? (
+            {talent.availability_status === 'Hired' ? (
+              <Button size="lg" disabled className="bg-white/10 text-gray-400 gap-2 w-full sm:w-auto cursor-not-allowed">
+                Already Hired — Unavailable
+              </Button>
+            ) : isEmployer && employerId ? (
               <Button
                 size="lg"
                 className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
