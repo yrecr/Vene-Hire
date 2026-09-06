@@ -171,29 +171,17 @@ export default function HomePage() {
       </section>
 
       {/* Featured Talent */}
+      {/* Talent Carousel */}
       <section className="py-20 lg:py-28 bg-gray-50/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
+        <Reveal>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
             <SectionHeader
-              title="Meet Our Top Engineers"
-              description="Hand-picked, production-ready engineers who have completed our rigorous training and evaluation program."
+              title="Discover More Engineers"
+              description="Browse through our growing pool of trained and evaluated software engineers."
             />
-          </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredTalent.slice(0, 6).map((talent, i) => (
-              <Reveal key={talent.id} delay={i * 60}>
-                <TalentCard talent={talent} />
-              </Reveal>
-            ))}
           </div>
-          <div className="text-center mt-10">
-            <Link href="/talent">
-              <Button variant="outline" size="lg" className="px-8">
-                View All Talent <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
+        </Reveal>
+        <TalentCarousel talents={talentProfiles} />
       </section>
 
       {/* Value Proposition */}
@@ -264,17 +252,29 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Talent Carousel */}
       <section className="py-20 lg:py-28 bg-gray-50/70">
-        <Reveal>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal>
             <SectionHeader
-              title="Discover More Engineers"
-              description="Browse through our growing pool of trained and evaluated software engineers."
+              title="Meet Our Top Engineers"
+              description="Hand-picked, production-ready engineers who have completed our rigorous training and evaluation program."
             />
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredTalent.slice(0, 6).map((talent, i) => (
+              <Reveal key={talent.id} delay={i * 60}>
+                <TalentCard talent={talent} />
+              </Reveal>
+            ))}
           </div>
-        </Reveal>
-        <TalentCarousel talents={talentProfiles} />
+          <div className="text-center mt-10">
+            <Link href="/talent">
+              <Button variant="outline" size="lg" className="px-8">
+                View All Talent <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* Final CTA */}
