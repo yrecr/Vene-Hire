@@ -1,10 +1,10 @@
 'use client';
 
 import { TalentCard } from '@/components/talent-card';
-import type { TalentProfile } from '@/types';
+import type { TalentProfile, TalentSkill } from '@/types';
 
 interface TalentCarouselProps {
-  talents: TalentProfile[];
+  talents: (TalentProfile & { skills?: TalentSkill[] })[];
 }
 
 export function TalentCarousel({ talents }: TalentCarouselProps) {
