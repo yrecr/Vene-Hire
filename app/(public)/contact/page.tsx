@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabase';
 import {
   Mail,
   MapPin,
@@ -71,16 +70,20 @@ export default function ContactPage() {
     }
 
     setIsSubmitting(true);
-    const { error: insertError } = await supabase.from('contact_messages').insert({
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      subject: formData.subject.trim(),
-      message: formData.message.trim(),
+    const res = await fetch('/api/contact-messages/create', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+      }),
     });
     setIsSubmitting(false);
 
-    if (insertError) {
-      setError('Something went wrong sending your message. Please try again.');
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setError(body.error || 'Something went wrong sending your message. Please try again.');
       return;
     }
     setIsSubmitted(true);

@@ -1,8 +1,15 @@
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/section-header';
 import { ValueCard } from '@/components/value-card';
 import { ArrowRight, Lightbulb, Award, Shield, Rocket, Building2, GraduationCap, Users, TrendingUp, CircleCheck as CheckCircle2, Target, ChartBar as BarChart3 } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn how VeneHire trains and evaluates software engineers before matching them with companies ready to hire production-ready talent.',
+  alternates: { canonical: '/about' },
+};
 
 const values = [
   {

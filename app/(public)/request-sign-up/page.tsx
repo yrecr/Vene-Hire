@@ -14,7 +14,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabase';
 import { useData } from '@/lib/data-context';
 import { Send, CircleCheck as CheckCircle2, ArrowLeft, Building2, ShieldCheck, Clock, Users, Loader as Loader2, CircleAlert as AlertCircle } from 'lucide-react';
 
@@ -161,17 +160,23 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
 
     // Awaited and checked — previously fire-and-forget, so a failed insert here
     // told the candidate "submitted" while the admin never saw the request.
-    const { error: insertError } = await supabase.from('access_requests').insert({
-      request_type: entry.request_type, full_name: entry.full_name,
-      company: entry.company, email: entry.email, country: entry.country,
-      hiring_need: entry.hiring_need, candidate_slug: entry.candidate_slug,
-      message: entry.message, status: entry.status, created_at: entry.created_at,
+    // Routed through an API route (not a direct client insert) so the server
+    // can rate-limit it — the RLS policy alone can't do that.
+    const res = await fetch('/api/access-requests/create', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request_type: entry.request_type, full_name: entry.full_name,
+        company: entry.company, email: entry.email, country: entry.country,
+        hiring_need: entry.hiring_need, candidate_slug: entry.candidate_slug,
+        message: entry.message,
+      }),
     });
 
     setIsSubmitting(false);
 
-    if (insertError) {
-      setError('Something went wrong submitting your request. Please try again.');
+    if (!res.ok) {
+      const resBody = await res.json().catch(() => ({}));
+      setError(resBody.error || 'Something went wrong submitting your request. Please try again.');
       return;
     }
 
