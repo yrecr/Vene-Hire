@@ -1,0 +1,12 @@
+# VeneHire
+
+> VeneHire trains and evaluates software engineers, then matches them with companies that need
+> production-ready talent without the ramp-up time of a traditional hire.
+
+## Pages
+
+- [Home](https://venehire.vercel.app/): Overview of the platform for companies and engineers.
+- [About](https://venehire.vercel.app/about): How the training and evaluation program works.
+- [Browse Talent](https://venehire.vercel.app/talent): Public directory of vetted engineers.
+- [Request Access](https://venehire.vercel.app/request-sign-up): Apply as a company or as an engineer.
+- [Contact](https://venehire.vercel.app/contact): Get in touch with the VeneHire team.

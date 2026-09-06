@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /employer
+Disallow: /applicant
+Disallow: /login
+Disallow: /welcome
+Disallow: /api
+
+Sitemap: https://venehire.vercel.app/sitemap.xml

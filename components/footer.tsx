@@ -14,7 +14,7 @@ const footerLinks = {
     { href: '/about#for-engineers', label: 'For Engineers' },
   ],
   legal: [
-    { href: '#', label: 'Privacy Policy' },
+    { href: '/privacy', label: 'Privacy Policy' },
     { href: '#', label: 'Terms of Service' },
     { href: '#', label: 'Cookie Policy' },
   ],
@@ -41,7 +41,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Platform</h4>
             <ul className="space-y-3">
               {footerLinks.platform.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
@@ -57,7 +57,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Resources</h4>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
@@ -73,7 +73,7 @@ export function Footer() {
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal</h4>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-gray-400 hover:text-white transition-colors"
