@@ -13,6 +13,15 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error('[app error boundary]', error);
+
+    const isChunkLoadError =
+      error.name === 'ChunkLoadError' ||
+      /Loading chunk|Failed to fetch dynamically imported module|failed to import/i.test(error.message);
+
+    if (isChunkLoadError && !sessionStorage.getItem('chunk-reload')) {
+      sessionStorage.setItem('chunk-reload', '1');
+      window.location.reload();
+    }
   }, [error]);
 
   return (
