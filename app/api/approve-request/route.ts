@@ -84,6 +84,13 @@ export async function POST(req: NextRequest) {
       .eq('email', email)
       .single();
     if (!existing) {
+      if (authError?.code === 'over_email_send_rate_limit' || authError?.status === 429) {
+        console.error('[approve-request:invite]', authError.message);
+        return NextResponse.json(
+          { error: 'Se alcanzó el límite de correos del servicio de email de Supabase. Espera unos minutos antes de reintentar, o configura un SMTP propio para levantar el límite.' },
+          { status: 429 }
+        );
+      }
       return authError
         ? dbError(shouldInvite ? 'approve-request:invite' : 'approve-request:create-user', authError)
         : NextResponse.json({ error: 'User exists but no profile found' }, { status: 500 });
