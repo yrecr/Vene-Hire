@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { GitBranch, Calendar as CalendarIcon, Clock, Globe, FileSignature, Hourglass, Eye, DollarSign, Pencil, Check, ClipboardCheck } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ProcessTimeline } from '@/components/process-timeline';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { EmptyState } from '@/components/empty-state';
 import { Badge } from '@/components/ui/badge';
@@ -167,10 +168,10 @@ export default function EmployerProcessesPage() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     {applicant && (
-                      <img
-                        src={applicant.profile_image_url || ''}
-                        alt={applicant.display_name}
-                        className="w-12 h-12 rounded-full object-cover"
+                      <ProfileAvatar
+                        src={applicant.profile_image_url}
+                        name={applicant.display_name}
+                        className="w-12 h-12 rounded-full"
                       />
                     )}
                     <div>

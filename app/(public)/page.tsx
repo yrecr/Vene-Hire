@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/section-header';
 import { TalentCard } from '@/components/talent-card';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { Reveal } from '@/components/reveal';
 import { useData } from '@/lib/data-context';
@@ -93,10 +94,10 @@ export default function HomePage() {
                   </div>
                   {featuredTalent.slice(0, 3).map((talent, i) => (
                     <div key={talent.id} className={`flex items-center gap-4 p-3 rounded-xl bg-gray-50/80 animate-fade-in-up stagger-${i + 2}`}>
-                      <img
-                        src={talent.profile_image_url || ''}
-                        alt={talent.display_name}
-                        className="w-10 h-10 rounded-xl object-cover"
+                      <ProfileAvatar
+                        src={talent.profile_image_url}
+                        name={talent.display_name}
+                        className="w-10 h-10 rounded-xl"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-foreground">{talent.display_name}</p>

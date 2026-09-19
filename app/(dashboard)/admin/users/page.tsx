@@ -206,6 +206,7 @@ export default function UserManagementPage() {
 
 function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; onCancel: () => void }) {
   const [data, setData] = useState({ full_name: '', email: '', password: '', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
+  const [accessMode, setAccessMode] = useState<'invite' | 'password'>('invite');
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
 
@@ -213,6 +214,10 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
     if (!data.full_name.trim() || !data.email.trim()) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
       setCreateError('Please enter a valid email address.');
+      return;
+    }
+    if (accessMode === 'password' && data.password.length < 8) {
+      setCreateError('The password must be at least 8 characters.');
       return;
     }
     setCreating(true);
@@ -237,7 +242,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
         full_name: data.full_name,
         company: data.company_name,
         request_type: data.role === 'employer' ? 'employer' : 'applicant',
-        password: data.password,
+        password: accessMode === 'password' ? data.password : '',
       }),
     });
 
@@ -274,12 +279,33 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
             onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Password (optional)</label>
-          <input type="text" placeholder="Leave empty to email an invitation" value={data.password}
-            onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
+        <div className="md:col-span-2 lg:col-span-3">
+          <label className="block text-sm font-medium text-foreground mb-1.5">Access</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer text-sm ${accessMode === 'invite' ? 'border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5' : 'border-gray-200'}`}>
+              <input type="radio" name="accessMode" className="mt-1" checked={accessMode === 'invite'} onChange={() => setAccessMode('invite')} />
+              <span>
+                <span className="block font-medium text-foreground">Send an invitation email</span>
+                <span className="block text-muted-foreground">The user receives a link and chooses their own password.</span>
+              </span>
+            </label>
+            <label className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer text-sm ${accessMode === 'password' ? 'border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5' : 'border-gray-200'}`}>
+              <input type="radio" name="accessMode" className="mt-1" checked={accessMode === 'password'} onChange={() => setAccessMode('password')} />
+              <span>
+                <span className="block font-medium text-foreground">Set a password myself</span>
+                <span className="block text-muted-foreground">The account is created active, with no email sent.</span>
+              </span>
+            </label>
+          </div>
         </div>
+        {accessMode === 'password' && (
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+            <input type="text" placeholder="At least 8 characters" value={data.password}
+              onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1.5">Role</label>
           <select value={data.role} onChange={(e) => setData((d) => ({ ...d, role: e.target.value as Profile['role'] }))}

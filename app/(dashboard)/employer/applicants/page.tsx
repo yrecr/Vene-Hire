@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Star, MessageSquare, ExternalLink, StarOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useData } from '@/lib/data-context';
@@ -203,10 +204,10 @@ export default function EmployerApplicantsPage() {
                 className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-md transition-shadow flex flex-col"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <img
-                    src={applicant.profile_image_url || ''}
-                    alt={applicant.display_name}
-                    className="w-14 h-14 rounded-full object-cover"
+                  <ProfileAvatar
+                    src={applicant.profile_image_url}
+                    name={applicant.display_name}
+                    className="w-14 h-14 rounded-full"
                   />
                   <div className="min-w-0">
                     <h3 className="font-semibold text-foreground truncate">{applicant.display_name}</h3>

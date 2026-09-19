@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useData } from '@/lib/data-context';
 import { SkillBar } from '@/components/skill-bar';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -83,10 +84,10 @@ export default function AdminApplicantDetailPage() {
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             <div className="shrink-0">
               <div className="relative">
-                <img
-                  src={talent.profile_image_url ?? ''}
-                  alt={talent.display_name}
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-2xl object-cover shadow-lg ring-4 ring-white"
+                <ProfileAvatar
+                  src={talent.profile_image_url}
+                  name={talent.display_name}
+                  className="w-32 h-32 md:w-40 md:h-40 rounded-2xl shadow-lg ring-4 ring-white"
                 />
                 {talent.availability_status === 'Available' && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
