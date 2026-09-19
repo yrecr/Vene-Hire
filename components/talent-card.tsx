@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SkillBar } from '@/components/skill-bar';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { MapPin, Clock, ArrowRight } from 'lucide-react';
 import type { TalentProfile, TalentSkill } from '@/types';
 
@@ -37,10 +38,10 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
     return (
       <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 hover:border-gray-200 transition-all duration-300 flex-shrink-0 w-[340px] p-6">
         <div className="flex items-center gap-4 pb-5 border-b border-gray-100">
-          <img
-            src={talent.profile_image_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100'}
-            alt={talent.display_name}
-            className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all flex-shrink-0"
+          <ProfileAvatar
+            src={talent.profile_image_url}
+            name={talent.display_name}
+            className="w-16 h-16 rounded-2xl ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all flex-shrink-0"
           />
           <div className="min-w-0">
             <h4 className="text-base font-semibold text-foreground truncate">{talent.display_name}</h4>
@@ -86,10 +87,10 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
     <div className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 hover:border-gray-200 transition-all duration-300">
       <div className="p-6">
         <div className="flex items-start gap-4 mb-4">
-          <img
-            src={talent.profile_image_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200'}
-            alt={talent.display_name}
-            className="w-16 h-16 rounded-2xl object-cover ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all"
+          <ProfileAvatar
+            src={talent.profile_image_url}
+            name={talent.display_name}
+            className="w-16 h-16 rounded-2xl ring-2 ring-gray-100 group-hover:ring-blue-100 transition-all"
           />
           <div className="min-w-0 flex-1">
             <h3 className="text-lg font-semibold text-foreground">{talent.display_name}</h3>

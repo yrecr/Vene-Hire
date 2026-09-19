@@ -4,6 +4,7 @@ import { useState } from 'react';
 import NextLink from 'next/link';
 import { MessageSquare, Calendar, Clock, CheckCircle2, XCircle, Link as LinkIcon, ExternalLink, Send } from 'lucide-react';
 import { RoleBadge } from '@/components/role-badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { EmptyState } from '@/components/empty-state';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -111,10 +112,10 @@ export default function EmployerRequestsPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     {applicant && (
-                      <img
-                        src={applicant.profile_image_url || ''}
-                        alt={applicant.display_name}
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      <ProfileAvatar
+                        src={applicant.profile_image_url}
+                        name={applicant.display_name}
+                        className="w-12 h-12 rounded-full flex-shrink-0"
                       />
                     )}
                     <div className="min-w-0">

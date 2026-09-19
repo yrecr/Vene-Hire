@@ -5,6 +5,7 @@ import { useData } from '@/lib/data-context';
 import { useAuth } from '@/lib/auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -95,10 +96,10 @@ export default function TalentProfilePage() {
           <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
             <div className="shrink-0">
               <div className="relative">
-                <img
-                  src={talent.profile_image_url ?? ''}
-                  alt={talent.display_name}
-                  className="w-40 h-40 md:w-52 md:h-52 rounded-2xl object-cover shadow-lg ring-4 ring-white"
+                <ProfileAvatar
+                  src={talent.profile_image_url}
+                  name={talent.display_name}
+                  className="w-40 h-40 md:w-52 md:h-52 rounded-2xl shadow-lg ring-4 ring-white"
                 />
                 {talent.availability_status === 'Available' && (
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">

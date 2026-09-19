@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ProfileAvatar } from '@/components/profile-avatar';
 import { Calendar } from '@/components/ui/calendar';
 import { useData } from '@/lib/data-context';
 import type { TalentProfile } from '@/types';
@@ -132,10 +133,10 @@ export function InterviewRequestModal({
         <div className="space-y-5">
           {/* Applicant info */}
           <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-            <img
-              src={applicant.profile_image_url || ''}
-              alt={applicant.display_name}
-              className="w-12 h-12 rounded-full object-cover"
+            <ProfileAvatar
+              src={applicant.profile_image_url}
+              name={applicant.display_name}
+              className="w-12 h-12 rounded-full"
             />
             <div>
               <p className="font-semibold text-foreground">{applicant.display_name}</p>
