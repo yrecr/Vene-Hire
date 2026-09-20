@@ -9,10 +9,13 @@ import { ProcessTimeline } from '@/components/process-timeline';
 import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { ContractSigningModal } from '@/components/contract-signing-modal';
 import type { SelectionProcess } from '@/types';
+import { useT } from '@/lib/i18n';
 
 type FilterType = 'all' | 'active' | 'completed';
 
 export default function ApplicantProcessesPage() {
+  const { t, lang, formatDate } = useT();
+  const isEs = lang === 'es';
   const { currentUser } = useAuth();
   const { selectionProcesses, interviewRequests, talentProfiles, employerProfiles, signContract } = useData();
   const user = currentUser;
@@ -58,25 +61,25 @@ export default function ApplicantProcessesPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to view your processes.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{isEs ? 'Inicia sesión con una cuenta de aplicante para ver tus procesos.' : 'Sign in with an applicant account to view your processes.'}</p>
         </div>
       </div>
     );
   }
 
   var filterOptions: { key: FilterType; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'active', label: 'Active' },
-    { key: 'completed', label: 'Completed' },
+    { key: 'all', label: isEs ? 'Todos' : 'All' },
+    { key: 'active', label: isEs ? 'Activos' : 'Active' },
+    { key: 'completed', label: isEs ? 'Completados' : 'Completed' },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Selection Processes</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.applicant.processesTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          Track the progress of your hiring processes with employers.
+          {isEs ? 'Sigue el progreso de tus procesos de selección con las empresas.' : 'Track the progress of your hiring processes with employers.'}
         </p>
       </div>
 
@@ -101,11 +104,11 @@ export default function ApplicantProcessesPage() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
             <GitBranch className="w-7 h-7 text-[hsl(210,100%,45%)]" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">No processes found</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1">{isEs ? 'No se encontraron procesos' : 'No processes found'}</h3>
           <p className="text-sm text-muted-foreground">
             {filter === 'all'
-              ? 'When you are part of a selection process, it will appear here.'
-              : 'No processes match the selected filter.'}
+              ? (isEs ? 'Cuando formes parte de un proceso de selección, aparecerá aquí.' : 'When you are part of a selection process, it will appear here.')
+              : (isEs ? 'Ningún proceso coincide con el filtro seleccionado.' : 'No processes match the selected filter.')}
           </p>
         </div>
       ) : (
@@ -124,14 +127,14 @@ export default function ApplicantProcessesPage() {
                   <div>
                     <h4 className="font-semibold text-foreground text-lg">{process.role_title}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {employer?.company_name || 'Unknown Company'}
+                      {employer?.company_name || (isEs ? 'Empresa Desconocida' : 'Unknown Company')}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {hasPendingForProcess(process.employer_id) && (
-                      <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full" title="Awaiting your response">
+                      <span className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full" title={isEs ? 'Esperando tu respuesta' : 'Awaiting your response'}>
                         <Hourglass className="w-3.5 h-3.5" />
-                        Pending
+                        {isEs ? 'Pendiente' : 'Pending'}
                       </span>
                     )}
                     <ProcessStatusBadge status={process.status} />
@@ -155,7 +158,7 @@ export default function ApplicantProcessesPage() {
                       variant="default"
                     >
                       <FileSignature className="w-4 h-4" />
-                      View Contract &amp; Sign
+                      {isEs ? 'Ver Contrato y Firmar' : 'View Contract & Sign'}
                     </Button>
                   </div>
                 )}
@@ -163,7 +166,7 @@ export default function ApplicantProcessesPage() {
                 {process.current_stage === 'contract_signing' && process.contract_status === 'under_review' && (
                   <div className="mt-4 flex items-center gap-2 bg-blue-50 rounded-xl px-4 py-3 text-sm text-blue-700">
                     <Eye className="w-4 h-4 shrink-0" />
-                    Your signature has been submitted. Waiting for admin verification.
+                    {isEs ? 'Tu firma ha sido enviada. Esperando verificación del administrador.' : 'Your signature has been submitted. Waiting for admin verification.'}
                   </div>
                 )}
 
@@ -175,30 +178,32 @@ export default function ApplicantProcessesPage() {
                       onClick={() => window.open(process.contract_url!, '_blank')}
                     >
                       <Eye className="w-4 h-4" />
-                      View Final Contract
+                      {isEs ? 'Ver Contrato Final' : 'View Final Contract'}
                     </Button>
-                    <span className="text-xs text-emerald-600 font-medium">Signed &amp; Finalized</span>
+                    <span className="text-xs text-emerald-600 font-medium">{isEs ? 'Firmado y Finalizado' : 'Signed & Finalized'}</span>
                   </div>
                 )}
 
                 {process.notes && (
                   <div className="mt-5 pt-4 border-t border-gray-100">
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Notes:</span> {process.notes}
+                      <span className="font-medium text-foreground">{isEs ? 'Notas:' : 'Notes:'}</span> {process.notes}
                     </p>
                   </div>
                 )}
 
                 <p className="text-xs text-muted-foreground mt-3">
-                  Started {new Date(process.created_at).toLocaleDateString('en-US', {
+                  {isEs ? 'Iniciado el ' : 'Started '}
+                  {formatDate(process.created_at, {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>
                 {process.status === 'hired' && process.contract_start_date && (
                   <p className="text-xs text-muted-foreground">
-                    Working since {new Date(process.contract_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    {isEs ? 'Trabajando desde el ' : 'Working since '}
+                    {formatDate(process.contract_start_date + 'T00:00:00', { month: 'short', day: 'numeric', year: 'numeric' })}
                     {process.contract_end_date && (
-                      <> · Ends {new Date(process.contract_end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</>
+                      <>{isEs ? ' · Termina el ' : ' · Ends '}{formatDate(process.contract_end_date + 'T00:00:00', { month: 'short', day: 'numeric', year: 'numeric' })}</>
                     )}
                   </p>
                 )}

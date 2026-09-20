@@ -8,8 +8,11 @@ import { ProcessStatusBadge } from '@/components/process-status-badge';
 import { Button } from '@/components/ui/button';
 import { removeBg } from '@/lib/signature';
 import type { EmployerProfile, SelectionProcess } from '@/types';
+import { useT } from '@/lib/i18n';
 
 export default function ApplicantContractPage() {
+  const { t, lang, formatDate } = useT();
+  const isEs = lang === 'es';
   const { currentUser } = useAuth();
   const { selectionProcesses, talentProfiles, employerProfiles, signContract } = useData();
   const user = currentUser;
@@ -37,8 +40,8 @@ export default function ApplicantContractPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to view your contracts.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{isEs ? 'Inicia sesión con una cuenta de aplicante para ver tus contratos.' : 'Sign in with an applicant account to view your contracts.'}</p>
         </div>
       </div>
     );
@@ -47,9 +50,9 @@ export default function ApplicantContractPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Contract</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.applicant.contractTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          View and manage your contract offers from employers.
+          {isEs ? 'Consulta y gestiona las ofertas de contrato de las empresas.' : 'View and manage your contract offers from employers.'}
         </p>
       </div>
 
@@ -58,9 +61,9 @@ export default function ApplicantContractPage() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
             <FileSignature className="w-7 h-7 text-[hsl(210,100%,45%)]" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">No active contracts</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1">{isEs ? 'No hay contratos activos' : 'No active contracts'}</h3>
           <p className="text-sm text-muted-foreground">
-            When a hiring process reaches the contract stage, the details will appear here.
+            {isEs ? 'Cuando un proceso de contratación llegue a la etapa de contrato, los detalles aparecerán aquí.' : 'When a hiring process reaches the contract stage, the details will appear here.'}
           </p>
         </div>
       ) : (
@@ -93,11 +96,17 @@ function getContractIcon(contractStatus: string | null) {
   return <Clock className="w-6 h-6 text-amber-500" />;
 }
 
-function getContractMessage(contractStatus: string | null) {
-  if (contractStatus === 'signed') { return 'Contract has been signed. You are all set!'; }
-  if (contractStatus === 'under_review') { return 'Your signed contract is under review. You will be notified once it is approved.'; }
-  if (contractStatus === 'pending') { return 'Your contract is ready. Review the document and sign below.'; }
-  return 'A contract is being prepared for you. Please check back soon.';
+function getContractMessage(contractStatus: string | null, isEs: boolean) {
+  if (contractStatus === 'signed') {
+    return isEs ? 'El contrato ha sido firmado. ¡Todo listo!' : 'Contract has been signed. You are all set!';
+  }
+  if (contractStatus === 'under_review') {
+    return isEs ? 'Tu contrato firmado está en revisión. Se te notificará una vez aprobado.' : 'Your signed contract is under review. You will be notified once it is approved.';
+  }
+  if (contractStatus === 'pending') {
+    return isEs ? 'Tu contrato está listo. Revisa el documento y firma abajo.' : 'Your contract is ready. Review the document and sign below.';
+  }
+  return isEs ? 'Se está preparando un contrato para ti. Vuelve a consultar pronto.' : 'A contract is being prepared for you. Please check back soon.';
 }
 
 /**
@@ -106,7 +115,7 @@ function getContractMessage(contractStatus: string | null) {
  * starts fully transparent so toBlob('image/png') already matches the
  * transparent-background format removeBg() produces for uploaded images.
  */
-function SignaturePad({ onConfirm }: { onConfirm: (blob: Blob) => void }) {
+function SignaturePad({ onConfirm, isEs }: { onConfirm: (blob: Blob) => void; isEs: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -114,7 +123,6 @@ function SignaturePad({ onConfirm }: { onConfirm: (blob: Blob) => void }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Backing store at 2x for crisp strokes on high-DPI screens; CSS size stays logical.
     const ctx = canvas.getContext('2d')!;
     canvas.width = canvas.clientWidth * 2;
     canvas.height = canvas.clientHeight * 2;
@@ -174,10 +182,10 @@ function SignaturePad({ onConfirm }: { onConfirm: (blob: Blob) => void }) {
       <div className="flex gap-3">
         <Button variant="outline" size="sm" className="gap-1.5" onClick={clear} disabled={!hasDrawn}>
           <Eraser className="w-3.5 h-3.5" />
-          Clear
+          {isEs ? 'Limpiar' : 'Clear'}
         </Button>
         <Button size="sm" className="bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]" disabled={!hasDrawn} onClick={confirm}>
-          Use this signature
+          {isEs ? 'Usar esta firma' : 'Use this signature'}
         </Button>
       </div>
     </div>
@@ -189,6 +197,8 @@ function ContractCard({ process, employer, signContract }: {
   employer: EmployerProfile | null;
   signContract: (processId: string, blob: Blob) => Promise<void>;
 }) {
+  const { t, lang } = useT();
+  const isEs = lang === 'es';
   const fileRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const blobRef = useRef<Blob | null>(null);
@@ -210,11 +220,11 @@ function ContractCard({ process, employer, signContract }: {
       blobRef.current = b;
       setPreviewUrl(URL.createObjectURL(b));
     } catch (err: any) {
-      setErrorMsg(err?.message || 'Failed to process image');
+      setErrorMsg(err?.message || (isEs ? 'Error al procesar la imagen' : 'Failed to process image'));
       console.error('[sign] process error:', err);
     }
     e.target.value = '';
-  }, []);
+  }, [isEs]);
 
   const clearSig = useCallback(() => {
     blobRef.current = null;
@@ -249,7 +259,7 @@ function ContractCard({ process, employer, signContract }: {
           <div>
             <h4 className="font-semibold text-foreground text-lg">{process.role_title}</h4>
             <p className="text-sm text-muted-foreground">
-              {employer?.company_name || 'Unknown Company'}
+              {employer?.company_name || (isEs ? 'Empresa Desconocida' : 'Unknown Company')}
             </p>
           </div>
         </div>
@@ -258,27 +268,27 @@ function ContractCard({ process, employer, signContract }: {
 
       <div className="bg-gray-50 rounded-xl p-4 mb-4">
         <p className="text-sm text-muted-foreground">
-          {getContractMessage(process.contract_status)}
+          {getContractMessage(process.contract_status, isEs)}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm mb-5">
         <div>
-          <p className="text-muted-foreground">Employer</p>
+          <p className="text-muted-foreground">{isEs ? 'Empleador' : 'Employer'}</p>
           <p className="font-medium text-foreground">{employer?.company_name || 'N/A'}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Contact</p>
+          <p className="text-muted-foreground">{isEs ? 'Contacto' : 'Contact'}</p>
           <p className="font-medium text-foreground">{employer?.contact_name || 'N/A'}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Role</p>
+          <p className="text-muted-foreground">{isEs ? 'Rol' : 'Role'}</p>
           <p className="font-medium text-foreground">{process.role_title}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Contract Status</p>
+          <p className="text-muted-foreground">{isEs ? 'Estado del Contrato' : 'Contract Status'}</p>
           <p className="font-medium text-foreground capitalize">
-            {(process.contract_status || 'pending').replace(/_/g, ' ')}
+            {(t.badges as Record<string, string>)[process.contract_status || 'pending'] || (process.contract_status || 'pending').replace(/_/g, ' ')}
           </p>
         </div>
       </div>
@@ -289,7 +299,7 @@ function ContractCard({ process, employer, signContract }: {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[hsl(210,100%,45%)] text-white text-sm font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
           >
             <FileDown className="w-4 h-4" />
-            View Contract PDF
+            {isEs ? 'Ver PDF del Contrato' : 'View Contract PDF'}
           </a>
         </div>
       )}
@@ -298,7 +308,7 @@ function ContractCard({ process, employer, signContract }: {
         <div className="border-t border-gray-100 pt-5">
           <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
             <Upload className="w-4 h-4" />
-            Upload your signature
+            {isEs ? 'Sube tu firma' : 'Upload your signature'}
           </h4>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
           {errorMsg && (
@@ -312,10 +322,10 @@ function ContractCard({ process, employer, signContract }: {
                 <img src={previewUrl} alt="Signature preview" className="max-h-24 object-contain" />
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" size="sm" onClick={clearSig}>Remove</Button>
+                <Button variant="outline" size="sm" onClick={clearSig}>{isEs ? 'Quitar' : 'Remove'}</Button>
                 <Button size="sm" className="bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]"
                   disabled={signing} onClick={handleSign}>
-                  {signing ? 'Signing...' : 'Sign Contract'}
+                  {signing ? (isEs ? 'Firmando...' : 'Signing...') : (isEs ? 'Firmar Contrato' : 'Sign Contract')}
                 </Button>
               </div>
             </div>
@@ -326,23 +336,23 @@ function ContractCard({ process, employer, signContract }: {
                   onClick={() => setMode('upload')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'upload' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                  Upload image
+                  {isEs ? 'Subir imagen' : 'Upload image'}
                 </button>
                 <button
                   onClick={() => setMode('draw')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'draw' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
-                  Draw signature
+                  {isEs ? 'Dibujar firma' : 'Draw signature'}
                 </button>
               </div>
 
               {mode === 'upload' ? (
                 <Button variant="outline" className="w-full py-8 border-dashed" onClick={() => fileRef.current?.click()}>
                   <Upload className="w-5 h-5 mr-2" />
-                  Select signature image
+                  {isEs ? 'Seleccionar imagen de firma' : 'Select signature image'}
                 </Button>
               ) : (
-                <SignaturePad onConfirm={handleDrawn} />
+                <SignaturePad onConfirm={handleDrawn} isEs={isEs} />
               )}
             </div>
           )}
@@ -351,7 +361,7 @@ function ContractCard({ process, employer, signContract }: {
 
       {process.signature_url && (
         <div className="border-t border-gray-100 pt-4 mt-2">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Your Signature</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{isEs ? 'Tu Firma' : 'Your Signature'}</p>
           <img src={process.signature_url} alt="Signed signature"
             className="h-12 object-contain border border-gray-200 rounded-lg p-1 bg-white" />
         </div>
@@ -360,7 +370,7 @@ function ContractCard({ process, employer, signContract }: {
       {process.notes && (
         <div className="mt-5 pt-4 border-t border-gray-100">
           <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">Notes:</span> {process.notes}
+            <span className="font-medium text-foreground">{isEs ? 'Notas:' : 'Notes:'}</span> {process.notes}
           </p>
         </div>
       )}

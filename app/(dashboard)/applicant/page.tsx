@@ -16,6 +16,7 @@ import { TrendCard, DonutCard } from '@/components/dashboard-charts';
 import { bucketLast14Days, countByStatus } from '@/lib/chart-utils';
 import { getApplicantCompletionItems, getCompletionPercent } from '@/lib/profile-completion';
 import { PageLoading } from '@/components/page-loading';
+import { useT } from '@/lib/i18n';
 
 const PROCESS_STATUS_LABELS: Record<string, string> = {
   active: 'Active',
@@ -43,6 +44,8 @@ const AVAILABILITY_COLORS: Record<string, string> = {
 };
 
 export default function ApplicantDashboardPage() {
+  const { t, lang, formatDate } = useT();
+  const isEs = lang === 'es';
   const { currentUser, loading } = useAuth();
   const {
     interviewRequests,
@@ -96,8 +99,8 @@ export default function ApplicantDashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to view your dashboard.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{isEs ? 'Inicia sesión con una cuenta de aplicante para ver tu panel.' : 'Sign in with an applicant account to view your dashboard.'}</p>
         </div>
       </div>
     );
@@ -113,7 +116,7 @@ export default function ApplicantDashboardPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-bold text-foreground">
-            Welcome back, {talentProfile.display_name}
+            {t.applicant.welcome.replace('{name}', talentProfile.display_name)}
           </h2>
           <p className="text-muted-foreground mt-1">
             {talentProfile.title} · {talentProfile.timezone}
@@ -124,44 +127,42 @@ export default function ApplicantDashboardPage() {
         <div className="flex items-center gap-2 flex-wrap">
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${ENGLISH_COLORS[talentProfile.english_level] ?? 'bg-gray-100 text-gray-700'}`}>
             <Globe className="w-3 h-3" />
-            {talentProfile.english_level} English
+            {talentProfile.english_level} {isEs ? 'Inglés' : 'English'}
           </span>
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${AVAILABILITY_COLORS[talentProfile.availability_status] ?? 'bg-gray-100 text-gray-700'}`}>
             <Clock className="w-3 h-3" />
-            {talentProfile.availability_status}
+            {(t.badges as Record<string, string>)[talentProfile.availability_status.toLowerCase().replace(/\s+/g, '_')] || talentProfile.availability_status}
           </span>
         </div>
       </div>
 
       {/* ── KPI Stats ───────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={TrendingUp} label="Active Processes" value={activeProcesses.length} />
-        <StatCard icon={MessageSquare} label="Pending Interviews" value={pendingInterviews.length} />
-        <StatCard icon={CalendarDays} label="Total Interviews" value={myInterviews.length} />
-        <StatCard icon={GitBranch} label="Total Processes" value={myProcesses.length} />
+        <StatCard icon={TrendingUp} label={t.applicant.activeProcesses} value={activeProcesses.length} />
+        <StatCard icon={MessageSquare} label={isEs ? 'Entrevistas Pendientes' : 'Pending Interviews'} value={pendingInterviews.length} />
+        <StatCard icon={CalendarDays} label={isEs ? 'Total de Entrevistas' : 'Total Interviews'} value={myInterviews.length} />
+        <StatCard icon={GitBranch} label={isEs ? 'Total de Procesos' : 'Total Processes'} value={myProcesses.length} />
       </div>
 
       {/* ── Trends ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <TrendCard title="Interview Requests (Last 14 Days)" data={interviewsTrend} />
-        <DonutCard title="My Processes by Status" data={processStatusDistribution} />
+        <TrendCard title={isEs ? 'Solicitudes de Entrevista (Últimos 14 días)' : 'Interview Requests (Last 14 Days)'} data={interviewsTrend} />
+        <DonutCard title={isEs ? 'Mis Procesos por Estado' : 'My Processes by Status'} data={processStatusDistribution} />
       </div>
 
       {/* ── Main content ────────────────────────────────────────── */}
-      {/* Notifications and Past Processes used to live here as sidebar
-          widgets — both were pure duplicates of the bell (global) and
-          /applicant/processes (which already lists every non-active
-          process), so they're gone rather than moved. */}
       <div className="space-y-6">
 
           {/* Active Processes */}
           <section>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Active Processes</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">{t.applicant.activeProcesses}</h3>
 
             {activeProcesses.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No active processes yet. Once an employer accepts your interview, it will appear here.
+                  {isEs
+                    ? 'No hay procesos activos aún. Cuando un empleador acepte tu entrevista, aparecerá aquí.'
+                    : 'No active processes yet. Once an employer accepts your interview, it will appear here.'}
                 </p>
               </div>
             ) : (
@@ -173,19 +174,19 @@ export default function ApplicantDashboardPage() {
                       <div className="flex items-center justify-between mb-1">
                         <div>
                           <h4 className="font-semibold text-foreground">{process.role_title}</h4>
-                          <p className="text-sm text-muted-foreground">{employer?.company_name ?? 'Unknown Company'}</p>
+                          <p className="text-sm text-muted-foreground">{employer?.company_name ?? (isEs ? 'Empresa Desconocida' : 'Unknown Company')}</p>
                         </div>
                         <ProcessStatusBadge status={process.status} />
                       </div>
 
                       {/* Current stage callout */}
                       <p className="text-xs text-muted-foreground mb-4 mt-2">
-                        Current stage:{' '}
+                        {isEs ? 'Etapa actual: ' : 'Current stage: '}
                         <span className="font-medium text-foreground capitalize">
-                          {process.current_stage.replace(/_/g, ' ')}
+                          {(t.badges as Record<string, string>)[process.current_stage] || process.current_stage.replace(/_/g, ' ')}
                         </span>
                         {process.current_stage === 'contract_signing' && process.contract_status && (
-                          <span className="ml-2 text-amber-600">· Contract {process.contract_status.replace(/_/g, ' ')}</span>
+                          <span className="ml-2 text-amber-600">· {isEs ? 'Contrato ' : 'Contract '}{(t.badges as Record<string, string>)[process.contract_status] || process.contract_status.replace(/_/g, ' ')}</span>
                         )}
                       </p>
 
@@ -205,12 +206,14 @@ export default function ApplicantDashboardPage() {
 
           {/* Pending Interview Requests */}
           <section>
-            <h3 className="text-lg font-semibold text-foreground mb-4">Interview Requests</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">{isEs ? 'Solicitudes de Entrevista' : 'Interview Requests'}</h3>
 
             {pendingInterviews.length === 0 ? (
               <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  No pending interview requests. Employers can contact you after viewing your profile.
+                  {isEs
+                    ? 'No hay solicitudes de entrevista pendientes. Los empleadores podrán contactarte tras revisar tu perfil.'
+                    : 'No pending interview requests. Employers can contact you after viewing your profile.'}
                 </p>
               </div>
             ) : (
@@ -218,8 +221,8 @@ export default function ApplicantDashboardPage() {
                 {pendingInterviews.map((interview) => {
                   const employer = getEmployerById(interview.employer_id);
                   const dateStr = interview.requested_date
-                    ? new Date(interview.requested_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                    : 'TBD';
+                    ? formatDate(interview.requested_date, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : (isEs ? 'Por definir' : 'TBD');
 
                   return (
                     <div key={interview.id} className="bg-white rounded-2xl border border-gray-100 p-4">
@@ -227,12 +230,11 @@ export default function ApplicantDashboardPage() {
                         <div className="flex items-start gap-3 min-w-0">
                           <MessageSquare className="w-5 h-5 text-[hsl(210,100%,45%)] flex-shrink-0 mt-0.5" />
                           <div className="min-w-0">
-                            <p className="font-medium text-foreground">{employer?.company_name ?? 'Unknown Company'}</p>
+                            <p className="font-medium text-foreground">{employer?.company_name ?? (isEs ? 'Empresa Desconocida' : 'Unknown Company')}</p>
                             <p className="text-sm text-muted-foreground line-clamp-1">{interview.message}</p>
-                            <p className="text-xs text-muted-foreground mt-1">Proposed: {dateStr}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{isEs ? 'Propuesta: ' : 'Proposed: '}{dateStr}</p>
                           </div>
                         </div>
-                        {/* ponytail: accept/decline actions inline — no modal needed for basic response */}
                         <div className="flex gap-2 flex-shrink-0">
                           <Button
                             size="sm"
@@ -240,14 +242,14 @@ export default function ApplicantDashboardPage() {
                             className="text-xs h-7"
                             onClick={() => respondToInterview(interview.id, 'declined')}
                           >
-                            Decline
+                            {isEs ? 'Rechazar' : 'Decline'}
                           </Button>
                           <Button
                             size="sm"
                             className="text-xs h-7 bg-[hsl(210,100%,45%)] hover:bg-[hsl(210,100%,38%)]"
                             onClick={() => respondToInterview(interview.id, 'accepted')}
                           >
-                            Accept
+                            {isEs ? 'Aceptar' : 'Accept'}
                           </Button>
                         </div>
                       </div>
@@ -264,8 +266,8 @@ export default function ApplicantDashboardPage() {
         completion={completion}
         items={completionItems}
         href="/applicant/settings"
-        ctaLabel="Complete your profile"
-        message="A complete profile gets you more opportunities to land an employer."
+        ctaLabel={isEs ? 'Completar mi perfil' : 'Complete your profile'}
+        message={isEs ? 'Un perfil completo aumenta tus oportunidades de ser contratado.' : 'A complete profile gets you more opportunities to land an employer.'}
         storageKey="venehire-profile-bubble-applicant"
       />
     </div>

@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/empty-state';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import type { LucideIcon } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 function getNotificationIcon(type: string): LucideIcon {
   switch (type) {
@@ -47,6 +48,8 @@ function getNotificationIconColor(type: string): string {
 }
 
 export default function ApplicantNotificationsPage() {
+  const { t, lang, formatDate } = useT();
+  const isEs = lang === 'es';
   const { currentUser } = useAuth();
   const { getNotificationsForUser } = useData();
   const notifications = getNotificationsForUser(currentUser?.profile_id ?? '');
@@ -73,12 +76,12 @@ export default function ApplicantNotificationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.applicant.notificationsTitle}</h2>
           <p className="text-muted-foreground mt-1">
-            Stay updated on your applications and interviews.
+            {isEs ? 'Mantente al tanto de tus postulaciones y entrevistas.' : 'Stay updated on your applications and interviews.'}
             {unreadCount > 0 && (
               <span className="ml-1 font-medium text-[hsl(210,100%,45%)]">
-                {unreadCount} unread
+                {unreadCount} {isEs ? 'no leídas' : 'unread'}
               </span>
             )}
           </p>
@@ -91,7 +94,7 @@ export default function ApplicantNotificationsPage() {
             onClick={markAllAsRead}
           >
             <CheckCheck className="w-4 h-4" />
-            Mark all as read
+            {isEs ? 'Marcar todo como leído' : 'Mark all as read'}
           </Button>
         )}
       </div>
@@ -99,8 +102,8 @@ export default function ApplicantNotificationsPage() {
       {notifications.length === 0 ? (
         <EmptyState
           icon={Bell}
-          title="No notifications"
-          description="You're all caught up! New notifications will appear here."
+          title={isEs ? 'Sin notificaciones' : 'No notifications'}
+          description={isEs ? '¡Estás al día! Nuevas notificaciones aparecerán aquí.' : "You're all caught up! New notifications will appear here."}
         />
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-100">
@@ -147,20 +150,17 @@ export default function ApplicantNotificationsPage() {
                       className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-[hsl(210,100%,45%)] text-white text-xs font-medium hover:bg-[hsl(210,100%,38%)] transition-colors"
                     >
                       <Video className="w-3.5 h-3.5" />
-                      Join Meeting
+                      {isEs ? 'Unirse a la Reunión' : 'Join Meeting'}
                     </a>
                   )}
                   <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(notification.created_at).toLocaleDateString(
-                      'en-US',
-                      {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      }
-                    )}
+                    {formatDate(notification.created_at, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                    })}
                   </p>
                 </div>
               </div>
