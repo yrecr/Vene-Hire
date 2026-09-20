@@ -83,7 +83,7 @@ export function ContractSigningModal({ open, onClose, process, onSign }: Props) 
             {sigPreviewUrl ? (
               <div className="space-y-3">
                 <div className="border border-gray-200 rounded-xl p-4 bg-white flex items-center justify-center">
-                  <img src={sigPreviewUrl} alt="Signature preview" className="max-h-24 object-contain" />
+                  <img src={sigPreviewUrl} alt={t.applicant.signaturePreview} className="max-h-24 object-contain" />
                 </div>
                 <div className="flex items-center justify-between">
                   <Button variant="outline" size="sm" onClick={clearSignature}>

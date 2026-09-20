@@ -189,8 +189,8 @@ export function ApplicantProfileSettings() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to edit your profile.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{t.applicant.signInPrompt}</p>
         </div>
       </div>
     );
@@ -625,7 +625,7 @@ export function ApplicantProfileSettings() {
             <iframe
               src={`${talentProfile?.resume_url ?? ''}?t=${resumeCacheBuster}`}
               className="w-full h-full border-0 rounded-lg"
-              title="Resume"
+              title={t.applicant.resume}
             />
           </DialogContent>
         </Dialog>
@@ -718,7 +718,7 @@ export function ApplicantProfileSettings() {
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title="Video introduction"
+                title={t.applicant.videoIntroduction}
               />
             </div>
           </div>

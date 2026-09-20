@@ -42,9 +42,9 @@ export default function EmployerApplicantsPage() {
 
   const englishLevels = [
     { value: 'All', label: t.talent.allEnglish },
-    { value: 'Fluent', label: 'Fluent' },
-    { value: 'Advanced', label: 'Advanced' },
-    { value: 'Intermediate', label: 'Intermediate' },
+    { value: 'Fluent', label: t.englishLevels.fluent },
+    { value: 'Advanced', label: t.englishLevels.advanced },
+    { value: 'Intermediate', label: t.englishLevels.intermediate },
   ];
 
   const availabilityOptions = [

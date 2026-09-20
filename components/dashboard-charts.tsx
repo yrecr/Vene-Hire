@@ -4,6 +4,7 @@ import {
   Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid,
   PieChart, Pie, Cell,
 } from 'recharts';
+import { useT } from '@/lib/i18n';
 
 const DONUT_COLORS = [
   'hsl(210,100%,45%)', 'hsl(170,60%,42%)', 'hsl(38,92%,50%)', 'hsl(0,84%,60%)', 'hsl(280,60%,55%)',
@@ -45,13 +46,14 @@ export function TrendCard({
 }
 
 export function DonutCard({ title, data }: { title: string; data: { name: string; value: number }[] }) {
+  const { t } = useT();
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-5">
       <h3 className="text-sm font-semibold text-foreground mb-4">{title}</h3>
       {total === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-10">No data yet.</p>
+        <p className="text-sm text-muted-foreground text-center py-10">{t.common.noData}</p>
       ) : (
         <div className="flex items-center gap-4">
           <ResponsiveContainer width="50%" height={160}>

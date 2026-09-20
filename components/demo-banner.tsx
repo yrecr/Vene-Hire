@@ -1,13 +1,17 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { isDemoMode, exitDemo } from '@/lib/demo';
 import { AlertTriangle, X } from 'lucide-react';
 import { useT } from '@/lib/i18n';
 
 export function DemoBanner() {
   const { t } = useT();
+  // The cookie only exists in the browser: read it after mount so server and client markup match.
+  const [demo, setDemo] = useState(false);
+  useEffect(() => { setDemo(isDemoMode()); }, []);
 
-  if (!isDemoMode()) return null;
+  if (!demo) return null;
 
   return (
     <div className="bg-amber-50 border-b border-amber-200 dark:bg-amber-950/40 dark:border-amber-800/40 px-4 py-2 flex items-center justify-between gap-3 text-sm">

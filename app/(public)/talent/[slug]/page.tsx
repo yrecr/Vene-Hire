@@ -176,7 +176,7 @@ export default function TalentProfilePage() {
                 <iframe
                   src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
                   className="w-full h-full border-0 rounded-lg"
-                  title="Resume"
+                  title={t.applicant.resume}
                 />
               </DialogContent>
             </Dialog>

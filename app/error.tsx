@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { CircleAlert as AlertCircle } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 export default function GlobalError({
   error,
@@ -11,6 +12,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const { t } = useT();
+
   useEffect(() => {
     console.error('[app error boundary]', error);
 
@@ -30,19 +33,19 @@ export default function GlobalError({
         <div className="mx-auto w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-6">
           <AlertCircle className="w-7 h-7 text-red-600" />
         </div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Something went wrong</h1>
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t.common.errorTitle}</h1>
         <p className="text-muted-foreground mb-8">
-          An unexpected error occurred. You can try again, or head back to the homepage.
+          {t.common.errorDesc}
         </p>
         <div className="flex items-center justify-center gap-3">
           <Button variant="outline" onClick={() => reset()}>
-            Try Again
+            {t.common.tryAgainBtn}
           </Button>
           <Button
             className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white"
             onClick={() => { window.location.href = '/'; }}
           >
-            Back to Home
+            {t.common.backToHome}
           </Button>
         </div>
       </div>

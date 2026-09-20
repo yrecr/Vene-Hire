@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Bell, MessageSquare, GitBranch, FileText, Inbox, Info } from 'lucide-react';
 import type { Notification } from '@/types';
 import * as api from '@/lib/supabase-service';
+import { useT } from '@/lib/i18n';
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -48,7 +49,7 @@ const typeColors: Record<Notification['type'], string> = {
   request: 'bg-emerald-50 text-emerald-600',
 };
 
-function getRelativeTime(dateStr: string): string {
+function getRelativeTime(dateStr: string, lang: 'en' | 'es'): string {
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
@@ -57,14 +58,15 @@ function getRelativeTime(dateStr: string): string {
   const diffHr = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHr / 24);
 
-  if (diffSec < 60) return 'Just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  if (diffSec < 60) return lang === 'es' ? 'Ahora mismo' : 'Just now';
+  if (diffMin < 60) return lang === 'es' ? `hace ${diffMin}m` : `${diffMin}m ago`;
+  if (diffHr < 24) return lang === 'es' ? `hace ${diffHr}h` : `${diffHr}h ago`;
+  if (diffDay < 7) return lang === 'es' ? `hace ${diffDay}d` : `${diffDay}d ago`;
+  return date.toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { month: 'short', day: 'numeric' });
 }
 
 export function NotificationCenter({ notifications: initialNotifications, role }: NotificationCenterProps) {
+  const { t, lang } = useT();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -115,7 +117,7 @@ export function NotificationCenter({ notifications: initialNotifications, role }
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="relative p-2 rounded-xl hover:bg-gray-100 transition-colors"
-        aria-label="Notifications"
+        aria-label={t.notifications.title}
       >
         <Bell className="w-5 h-5 text-gray-600" />
         {unreadCount > 0 && (
@@ -130,13 +132,13 @@ export function NotificationCenter({ notifications: initialNotifications, role }
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 z-50 overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
+            <h3 className="text-sm font-semibold text-foreground">{t.notifications.title}</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
                 className="text-xs font-medium text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,35%)] transition-colors"
               >
-                Mark all as read
+                {t.notifications.markAllRead}
               </button>
             )}
           </div>
@@ -146,7 +148,7 @@ export function NotificationCenter({ notifications: initialNotifications, role }
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center">
                 <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No notifications yet</p>
+                <p className="text-sm text-muted-foreground">{t.notifications.empty}</p>
               </div>
             ) : (
               notifications.map((notification) => {
@@ -178,7 +180,7 @@ export function NotificationCenter({ notifications: initialNotifications, role }
                         {notification.message}
                       </p>
                       <p className="text-[10px] text-gray-400 mt-1">
-                        {getRelativeTime(notification.created_at)}
+                        {getRelativeTime(notification.created_at, lang)}
                       </p>
                     </div>
                   </button>

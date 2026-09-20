@@ -10,9 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useT } from '@/lib/i18n';
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const { t } = useT();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -24,7 +26,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Toggle theme"
+        aria-label={t.theme.toggleTheme}
         className={`w-9 h-9 text-muted-foreground ${className ?? ''}`}
       >
         <Sun className="w-4 h-4 opacity-70" />
@@ -47,11 +49,11 @@ export function ThemeToggle({ className }: { className?: string }) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Select theme"
+          aria-label={t.theme.selectTheme}
           className={`w-9 h-9 text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors ${className ?? ''}`}
         >
           {currentIcon}
-          <span className="sr-only">Toggle theme</span>
+          <span className="sr-only">{t.theme.toggleTheme}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-36">
@@ -61,7 +63,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <span className="flex items-center gap-2">
             <Sun className="w-4 h-4 text-amber-500" />
-            <span>Light</span>
+            <span>{t.theme.light}</span>
           </span>
           {theme === 'light' && <Check className="w-4 h-4 text-primary" />}
         </DropdownMenuItem>
@@ -71,7 +73,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <span className="flex items-center gap-2">
             <Moon className="w-4 h-4 text-blue-400" />
-            <span>Dark</span>
+            <span>{t.theme.dark}</span>
           </span>
           {theme === 'dark' && <Check className="w-4 h-4 text-primary" />}
         </DropdownMenuItem>
@@ -81,7 +83,7 @@ export function ThemeToggle({ className }: { className?: string }) {
         >
           <span className="flex items-center gap-2">
             <Laptop className="w-4 h-4 text-muted-foreground" />
-            <span>System</span>
+            <span>{t.theme.system}</span>
           </span>
           {theme === 'system' && <Check className="w-4 h-4 text-primary" />}
         </DropdownMenuItem>
@@ -92,6 +94,7 @@ export function ThemeToggle({ className }: { className?: string }) {
 
 export function ThemeMenuSub() {
   const { theme, setTheme } = useTheme();
+  const { t } = useT();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -102,7 +105,7 @@ export function ThemeMenuSub() {
 
   return (
     <div className="px-2 py-1.5">
-      <div className="text-xs font-semibold text-muted-foreground mb-1.5 px-1">Theme</div>
+      <div className="text-xs font-semibold text-muted-foreground mb-1.5 px-1">{t.theme.title}</div>
       <div className="grid grid-cols-3 gap-1 bg-secondary p-1 rounded-lg">
         <button
           type="button"
@@ -114,7 +117,7 @@ export function ThemeMenuSub() {
           }`}
         >
           <Sun className="w-3.5 h-3.5 text-amber-500" />
-          <span>Light</span>
+          <span>{t.theme.light}</span>
         </button>
         <button
           type="button"
@@ -126,7 +129,7 @@ export function ThemeMenuSub() {
           }`}
         >
           <Moon className="w-3.5 h-3.5 text-blue-400" />
-          <span>Dark</span>
+          <span>{t.theme.dark}</span>
         </button>
         <button
           type="button"
@@ -138,7 +141,7 @@ export function ThemeMenuSub() {
           }`}
         >
           <Laptop className="w-3.5 h-3.5" />
-          <span>Auto</span>
+          <span>{t.theme.system}</span>
         </button>
       </div>
     </div>

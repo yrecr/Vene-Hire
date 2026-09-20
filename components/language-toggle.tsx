@@ -13,7 +13,7 @@ import { useT } from '@/lib/i18n';
 import type { Lang } from '@/lib/i18n';
 
 export function LanguageToggle({ className }: { className?: string }) {
-  const { lang, setLang } = useT();
+  const { lang, setLang, t } = useT();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -25,7 +25,7 @@ export function LanguageToggle({ className }: { className?: string }) {
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Toggle language"
+        aria-label={t.language.toggleLanguage}
         className={`w-9 h-9 text-muted-foreground ${className ?? ''}`}
       >
         <Globe className="w-4 h-4 opacity-70" />
@@ -39,7 +39,7 @@ export function LanguageToggle({ className }: { className?: string }) {
         <Button
           variant="ghost"
           size="sm"
-          aria-label="Select language"
+          aria-label={t.language.selectLanguage}
           className={`flex items-center gap-1.5 px-2.5 h-9 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors ${className ?? ''}`}
         >
           <Globe className="w-4 h-4 text-muted-foreground" />

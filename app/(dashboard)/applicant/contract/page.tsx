@@ -319,7 +319,7 @@ function ContractCard({ process, employer, signContract }: {
           {previewUrl ? (
             <div className="space-y-3">
               <div className="border border-gray-200 rounded-xl p-4 bg-white flex items-center justify-center">
-                <img src={previewUrl} alt="Signature preview" className="max-h-24 object-contain" />
+                <img src={previewUrl} alt={t.applicant.signaturePreview} className="max-h-24 object-contain" />
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="sm" onClick={clearSig}>{isEs ? 'Quitar' : 'Remove'}</Button>
@@ -362,7 +362,7 @@ function ContractCard({ process, employer, signContract }: {
       {process.signature_url && (
         <div className="border-t border-gray-100 pt-4 mt-2">
           <p className="text-xs font-medium text-muted-foreground mb-2">{isEs ? 'Tu Firma' : 'Your Signature'}</p>
-          <img src={process.signature_url} alt="Signed signature"
+          <img src={process.signature_url} alt={t.applicant.signedSignature}
             className="h-12 object-contain border border-gray-200 rounded-lg p-1 bg-white" />
         </div>
       )}
