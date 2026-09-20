@@ -20,7 +20,7 @@ const trustItems = [
 const steps = [
   { icon: Search, title: 'Browse Talent', description: 'Explore our curated pool of pre-trained, production-ready engineers.' },
   { icon: Play, title: 'Review Profiles', description: 'Watch intro videos and review detailed technical profiles.' },
-  { icon: MessageSquare, title: 'Request Interview', description: 'Submit a demo request to start the evaluation process.' },
+  { icon: MessageSquare, title: 'Request Interview', description: 'Register to start the evaluation process with your chosen candidate.' },
   { icon: Rocket, title: 'Get Started', description: 'Receive guided onboarding and integrate talent into your team.' },
 ];
 
@@ -71,7 +71,7 @@ export default function HomePage() {
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link href="/request-sign-up">
                   <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
-                    Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
+                    Register <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
                 <Link href="/talent">
@@ -291,7 +291,7 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/request-sign-up">
               <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
-                Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
+                Register <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <Link href="/talent">

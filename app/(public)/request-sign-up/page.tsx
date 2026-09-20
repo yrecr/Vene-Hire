@@ -243,7 +243,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
         {/* Header */}
         <div className="max-w-2xl mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            {isApplicant ? 'Apply as Talent' : 'Request a Demo'}
+            {isApplicant ? 'Apply as Talent' : 'Register'}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             {isApplicant

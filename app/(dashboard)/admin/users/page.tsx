@@ -10,6 +10,7 @@ import type { Profile } from '@/types';
 import { Plus, Search, Pencil, Trash2, X, Save } from 'lucide-react';
 import { useData } from '@/lib/data-context';
 import * as api from '@/lib/supabase-service';
+import { demoGuard, isDemoMode } from '@/lib/demo';
 
 export default function UserManagementPage() {
   const { profiles: contextProfiles, setProfiles, isHydrated } = useData();
@@ -22,10 +23,10 @@ export default function UserManagementPage() {
 
   useEffect(() => { setLocalProfiles(contextProfiles); }, [contextProfiles]);
 
-  function sync(list: Profile[]) {
+  const sync = useCallback((list: Profile[]) => {
     setLocalProfiles(list);
     setProfiles(list);
-  }
+  }, [setProfiles]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return profiles;
@@ -49,18 +50,21 @@ export default function UserManagementPage() {
     if (!updated) return;
     const merged = { ...updated, ...editData } as Profile;
     sync(profiles.map((p) => p.id === editId ? merged : p));
-    api.upsertProfile(merged).catch(() => {});
+    if (!isDemoMode()) {
+      api.upsertProfile(merged).catch(() => {});
+    }
     setEditId(null);
     setEditData({});
-  }, [editId, editData, profiles]);
+  }, [editId, editData, profiles, sync]);
 
   const deleteUser = useCallback(async (id: string) => {
+    if (demoGuard('delete a user')) return;
     // Not optimistic: this is a real, irreversible network call that can fail
     // (e.g. the "last remaining admin" guard) — the row should only disappear
     // once the account is actually gone.
     await api.deleteAccount(id);
     sync(profiles.filter((p) => p.id !== id));
-  }, [profiles]);
+  }, [profiles, sync]);
 
   const columns: DataTableColumn<Profile>[] = [
     {
@@ -211,6 +215,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
   const [createError, setCreateError] = useState('');
 
   const handleCreate = async () => {
+    if (demoGuard('create a user')) return;
     if (!data.full_name.trim() || !data.email.trim()) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
       setCreateError('Please enter a valid email address.');

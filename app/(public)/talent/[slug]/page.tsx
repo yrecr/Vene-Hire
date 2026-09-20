@@ -248,7 +248,7 @@ export default function TalentProfilePage() {
                   variant="outline"
                   className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white gap-2 w-full sm:w-auto"
                 >
-                  Request a Demo
+                  Register
                 </Button>
               </Link>
             )}

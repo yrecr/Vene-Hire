@@ -1,12 +1,19 @@
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import type { Profile, TalentProfile, TalentSkill, EmployerProfile, AccessRequest, SelectionProcess, InterviewRequest, Notification, AvailabilitySlot, Bootcamp, Enrollment, Resource, ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent, ContactMessage } from '@/types';
 
+// Demo sandbox: no request may leave the browser, even with a real session open.
+// Every read/write in this module goes through one of these two doors.
+const inDemo = () => typeof document !== 'undefined' && /(?:^|;\s*)venehire_demo=/.test(document.cookie);
+const emptyOk = () => new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } });
+const apiFetch: typeof fetch = (input, init) => (inDemo() ? Promise.resolve(emptyOk()) : fetch(input, init));
+
 let _sb: ReturnType<typeof createBrowserClient> | null = null;
 function sb() {
   if (!_sb) {
     _sb = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { fetch: apiFetch } }
     );
   }
   return _sb;
@@ -36,7 +43,7 @@ export async function upsertProfile(profile: Profile): Promise<void> {
 // deleting the Supabase Auth user cascades to profiles and everything
 // downstream, instead of leaving an orphaned Auth user (see route for why).
 export async function deleteAccount(profileId?: string): Promise<void> {
-  const res = await fetch('/api/delete-account', {
+  const res = await apiFetch('/api/delete-account', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ profile_id: profileId }),
   });
@@ -120,7 +127,7 @@ export async function fetchSelectionProcesses(): Promise<SelectionProcess[]> {
 // ponytail: route through /api/selection-processes/create to use service_role key,
 // bypassing RLS that blocks selection process persistence
 export async function upsertSelectionProcess(sp: SelectionProcess): Promise<void> {
-  const res = await fetch('/api/selection-processes/create', {
+  const res = await apiFetch('/api/selection-processes/create', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify([sp]),
   });
@@ -136,7 +143,7 @@ export async function fetchInterviewRequests(): Promise<InterviewRequest[]> {
 // ponytail: route through /api/interview-requests/create to use service_role key,
 // bypassing RLS that can block interview request persistence
 export async function upsertInterviewRequest(ir: InterviewRequest): Promise<void> {
-  const res = await fetch('/api/interview-requests/create', {
+  const res = await apiFetch('/api/interview-requests/create', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify([ir]),
   });
@@ -152,7 +159,7 @@ export async function fetchNotifications(): Promise<Notification[]> {
 // ponytail: route through /api/notifications/create to use service_role key,
 // bypassing RLS that blocks non-admin notification inserts
 export async function upsertNotification(n: Notification): Promise<void> {
-  const res = await fetch('/api/notifications/create', {
+  const res = await apiFetch('/api/notifications/create', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify([n]),
   });
@@ -161,7 +168,7 @@ export async function upsertNotification(n: Notification): Promise<void> {
 
 export async function upsertNotifications(notifications: Notification[]): Promise<void> {
   if (!notifications.length) return;
-  const res = await fetch('/api/notifications/create', {
+  const res = await apiFetch('/api/notifications/create', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(notifications),
   });
@@ -179,7 +186,7 @@ export async function fetchShortlistedIds(): Promise<string[]> {
 }
 
 export async function toggleShortlist(talentProfileId: string): Promise<boolean> {
-  const res = await fetch('/api/shortlist/toggle', {
+  const res = await apiFetch('/api/shortlist/toggle', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ talent_profile_id: talentProfileId }),
   });
@@ -226,7 +233,7 @@ export async function fetchContractApprovalRequests(): Promise<ContractApprovalR
 }
 
 export async function createContractApprovalRequest(processId: string, employerId: string, applicantId: string): Promise<ContractApprovalRequest> {
-  const res = await fetch('/api/contract-approval', {
+  const res = await apiFetch('/api/contract-approval', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ process_id: processId, employer_id: employerId, applicant_id: applicantId }),
   });
@@ -235,7 +242,7 @@ export async function createContractApprovalRequest(processId: string, employerI
 }
 
 export async function reviewContractApprovalRequest(requestId: string, status: 'approved' | 'rejected'): Promise<void> {
-  const res = await fetch('/api/contract-approval', {
+  const res = await apiFetch('/api/contract-approval', {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ requestId, status }),
   });
@@ -244,7 +251,7 @@ export async function reviewContractApprovalRequest(requestId: string, status: '
 
 // ─── Contract Documents ──────────────────────────────
 export async function generateContractPdf(processId: string): Promise<{ url?: string; error?: string }> {
-  const res = await fetch('/api/contracts/generate', {
+  const res = await apiFetch('/api/contracts/generate', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ process_id: processId }),
   });
@@ -259,7 +266,7 @@ export async function signContract(processId: string, signatureBlob: Blob): Prom
   const fd = new FormData();
   fd.append('process_id', processId);
   fd.append('signature', signatureBlob, 'signature.png');
-  const res = await fetch('/api/contracts/sign', { method: 'POST', body: fd });
+  const res = await apiFetch('/api/contracts/sign', { method: 'POST', body: fd });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     try { const body = JSON.parse(text); return { error: `${res.status}: ${body.error || res.statusText}` }; }
@@ -269,7 +276,7 @@ export async function signContract(processId: string, signatureBlob: Blob): Prom
 }
 
 export async function verifyContract(processId: string): Promise<{ error?: string }> {
-  const res = await fetch('/api/contracts/verify', {
+  const res = await apiFetch('/api/contracts/verify', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ process_id: processId }),
   });
@@ -289,7 +296,7 @@ export async function fetchVacancies(): Promise<Vacancy[]> {
 // ponytail: route through /api/vacancies/create to use service_role key,
 // same pattern as upsertInterviewRequest/upsertSelectionProcess
 export async function upsertVacancy(v: Vacancy): Promise<void> {
-  const res = await fetch('/api/vacancies/create', {
+  const res = await apiFetch('/api/vacancies/create', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(v),
   });
@@ -303,7 +310,7 @@ export async function fetchCandidates(): Promise<Candidate[]> {
 }
 
 export async function updateCandidateStatus(candidateId: string, manualStatus: Candidate['manual_status']): Promise<void> {
-  const res = await fetch('/api/candidates/status', {
+  const res = await apiFetch('/api/candidates/status', {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ candidate_id: candidateId, manual_status: manualStatus }),
   });
@@ -331,14 +338,14 @@ export async function fetchResources(): Promise<Resource[]> {
 // ponytail: route through /api/resources/upload to use service_role key,
 // same pattern as upsertInterviewRequest/upsertVacancy
 export async function createResource(formData: FormData): Promise<Resource> {
-  const res = await fetch('/api/resources/upload', { method: 'POST', body: formData });
+  const res = await apiFetch('/api/resources/upload', { method: 'POST', body: formData });
   if (!res.ok) throw new Error(`Failed to create resource: ${await res.text()}`);
   return res.json();
 }
 
 // Metadata-only edit (visibility/title/description) on an existing resource.
 export async function upsertResource(resource: Pick<Resource, 'id' | 'visibility'> & Partial<Resource>): Promise<void> {
-  const res = await fetch('/api/resources/update', {
+  const res = await apiFetch('/api/resources/update', {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(resource),
   });
@@ -357,7 +364,7 @@ export async function fetchTimesheetEvents(): Promise<TimesheetEvent[]> {
 }
 
 export async function submitTimesheet(processId: string, month: string, days: TimesheetDay[]): Promise<Timesheet> {
-  const res = await fetch('/api/timesheets/submit', {
+  const res = await apiFetch('/api/timesheets/submit', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ process_id: processId, month, days }),
   });
@@ -366,7 +373,7 @@ export async function submitTimesheet(processId: string, month: string, days: Ti
 }
 
 export async function reviewTimesheet(timesheetId: string, decision: 'approved' | 'rejected', comment?: string): Promise<Timesheet> {
-  const res = await fetch('/api/timesheets/review', {
+  const res = await apiFetch('/api/timesheets/review', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ timesheet_id: timesheetId, decision, comment }),
   });

@@ -6,6 +6,7 @@ import {
   File, CircleCheck as CheckCircle2, ExternalLink, Link2, Clock, Plus, Trash2,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { demoGuard } from '@/lib/demo';
 import { SkillBar } from '@/components/skill-bar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -194,6 +195,7 @@ export function ApplicantProfileSettings() {
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !talentProfile) return;
+    if (demoGuard('Upload photo')) return;
     setPhotoUploading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -207,6 +209,7 @@ export function ApplicantProfileSettings() {
 
   async function handleAnalyzeResume() {
     if (!talentProfile?.resume_url) return;
+    if (demoGuard('Analyze resume')) return;
     setAnalyzing(true);
     setAnalyzeError('');
     setAnalysisTriggered(false);
@@ -248,6 +251,7 @@ export function ApplicantProfileSettings() {
   async function handleResumeFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !talentProfile) return;
+    if (demoGuard('Upload resume')) return;
     setResumeUploadError('');
     setResumeUploading(true);
 

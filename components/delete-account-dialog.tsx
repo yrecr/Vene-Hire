@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TriangleAlert } from 'lucide-react';
+import { demoGuard } from '@/lib/demo';
 
 interface DeleteAccountDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ export function DeleteAccountDialog({ open, onOpenChange, targetLabel, confirmTe
   const canDelete = typed.trim() === confirmText && !deleting;
 
   const handleConfirm = async () => {
+    if (demoGuard('delete an account')) return;
     setDeleting(true);
     setError(null);
     try {

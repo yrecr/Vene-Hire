@@ -13,6 +13,7 @@ import {
 import { useData } from '@/lib/data-context';
 import type { AccessRequest } from '@/types';
 import { Eye, CircleCheck, CircleX } from 'lucide-react';
+import { demoGuard, isDemoMode } from '@/lib/demo';
 
 const statusTabs = ['All', 'Pending', 'Contacted', 'Approved', 'Rejected'] as const;
 const typeTabs = ['All', 'Applicant Requests', 'Employer Requests'] as const;
@@ -37,6 +38,7 @@ export default function AccessRequestsPage() {
   }, []);
 
   const commitApproval = useCallback((req: AccessRequest) => {
+    if (isDemoMode()) return;
     fetch('/api/approve-request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -66,6 +68,7 @@ export default function AccessRequestsPage() {
   }, [profiles, setProfiles]);
 
   const decide = useCallback((req: AccessRequest, status: 'approved' | 'rejected') => {
+    if (demoGuard(`${status} request`)) return;
     setAccessRequests((prev) => prev.map((r) => (r.id === req.id ? { ...r, status } : r)));
 
     const undo = () => {

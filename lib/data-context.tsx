@@ -8,8 +8,15 @@ import type {
   ContractApprovalRequest, Vacancy, Candidate, Timesheet, TimesheetDay, TimesheetEvent, ContactMessage,
 } from '@/types';
 import * as api from './supabase-service';
-import { mockEmployerProfiles } from '@/data/mock';
+import {
+  mockEmployerProfiles, mockProfiles, mockTalentProfiles, mockAccessRequests,
+  mockInterviewRequests, mockSelectionProcesses, mockNotifications,
+  mockAvailabilitySlots, mockBootcamps, mockEnrollments, mockResources,
+  mockVacancies, mockCandidates, mockContractApprovalRequests,
+  mockTimesheets, mockTimesheetEvents, mockContactMessages, mockShortlistedIds,
+} from '@/data/mock';
 import { getApplicantCompletionPercent, APPLICANT_PUBLISH_THRESHOLD } from '@/lib/profile-completion';
+import { isDemoMode } from '@/lib/demo';
 
 interface NewInterviewData {
   applicant_id: string;
@@ -89,6 +96,8 @@ function logBackgroundFailure(err: unknown) {
  * the next reload.
  */
 function persist(save: Promise<unknown>, rollback: () => void, tag: string) {
+  // In demo mode, skip the actual write — keep only the optimistic update in memory.
+  if (isDemoMode()) return;
   save.catch((err) => {
     console.error(`[data-context] ${tag} failed, rolling back:`, err);
     rollback();
@@ -164,9 +173,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => { hydrateFromSupabase(); }, [hydrateFromSupabase]);
+  useEffect(() => {
+    // ── Demo mode: hydrate synchronously from mock data, skip Supabase ──
+    if (isDemoMode()) {
+      setTalentProfiles([...mockTalentProfiles]);
+      setProfilesState([...mockProfiles]);
+      setEmployerProfiles([...mockEmployerProfiles]);
+      setAccessRequestsState([...mockAccessRequests]);
+      setInterviewRequests([...mockInterviewRequests]);
+      setSelectionProcesses([...mockSelectionProcesses]);
+      setNotifications([...mockNotifications]);
+      setAvailabilitySlots([...mockAvailabilitySlots]);
+      setBootcamps([...mockBootcamps]);
+      setEnrollments([...mockEnrollments]);
+      setResources([...mockResources]);
+      setVacancies([...mockVacancies]);
+      setCandidates([...mockCandidates]);
+      setContractApprovalRequests([...mockContractApprovalRequests]);
+      setTimesheets([...mockTimesheets]);
+      setTimesheetEvents([...mockTimesheetEvents]);
+      setContactMessages([...mockContactMessages]);
+      setShortlistedIds([...mockShortlistedIds]);
+      setIsHydrated(true);
+      return;
+    }
+    hydrateFromSupabase();
+  }, [hydrateFromSupabase]);
 
   useEffect(() => {
+    // Skip Supabase realtime in demo mode
+    if (isDemoMode()) return;
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -204,11 +240,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       meeting_url: null,
     };
     setInterviewRequests((prev) => [...prev, newRequest]);
-    try {
-      await api.upsertInterviewRequest(newRequest);
-    } catch {
-      setInterviewRequests((prev) => prev.filter((r) => r.id !== newRequest.id));
-      throw new Error('Failed to save interview request');
+    if (!isDemoMode()) {
+      try {
+        await api.upsertInterviewRequest(newRequest);
+      } catch {
+        setInterviewRequests((prev) => prev.filter((r) => r.id !== newRequest.id));
+        throw new Error('Failed to save interview request');
+      }
     }
 
     const applicant = findTalentById(data.applicant_id);
@@ -371,10 +409,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!prevProcess) return;
     const updated: SelectionProcess = { ...prevProcess, status };
     setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
-    try {
-      await api.upsertSelectionProcess(updated);
-    } catch {
-      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    if (!isDemoMode()) {
+      try {
+        await api.upsertSelectionProcess(updated);
+      } catch {
+        setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+      }
     }
   }, [selectionProcesses]);
 
@@ -383,10 +423,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!prevProcess) return;
     const updated: SelectionProcess = { ...prevProcess, hourly_rate: hourlyRate };
     setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
-    try {
-      await api.upsertSelectionProcess(updated);
-    } catch {
-      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    if (!isDemoMode()) {
+      try {
+        await api.upsertSelectionProcess(updated);
+      } catch {
+        setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+      }
     }
   }, [selectionProcesses]);
 
@@ -395,14 +437,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!prevProcess) return;
     const updated: SelectionProcess = { ...prevProcess, contract_end_date: endDate };
     setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? updated : p)));
-    try {
-      await api.upsertSelectionProcess(updated);
-    } catch {
-      setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+    if (!isDemoMode()) {
+      try {
+        await api.upsertSelectionProcess(updated);
+      } catch {
+        setSelectionProcesses((prev) => prev.map((p) => (p.id === processId ? prevProcess : p)));
+      }
     }
   }, [selectionProcesses]);
 
   const submitTimesheet = useCallback(async (processId: string, month: string, days: TimesheetDay[]) => {
+    if (isDemoMode()) return; // timesheets require server-side logic
     const timesheet = await api.submitTimesheet(processId, month, days);
     setTimesheets((prev) => {
       const exists = prev.some((t) => t.id === timesheet.id);
@@ -428,6 +473,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const reviewTimesheet = useCallback(async (timesheetId: string, decision: 'approved' | 'rejected', comment?: string) => {
+    if (isDemoMode()) return; // timesheets require server-side logic
     const timesheet = await api.reviewTimesheet(timesheetId, decision, comment);
     setTimesheets((prev) => prev.map((t) => (t.id === timesheetId ? timesheet : t)));
     api.fetchTimesheetEvents().then(setTimesheetEvents).catch(logBackgroundFailure);
@@ -536,10 +582,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const toggleShortlist = useCallback(async (applicantId: string) => {
     const wasShortlisted = shortlistedIds.includes(applicantId);
     setShortlistedIds((prev) => wasShortlisted ? prev.filter((id) => id !== applicantId) : [...prev, applicantId]);
-    try {
-      await api.toggleShortlist(applicantId);
-    } catch {
-      setShortlistedIds((prev) => wasShortlisted ? [...prev, applicantId] : prev.filter((id) => id !== applicantId));
+    if (!isDemoMode()) {
+      try {
+        await api.toggleShortlist(applicantId);
+      } catch {
+        setShortlistedIds((prev) => wasShortlisted ? [...prev, applicantId] : prev.filter((id) => id !== applicantId));
+      }
     }
   }, [shortlistedIds]);
 
@@ -547,10 +595,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const prev = contactMessages.find((m) => m.id === id);
     if (!prev || prev.status === 'read') return;
     setContactMessages((list) => list.map((m) => (m.id === id ? { ...m, status: 'read' } : m)));
-    try {
-      await api.markContactMessageRead(id);
-    } catch {
-      setContactMessages((list) => list.map((m) => (m.id === id ? prev : m)));
+    if (!isDemoMode()) {
+      try {
+        await api.markContactMessageRead(id);
+      } catch {
+        setContactMessages((list) => list.map((m) => (m.id === id ? prev : m)));
+      }
     }
   }, [contactMessages]);
 
@@ -558,10 +608,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const prevRequest = accessRequests.find((r) => r.id === id);
     if (!prevRequest) return;
     setAccessRequestsState((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    try {
-      await api.upsertAccessRequest({ ...prevRequest, status });
-    } catch {
-      setAccessRequestsState((prev) => prev.map((r) => (r.id === id ? prevRequest : r)));
+    if (!isDemoMode()) {
+      try {
+        await api.upsertAccessRequest({ ...prevRequest, status });
+      } catch {
+        setAccessRequestsState((prev) => prev.map((r) => (r.id === id ? prevRequest : r)));
+      }
     }
   }, [accessRequests]);
 
@@ -573,9 +625,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateAvailabilitySlots = useCallback((applicantId: string, slots: AvailabilitySlot[]) => {
     setAvailabilitySlots((prev) => {
-      const oldForApplicant = prev.filter((s) => s.applicant_id === applicantId);
-      api.deleteAvailabilitySlots(oldForApplicant.map((s) => s.id)).catch(logBackgroundFailure);
-      api.upsertAvailabilitySlots(slots).catch(logBackgroundFailure);
+      if (!isDemoMode()) {
+        const oldForApplicant = prev.filter((s) => s.applicant_id === applicantId);
+        api.deleteAvailabilitySlots(oldForApplicant.map((s) => s.id)).catch(logBackgroundFailure);
+        api.upsertAvailabilitySlots(slots).catch(logBackgroundFailure);
+      }
       const other = prev.filter((s) => s.applicant_id !== applicantId);
       return [...other, ...slots];
     });
@@ -587,10 +641,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const applicant = findTalentById(process.applicant_id);
     const employer = findEmployer(process.employer_id);
     let newReq: ContractApprovalRequest | undefined;
-    try {
-      newReq = await api.createContractApprovalRequest(processId, process.employer_id, process.applicant_id);
-    } catch {
-      return;
+    if (!isDemoMode()) {
+      try {
+        newReq = await api.createContractApprovalRequest(processId, process.employer_id, process.applicant_id);
+      } catch {
+        return;
+      }
+    } else {
+      newReq = {
+        id: crypto.randomUUID(), process_id: processId, employer_id: process.employer_id,
+        applicant_id: process.applicant_id, status: 'pending', created_at: new Date().toISOString(),
+        reviewed_at: null,
+      } as ContractApprovalRequest;
     }
     const req = newReq;
     if (req) setContractApprovalRequests((prev) => [...prev, req]);
@@ -621,17 +683,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const requestContractApproval = requestContractApprovalFn;
 
   const approveContractRequest = useCallback(async (requestId: string, processId: string) => {
-    try {
-      await api.reviewContractApprovalRequest(requestId, 'approved');
-    } catch {
-      return;
+    if (!isDemoMode()) {
+      try {
+        await api.reviewContractApprovalRequest(requestId, 'approved');
+      } catch {
+        return;
+      }
     }
     setContractApprovalRequests((prev) =>
       prev.map((r) => r.id === requestId ? { ...r, status: 'approved', reviewed_at: new Date().toISOString() } : r)
     );
-    const pdfResult = await api.generateContractPdf(processId);
+    let contractUrl: string | null = null;
+    if (!isDemoMode()) {
+      const pdfResult = await api.generateContractPdf(processId);
+      contractUrl = pdfResult.url ?? null;
+    }
     setSelectionProcesses((prev) => prev.map((p) =>
-      p.id === processId ? { ...p, current_stage: 'contract_signing', contract_status: 'pending', contract_url: pdfResult.url ?? null } : p
+      p.id === processId ? { ...p, current_stage: 'contract_signing', contract_status: 'pending', contract_url: contractUrl } : p
     ));
     const process = selectionProcesses.find((p) => p.id === processId);
     if (!process) return;
@@ -646,7 +714,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'contract', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(logBackgroundFailure);
+      if (!isDemoMode()) api.upsertNotification(n).catch(logBackgroundFailure);
     }
     const appUserId = applicant?.user_id;
     if (appUserId) {
@@ -657,15 +725,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'contract', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(logBackgroundFailure);
+      if (!isDemoMode()) api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
   const rejectContractRequest = useCallback(async (requestId: string, processId: string) => {
-    try {
-      await api.reviewContractApprovalRequest(requestId, 'rejected');
-    } catch {
-      return;
+    if (!isDemoMode()) {
+      try {
+        await api.reviewContractApprovalRequest(requestId, 'rejected');
+      } catch {
+        return;
+      }
     }
     setContractApprovalRequests((prev) =>
       prev.map((r) => r.id === requestId ? { ...r, status: 'rejected', reviewed_at: new Date().toISOString() } : r)
@@ -683,11 +753,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         type: 'request', read: false, created_at: new Date().toISOString(),
       };
       setNotifications((prev) => [...prev, n]);
-      api.upsertNotification(n).catch(logBackgroundFailure);
+      if (!isDemoMode()) api.upsertNotification(n).catch(logBackgroundFailure);
     }
   }, [selectionProcesses, findTalentById, findEmployer, findEmployerUserId]);
 
   const signContract = useCallback(async (processId: string, signatureBlob: Blob) => {
+    if (isDemoMode()) return; // signing requires server-side file upload
     const result = await api.signContract(processId, signatureBlob);
     if (result.error) throw new Error(result.error);
     if (result.signature_url) {
@@ -720,7 +791,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [selectionProcesses, profiles, findTalentById, findEmployer]);
 
   const verifyContract = useCallback(async (processId: string) => {
-    await api.verifyContract(processId);
+    if (!isDemoMode()) await api.verifyContract(processId);
     const startDate = new Date().toISOString().slice(0, 10);
     setSelectionProcesses((prev) => prev.map((p) =>
       p.id === processId ? { ...p, contract_status: 'signed', status: 'hired', contract_start_date: startDate } : p
@@ -775,22 +846,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const createVacancy = useCallback(async (v: Vacancy): Promise<void> => {
     setVacancies((prev) => [v, ...prev]);
-    try {
-      await api.upsertVacancy(v);
-    } catch (err) {
-      setVacancies((prev) => prev.filter((x) => x.id !== v.id));
-      throw err;
+    if (!isDemoMode()) {
+      try {
+        await api.upsertVacancy(v);
+      } catch (err) {
+        setVacancies((prev) => prev.filter((x) => x.id !== v.id));
+        throw err;
+      }
     }
   }, []);
 
   const updateCandidateStatusFn = useCallback(async (candidateId: string, status: Candidate['manual_status']): Promise<void> => {
     const prevStatus = candidates.find((c) => c.id === candidateId)?.manual_status;
     setCandidates((prev) => prev.map((c) => c.id === candidateId ? { ...c, manual_status: status } : c));
-    try {
-      await api.updateCandidateStatus(candidateId, status);
-    } catch (err) {
-      if (prevStatus) setCandidates((prev) => prev.map((c) => c.id === candidateId ? { ...c, manual_status: prevStatus } : c));
-      throw err;
+    if (!isDemoMode()) {
+      try {
+        await api.updateCandidateStatus(candidateId, status);
+      } catch (err) {
+        if (prevStatus) setCandidates((prev) => prev.map((c) => c.id === candidateId ? { ...c, manual_status: prevStatus } : c));
+        throw err;
+      }
     }
   }, [candidates]);
 
@@ -799,11 +874,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const toSave = !profile.public_visible && getApplicantCompletionPercent(profile) >= APPLICANT_PUBLISH_THRESHOLD
       ? { ...profile, public_visible: true }
       : profile;
-    await api.upsertTalentProfile(toSave as TalentProfile & { skills: TalentSkill[] });
+    if (!isDemoMode()) await api.upsertTalentProfile(toSave as TalentProfile & { skills: TalentSkill[] });
     setTalentProfiles((prev) => prev.map((t) => t.id === toSave.id ? toSave : t));
   }, []);
 
   const createResource = useCallback(async (formData: FormData): Promise<void> => {
+    if (isDemoMode()) return; // file upload requires server
     const created = await api.createResource(formData);
     setResources((prev) => [created, ...prev]);
   }, []);
@@ -812,11 +888,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const prevResource = resources.find((r) => r.id === id);
     if (!prevResource) return;
     setResources((prev) => prev.map((r) => (r.id === id ? { ...r, visibility } : r)));
-    try {
-      await api.upsertResource({ id, visibility });
-    } catch (err) {
-      setResources((prev) => prev.map((r) => (r.id === id ? prevResource : r)));
-      throw err;
+    if (!isDemoMode()) {
+      try {
+        await api.upsertResource({ id, visibility });
+      } catch (err) {
+        setResources((prev) => prev.map((r) => (r.id === id ? prevResource : r)));
+        throw err;
+      }
     }
   }, [resources]);
 
