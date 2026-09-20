@@ -43,6 +43,11 @@ export const es: TranslationSchema = {
     noData: 'No hay datos disponibles',
     noResults: 'No se encontraron resultados',
     notFound: 'Página no encontrada',
+    notFoundDesc: 'La página que buscas no existe o puede haber sido movida.',
+    backToHome: 'Volver al Inicio',
+    errorTitle: 'Algo salió mal',
+    errorDesc: 'Ocurrió un error inesperado. Puedes intentar de nuevo o volver a la página principal.',
+    tryAgainBtn: 'Intentar de nuevo',
     success: 'Éxito',
     error: 'Error',
     somethingWentWrong: 'Ocurrió un error. Por favor intenta de nuevo.',
@@ -382,6 +387,11 @@ export const es: TranslationSchema = {
     settingsTitle: 'Configuración de Cuenta y Perfil',
     noInterviewsScheduled: 'No tienes entrevistas agendadas actualmente.',
     joinMeeting: 'Unirse a la Reunión',
+    signInPrompt: 'Inicia sesión con una cuenta de aplicante para editar tu perfil.',
+    resume: 'Currículum',
+    videoIntroduction: 'Video de presentación',
+    signaturePreview: 'Vista previa de la firma',
+    signedSignature: 'Firma digital registrada',
   },
 
   admin: {
@@ -637,6 +647,60 @@ export const es: TranslationSchema = {
     deleteAccountDesc: 'Esto eliminará permanentemente la cuenta y todo lo asociado a ella: perfil, procesos, entrevistas e historial. Esta acción no se puede deshacer.',
     typeToConfirm: 'Para confirmar, escribe "{confirmText}" a continuación:',
     confirmDeleteBtn: 'Eliminar Cuenta Permanentemente',
+  },
+
+  processTimeline: {
+    introInterview: 'Entrevista Inicial',
+    technicalInterview: 'Entrevista Técnica',
+    contractSigning: 'Firma de Contrato',
+    joinMeeting: 'Unirse a la Reunión',
+    interviewLinkReady: 'El enlace de la entrevista está listo',
+    openMeetingPrompt: '¿Deseas abrir el enlace de la reunión ahora?',
+    joinNow: 'Unirse Ahora',
+  },
+
+  dataTable: {
+    of: 'de',
+    previousPage: 'Página anterior',
+    nextPage: 'Página siguiente',
+    noRecords: 'No se encontraron registros.',
+  },
+
+  notifications: {
+    title: 'Notificaciones',
+    empty: 'Aún no hay notificaciones',
+    markAllRead: 'Marcar todas como leídas',
+  },
+
+  profileCompletion: {
+    title: 'Completa tu perfil',
+    minimize: 'Minimizar',
+    progress: 'Progreso',
+  },
+
+  theme: {
+    title: 'Tema',
+    toggleTheme: 'Alternar tema',
+    selectTheme: 'Seleccionar tema',
+    light: 'Claro',
+    dark: 'Oscuro',
+    system: 'Sistema',
+  },
+
+  language: {
+    title: 'Idioma',
+    toggleLanguage: 'Alternar idioma',
+    selectLanguage: 'Seleccionar idioma',
+    english: 'English',
+    spanish: 'Español',
+  },
+
+  englishLevels: {
+    fluent: 'Fluido',
+    advanced: 'Avanzado',
+    intermediate: 'Intermedio',
+    basic: 'Básico',
+    native: 'Nativo',
   },
 
   errors: {

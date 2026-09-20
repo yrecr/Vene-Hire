@@ -68,7 +68,11 @@ export function I18nProvider({
 
   useEffect(() => {
     // Client-side detection if cookie differs or wasn't present on initial server load
+    const hasCookie = typeof document !== 'undefined' && /(?:^|;\s*)venehire_lang=(en|es)(?:;|$)/.test(document.cookie);
     const detected = getInitialClientLang(initialLang);
+    if (!hasCookie && detected === 'es' && typeof document !== 'undefined') {
+      document.cookie = 'venehire_lang=es; max-age=31536000; path=/; SameSite=Lax';
+    }
     if (detected !== lang) {
       setLangState(detected);
     }
@@ -136,11 +140,13 @@ export function I18nProvider({
 export function useT(): I18nContextType {
   const context = useContext(I18nContext);
   if (!context) {
-    // Fallback if rendered outside provider
+    // Fallback if rendered outside provider (e.g. error boundary)
+    const fallbackLang = getInitialClientLang('en');
+    const dict = dictionaries[fallbackLang] || dictionaries.en;
     return {
-      lang: 'en',
+      lang: fallbackLang,
       setLang: () => {},
-      t: dictionaries.en,
+      t: dict,
       formatDate: (d) => String(d),
       formatNumber: (n) => String(n),
       formatCurrency: (n) => `$${n}`,

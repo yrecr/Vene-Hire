@@ -41,6 +41,11 @@ export const en = {
     noData: 'No data available',
     noResults: 'No results found',
     notFound: 'Page not found',
+    notFoundDesc: 'The page you are looking for does not exist or may have moved.',
+    backToHome: 'Back to Home',
+    errorTitle: 'Something went wrong',
+    errorDesc: 'An unexpected error occurred. You can try again, or head back to the homepage.',
+    tryAgainBtn: 'Try Again',
     success: 'Success',
     error: 'Error',
     somethingWentWrong: 'Something went wrong. Please try again.',
@@ -380,6 +385,11 @@ export const en = {
     settingsTitle: 'Profile & Account Settings',
     noInterviewsScheduled: 'No interviews currently scheduled.',
     joinMeeting: 'Join Meeting',
+    signInPrompt: 'Sign in with an applicant account to edit your profile.',
+    resume: 'Resume',
+    videoIntroduction: 'Video introduction',
+    signaturePreview: 'Signature preview',
+    signedSignature: 'Signed signature',
   },
 
   admin: {
@@ -635,6 +645,60 @@ export const en = {
     deleteAccountDesc: 'This permanently deletes the account and everything tied to it — profile, processes, interviews, and history. This cannot be undone.',
     typeToConfirm: 'To confirm, type "{confirmText}" below:',
     confirmDeleteBtn: 'Delete Account Permanently',
+  },
+
+  processTimeline: {
+    introInterview: 'Intro Interview',
+    technicalInterview: 'Technical Interview',
+    contractSigning: 'Contract Signing',
+    joinMeeting: 'Join Meeting',
+    interviewLinkReady: 'The interview link is ready',
+    openMeetingPrompt: 'Do you want to open the meeting link now?',
+    joinNow: 'Join Now',
+  },
+
+  dataTable: {
+    of: 'of',
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+    noRecords: 'No records found.',
+  },
+
+  notifications: {
+    title: 'Notifications',
+    empty: 'No notifications yet',
+    markAllRead: 'Mark all as read',
+  },
+
+  profileCompletion: {
+    title: 'Complete your profile',
+    minimize: 'Minimize',
+    progress: 'Progress',
+  },
+
+  theme: {
+    title: 'Theme',
+    toggleTheme: 'Toggle theme',
+    selectTheme: 'Select theme',
+    light: 'Light',
+    dark: 'Dark',
+    system: 'System',
+  },
+
+  language: {
+    title: 'Language',
+    toggleLanguage: 'Toggle language',
+    selectLanguage: 'Select language',
+    english: 'English',
+    spanish: 'Español',
+  },
+
+  englishLevels: {
+    fluent: 'Fluent',
+    advanced: 'Advanced',
+    intermediate: 'Intermediate',
+    basic: 'Basic',
+    native: 'Native',
   },
 
   errors: {
