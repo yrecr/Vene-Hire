@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,6 +7,7 @@ import { SkillBar } from '@/components/skill-bar';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { MapPin, Clock, ArrowRight } from 'lucide-react';
 import type { TalentProfile, TalentSkill } from '@/types';
+import { useT } from '@/lib/i18n';
 
 interface TalentCardProps {
   talent: TalentProfile & { skills?: TalentSkill[] };
@@ -12,26 +15,29 @@ interface TalentCardProps {
 }
 
 const availabilityColor: Record<string, string> = {
-  'Available': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Available: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   'In Training': 'bg-amber-50 text-amber-700 border-amber-200',
-  'Hired': 'bg-gray-100 text-gray-600 border-gray-200',
+  Hired: 'bg-gray-100 text-gray-600 border-gray-200',
   'On Hold': 'bg-blue-50 text-blue-700 border-blue-200',
 };
 
 const englishColor: Record<string, string> = {
-  'Native': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Fluent': 'bg-teal-50 text-teal-700 border-teal-200',
-  'Advanced': 'bg-blue-50 text-blue-700 border-blue-200',
-  'Intermediate': 'bg-amber-50 text-amber-700 border-amber-200',
-  'Basic': 'bg-gray-100 text-gray-600 border-gray-200',
+  Native: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  Fluent: 'bg-teal-50 text-teal-700 border-teal-200',
+  Advanced: 'bg-blue-50 text-blue-700 border-blue-200',
+  Intermediate: 'bg-amber-50 text-amber-700 border-amber-200',
+  Basic: 'bg-gray-100 text-gray-600 border-gray-200',
 };
 
 export function TalentCard({ talent, compact }: TalentCardProps) {
+  const { t, lang } = useT();
+
+  const getStatusLabel = (status: string) => {
+    const key = status.toLowerCase().replace(/\s+/g, '_');
+    return (t.badges as Record<string, string>)[key] || status;
+  };
+
   if (compact) {
-    // Real quantified skills (name + score) when the profile has them —
-    // reused for both the tag row and the progress bars, same as the
-    // reference layout. Falls back to plain tech_stack tags (no scores to
-    // bar-chart) for the rare profile that hasn't set any skills yet.
     const topSkills = [...(talent.skills || [])].sort((a, b) => b.score - a.score).slice(0, 3);
     const tags = topSkills.length ? topSkills.map((s) => s.skill_name) : talent.tech_stack.slice(0, 4);
 
@@ -61,8 +67,8 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
             ))}
           </div>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc ps-4">
-            <li>Spanish: Native or bilingual</li>
-            <li>English: {talent.english_level}</li>
+            <li>{lang === 'es' ? 'Español: Nativo o bilingüe' : 'Spanish: Native or bilingual'}</li>
+            <li>{lang === 'es' ? 'Inglés' : 'English'}: {talent.english_level}</li>
           </ul>
         </div>
 
@@ -76,7 +82,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
 
         <Link href={`/talent/${talent.slug}`} className="mt-5 flex justify-center">
           <Button variant="outline" size="sm" className="rounded-full px-6 border-2 border-foreground text-foreground hover:bg-foreground hover:text-white">
-            View Profile
+            {t.talent.viewProfileBtn}
           </Button>
         </Link>
       </div>
@@ -98,7 +104,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
             <div className="flex items-center gap-3 mt-2">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full border ${availabilityColor[talent.availability_status] || ''}`}>
                 <Clock className="w-3 h-3" />
-                {talent.availability_status}
+                {getStatusLabel(talent.availability_status)}
               </span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-full border ${englishColor[talent.english_level] || ''}`}>
                 <MapPin className="w-3 h-3" />
@@ -127,7 +133,7 @@ export function TalentCard({ talent, compact }: TalentCardProps) {
 
         <Link href={`/talent/${talent.slug}`}>
           <Button variant="outline" className="w-full group-hover:bg-[hsl(210,100%,45%)] group-hover:text-white group-hover:border-[hsl(210,100%,45%)] transition-all duration-300" size="sm">
-            View Profile <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+            {t.talent.viewProfileBtn} <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
           </Button>
         </Link>
       </div>

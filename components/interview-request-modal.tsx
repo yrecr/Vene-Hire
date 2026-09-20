@@ -19,23 +19,21 @@ import { useData } from '@/lib/data-context';
 import type { TalentProfile } from '@/types';
 import { Calendar as CalendarIcon, Clock, Globe } from 'lucide-react';
 import { format } from 'date-fns';
-
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-interface InterviewRequestModalProps {
-  applicant: TalentProfile;
-  employerId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+import { useT } from '@/lib/i18n';
 
 export function InterviewRequestModal({
   applicant,
   employerId,
   open,
   onOpenChange,
-}: InterviewRequestModalProps) {
+}: {
+  applicant: TalentProfile;
+  employerId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const { createInterviewRequest, getAvailabilityForApplicant } = useData();
+  const { t, lang } = useT();
   const router = useRouter();
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [timeSlot, setTimeSlot] = useState<string>('');
@@ -43,6 +41,14 @@ export function InterviewRequestModal({
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const dayNames = useMemo(
+    () =>
+      lang === 'es'
+        ? ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+        : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    [lang]
+  );
 
   const availabilitySlots = useMemo(
     () => getAvailabilityForApplicant(applicant.id),
@@ -72,7 +78,7 @@ export function InterviewRequestModal({
       });
       setSubmitted(true);
     } catch {
-      setSubmitError('Failed to send request. Please try again.');
+      setSubmitError(t.common.somethingWentWrong);
     }
   }
 
@@ -100,7 +106,9 @@ export function InterviewRequestModal({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center text-xl">Request Sent!</DialogTitle>
+            <DialogTitle className="text-center text-xl">
+              {t.auth.requestSuccessTitle}
+            </DialogTitle>
           </DialogHeader>
           <div className="text-center py-6">
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
@@ -109,11 +117,13 @@ export function InterviewRequestModal({
               </svg>
             </div>
             <p className="text-muted-foreground">
-              Your interview request has been sent to {applicant.display_name}. They will review it and respond.
+              {lang === 'es'
+                ? `Tu solicitud de entrevista fue enviada a ${applicant.display_name}. La revisará en breve.`
+                : `Your interview request has been sent to ${applicant.display_name}. They will review it and respond.`}
             </p>
           </div>
           <DialogFooter className="sm:justify-center">
-            <Button onClick={handleClose}>Done</Button>
+            <Button onClick={handleClose}>{t.common.close}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -124,9 +134,9 @@ export function InterviewRequestModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Request Interview</DialogTitle>
+          <DialogTitle>{t.modals.requestInterviewTitle}</DialogTitle>
           <DialogDescription>
-            Schedule an interview with {applicant.display_name}
+            {t.modals.requestInterviewSubtitle.replace('{name}', applicant.display_name)}
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +157,7 @@ export function InterviewRequestModal({
           {/* Role title */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Role Title <span className="text-red-500">*</span>
+              {t.talent.roleFilter} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -162,16 +172,20 @@ export function InterviewRequestModal({
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Globe className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Available Slots ({userTimezone})</span>
+              <span className="text-sm font-medium text-foreground">
+                {lang === 'es' ? 'Horarios Disponibles' : 'Available Slots'} ({userTimezone})
+              </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {availabilitySlots.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No availability slots set.</p>
+                <p className="text-xs text-muted-foreground">
+                  {lang === 'es' ? 'Sin horarios asignados.' : 'No availability slots set.'}
+                </p>
               ) : (
                 availabilitySlots.map((slot) => (
                   <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
+                    {dayNames[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                   </Badge>
                 ))
               )}
@@ -181,7 +195,7 @@ export function InterviewRequestModal({
           {/* Date picker */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Select Date <span className="text-red-500">*</span>
+              {t.modals.preferredDate} <span className="text-red-500">*</span>
             </label>
             <Calendar
               mode="single"
@@ -199,7 +213,7 @@ export function InterviewRequestModal({
           {slotsForSelectedDay.length > 0 && (
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
-                Select Time <span className="text-red-500">*</span>
+                {lang === 'es' ? 'Seleccionar Hora' : 'Select Time'} <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {slotsForSelectedDay.map((slot) => {
@@ -232,12 +246,12 @@ export function InterviewRequestModal({
           {/* Message */}
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Message
+              {t.modals.interviewMessage}
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a personal message to the candidate..."
+              placeholder={lang === 'es' ? 'Agrega un mensaje para el candidato...' : 'Add a personal message to the candidate...'}
               rows={3}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
             />
@@ -246,13 +260,13 @@ export function InterviewRequestModal({
 
         <DialogFooter className="gap-2">
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline">{t.common.cancel}</Button>
           </DialogClose>
           <Button
             onClick={handleSubmit}
             disabled={!date || !timeSlot || !roleTitle.trim()}
           >
-            Send Request
+            {t.modals.submitInterviewRequest}
           </Button>
         </DialogFooter>
       </DialogContent>

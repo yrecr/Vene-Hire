@@ -13,9 +13,10 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Play, Clock, MapPin, Calendar, Briefcase, ArrowRight, Globe, CircleCheck as CheckCircle2, FileText } from 'lucide-react';
+import { ArrowLeft, Play, Clock, MapPin, Briefcase, ArrowRight, Globe, CircleCheck as CheckCircle2, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useT } from '@/lib/i18n';
 
 function toEmbedUrl(url: string): string {
   if (!url) return url;
@@ -29,11 +30,11 @@ function toEmbedUrl(url: string): string {
   return url;
 }
 
-const availabilityConfig: Record<string, { label: string; className: string }> = {
-  Available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40' },
-  'In Training': { label: 'In Training', className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40' },
-  Hired: { label: 'Hired', className: 'bg-gray-50 text-gray-700 border-gray-200' },
-  'On Hold': { label: 'On Hold', className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40' },
+const availabilityColor: Record<string, string> = {
+  Available: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40',
+  'In Training': 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40',
+  Hired: 'bg-gray-50 text-gray-700 border-gray-200',
+  'On Hold': 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40',
 };
 
 export default function TalentProfilePage() {
@@ -41,6 +42,7 @@ export default function TalentProfilePage() {
   const slug = params.slug as string;
   const { currentUser } = useAuth();
   const { getEmployerById, talentProfiles } = useData();
+  const { t, lang } = useT();
   const [modalOpen, setModalOpen] = useState(false);
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
@@ -53,6 +55,11 @@ export default function TalentProfilePage() {
     : null;
   const backLink = isEmployer ? '/employer/applicants' : '/talent';
 
+  const getStatusLabel = (status: string) => {
+    const key = status.toLowerCase().replace(/\s+/g, '_');
+    return (t.badges as Record<string, string>)[key] || status;
+  };
+
   if (!talent) {
     return (
       <div className="min-h-screen pt-24 flex flex-col items-center justify-center px-4">
@@ -60,14 +67,14 @@ export default function TalentProfilePage() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-8 h-8 text-gray-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Talent not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.talent.talentNotFound}</h1>
           <p className="text-gray-500 mb-8">
-            The talent profile you are looking for does not exist or has been removed.
+            {t.talent.talentNotFoundDesc}
           </p>
           <Link href={backLink}>
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Talent
+              {t.talent.backToTalent}
             </Button>
           </Link>
         </div>
@@ -75,10 +82,8 @@ export default function TalentProfilePage() {
     );
   }
 
-  const availability = availabilityConfig[talent.availability_status] ?? {
-    label: talent.availability_status,
-    className: 'bg-gray-50 text-gray-700 border-gray-200',
-  };
+  const availabilityBadgeStyle = availabilityColor[talent.availability_status] || 'bg-gray-50 text-gray-700 border-gray-200';
+  const availabilityBadgeLabel = getStatusLabel(talent.availability_status);
 
   return (
     <div className="min-h-screen pt-24 pb-20">
@@ -86,7 +91,7 @@ export default function TalentProfilePage() {
         <Link href={backLink}>
           <Button variant="ghost" className="gap-2 text-gray-600 hover:text-gray-900 -ml-2">
             <ArrowLeft className="w-4 h-4" />
-            Back to Talent
+            {t.talent.backToTalent}
           </Button>
         </Link>
       </div>
@@ -116,17 +121,17 @@ export default function TalentProfilePage() {
               <p className="text-lg text-gray-600 mb-5">{talent.title}</p>
 
               <div className="flex flex-wrap gap-3 mb-6">
-                <Badge variant="outline" className={`${availability.className} px-3 py-1 text-sm font-medium`}>
+                <Badge variant="outline" className={`${availabilityBadgeStyle} px-3 py-1 text-sm font-medium`}>
                   <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                  {availability.label}
+                  {availabilityBadgeLabel}
                 </Badge>
                 <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
                   <Globe className="w-3.5 h-3.5 mr-1.5" />
-                  {talent.english_level} English
+                  {talent.english_level} {t.talent.englishLevel}
                 </Badge>
                 <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
                   <Briefcase className="w-3.5 h-3.5 mr-1.5" />
-                  {talent.years_experience} years experience
+                  {t.talent.yearsExp.replace('{years}', String(talent.years_experience))}
                 </Badge>
               </div>
 
@@ -148,26 +153,26 @@ export default function TalentProfilePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-10">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.talent.overviewTab}</h2>
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
             </div>
 
             {talent.resume_url && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Resume</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.talent.resumeDownload}</h2>
                 <button
                   onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
                   className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
                 >
                   <FileText className="w-5 h-5" />
-                  <span className="text-base font-medium">View Resume</span>
+                  <span className="text-base font-medium">{t.talent.viewResume}</span>
                 </button>
               </div>
             )}
 
             <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
               <DialogContent className="max-w-4xl h-[80vh]">
-                <DialogTitle className="sr-only">Resume</DialogTitle>
+                <DialogTitle className="sr-only">{t.talent.viewResume}</DialogTitle>
                 <iframe
                   src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
                   className="w-full h-full border-0 rounded-lg"
@@ -180,7 +185,7 @@ export default function TalentProfilePage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="flex items-center gap-2 mb-5">
                   <Play className="w-5 h-5 text-gray-700" />
-                  <h2 className="text-xl font-semibold text-gray-900">Introduction Video</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t.talent.interviewPitch}</h2>
                 </div>
                 <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: '16 / 9' }}>
                   <iframe
@@ -197,7 +202,7 @@ export default function TalentProfilePage() {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 sticky top-28">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Skills</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.talent.skillsTab}</h2>
               <div className="space-y-5">
                 {talent.skills?.map((skill) => (
                   <SkillBar key={skill.id} name={skill.skill_name} score={skill.score} />
@@ -211,15 +216,15 @@ export default function TalentProfilePage() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12 text-center shadow-xl border border-white/10">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Interested in {talent.display_name}?
+            {t.talent.interestedTitle.replace('{name}', talent.display_name)}
           </h2>
           <p className="text-gray-300 dark:text-slate-300 mb-8 max-w-xl mx-auto">
-            Get in touch to learn more about this candidate or explore our full talent pool for your hiring needs.
+            {t.talent.interestedDesc}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {talent.availability_status === 'Hired' ? (
               <Button size="lg" disabled className="bg-white/10 text-gray-400 gap-2 w-full sm:w-auto cursor-not-allowed">
-                Already Hired — Unavailable
+                {t.talent.alreadyHired}
               </Button>
             ) : isEmployer && employerId ? (
               <Button
@@ -227,7 +232,7 @@ export default function TalentProfilePage() {
                 className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 gap-2 w-full sm:w-auto"
                 onClick={() => setModalOpen(true)}
               >
-                Request Interview
+                {t.talent.requestInterviewBtn}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             ) : (
@@ -236,7 +241,7 @@ export default function TalentProfilePage() {
                   size="lg"
                   className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 gap-2 w-full sm:w-auto"
                 >
-                  Request Interview
+                  {t.talent.requestInterviewBtn}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -248,7 +253,7 @@ export default function TalentProfilePage() {
                   variant="outline"
                   className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white gap-2 w-full sm:w-auto"
                 >
-                  Register
+                  {t.nav.register}
                 </Button>
               </Link>
             )}

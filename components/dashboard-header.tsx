@@ -10,6 +10,8 @@ import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { NotificationCenter } from '@/components/notification-center';
 import { ThemeToggle, ThemeMenuSub } from '@/components/theme-toggle';
+import { LanguageToggle, LanguageMenuSub } from '@/components/language-toggle';
+import { useT } from '@/lib/i18n';
 import { useRouter } from 'next/navigation';
 
 interface DashboardHeaderProps {
@@ -20,6 +22,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
   const { currentUser, logout } = useAuth();
   const { getNotificationsForUser } = useData();
+  const { t } = useT();
   const router = useRouter();
   const userNotifications = getNotificationsForUser(currentUser?.profile_id ?? '');
   const settingsBase = currentUser ? `/${currentUser.role}/settings` : '/';
@@ -39,6 +42,7 @@ export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
         <NotificationCenter notifications={userNotifications} role={currentUser?.role} />
         <DropdownMenu>
@@ -54,22 +58,24 @@ export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push(`${settingsBase}#profile`)} className="gap-2 cursor-pointer">
-              <User className="w-4 h-4" /> Profile
+              <User className="w-4 h-4" /> {t.nav.profile}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push(`${settingsBase}#system`)} className="gap-2 cursor-pointer">
-              <Settings className="w-4 h-4" /> System Settings
+              <Settings className="w-4 h-4" /> {t.nav.systemSettings}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push(`${settingsBase}#security`)} className="gap-2 cursor-pointer">
-              <KeyRound className="w-4 h-4" /> Change Password
+              <KeyRound className="w-4 h-4" /> {t.nav.changePassword}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => router.push(`${settingsBase}#about`)} className="gap-2 cursor-pointer">
-              <Info className="w-4 h-4" /> About
+              <Info className="w-4 h-4" /> {t.nav.about}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <ThemeMenuSub />
             <DropdownMenuSeparator />
+            <LanguageMenuSub />
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { logout(); router.push('/'); }} className="gap-2 cursor-pointer text-red-600 focus:text-red-600">
-              <LogOut className="w-4 h-4" /> Log Out
+              <LogOut className="w-4 h-4" /> {t.nav.logOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
