@@ -15,22 +15,53 @@ import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import type { SelectionProcess } from '@/types';
 import { format } from 'date-fns';
+import { useT } from '@/lib/i18n';
 
-const filterTabs = ['All', 'Active', 'Hired', 'On Hold', 'Not Selected'] as const;
-type FilterTab = typeof filterTabs[number];
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+type FilterTabKey = 'all' | 'active' | 'hired' | 'on_hold' | 'not_selected';
 
-function tabToStatus(tab: FilterTab): string | null {
-  if (tab === 'All') return null;
-  if (tab === 'On Hold') return 'on_hold';
-  if (tab === 'Not Selected') return 'not_selected';
-  return tab.toLowerCase();
+function tabToStatus(tabKey: FilterTabKey): string | null {
+  if (tabKey === 'all') return null;
+  return tabKey;
 }
 
 export default function EmployerProcessesPage() {
   const { currentUser } = useAuth();
-  const { selectionProcesses, interviewRequests, setProcessStage, updateProcessStatus, updateProcessHourlyRate, updateProcessContractEndDate, getApplicantById, getAvailabilityForApplicant, initiateContract, requestContractApproval, contractApprovalRequests, employerProfiles, timesheets } = useData();
-  const [activeTab, setActiveTab] = useState<FilterTab>('All');
+  const {
+    selectionProcesses,
+    interviewRequests,
+    setProcessStage,
+    updateProcessStatus,
+    updateProcessHourlyRate,
+    updateProcessContractEndDate,
+    getApplicantById,
+    getAvailabilityForApplicant,
+    requestContractApproval,
+    contractApprovalRequests,
+    employerProfiles,
+    timesheets,
+  } = useData();
+  const { t, lang, formatDate, formatCurrency } = useT();
+
+  const filterTabs: { key: FilterTabKey; label: string }[] = useMemo(
+    () => [
+      { key: 'all', label: t.common.all },
+      { key: 'active', label: t.badges.active },
+      { key: 'hired', label: t.badges.hired },
+      { key: 'on_hold', label: t.badges.on_hold },
+      { key: 'not_selected', label: t.badges.not_selected },
+    ],
+    [t]
+  );
+
+  const dayNames = useMemo(
+    () =>
+      lang === 'es'
+        ? ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+        : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    [lang]
+  );
+
+  const [activeTab, setActiveTab] = useState<FilterTabKey>('all');
   const [schedulingProcess, setSchedulingProcess] = useState<SelectionProcess | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
@@ -70,40 +101,54 @@ export default function EmployerProcessesPage() {
   }, [processes, activeTab]);
 
   const hasApprovalPending = useCallback(
-    (process: SelectionProcess) => contractApprovalRequests.some(
-      (r) => r.process_id === process.id && r.status === 'pending'
-    ),
+    (process: SelectionProcess) =>
+      contractApprovalRequests.some((r) => r.process_id === process.id && r.status === 'pending'),
     [contractApprovalRequests]
   );
 
   const hasPendingForProcess = useCallback(
-    (process: SelectionProcess) => interviewRequests.some(
-      (r) =>
-        r.applicant_id === process.applicant_id &&
-        r.employer_id === process.employer_id &&
-        r.status === 'pending' &&
-        r.role_title === `Technical Interview - ${process.role_title}`
-    ),
+    (process: SelectionProcess) =>
+      interviewRequests.some(
+        (r) =>
+          r.applicant_id === process.applicant_id &&
+          r.employer_id === process.employer_id &&
+          r.status === 'pending' &&
+          r.role_title === `Technical Interview - ${process.role_title}`
+      ),
     [interviewRequests]
   );
 
   const latestTimesheetFor = useCallback(
-    (process: SelectionProcess) => timesheets.find((t) => t.process_id === process.id && (t.status === 'submitted' || t.status === 'approved')),
+    (process: SelectionProcess) =>
+      timesheets.find(
+        (item) => item.process_id === process.id && (item.status === 'submitted' || item.status === 'approved')
+      ),
     [timesheets]
   );
 
-  const handleStageClick = useCallback((process: SelectionProcess, stageKey: string) => {
-    if (stageKey === 'technical_interview' && interviewRequests.some(
-      (r) => r.applicant_id === process.applicant_id && r.employer_id === process.employer_id && r.status === 'pending' && r.role_title === `Technical Interview - ${process.role_title}`
-    )) return;
-    if (stageKey === 'contract_signing') {
-      setContractProcess(process);
-    } else {
-      setSchedulingProcess(process);
-      setSelectedDate(undefined);
-      setSelectedTimeSlot('');
-    }
-  }, [interviewRequests]);
+  const handleStageClick = useCallback(
+    (process: SelectionProcess, stageKey: string) => {
+      if (
+        stageKey === 'technical_interview' &&
+        interviewRequests.some(
+          (r) =>
+            r.applicant_id === process.applicant_id &&
+            r.employer_id === process.employer_id &&
+            r.status === 'pending' &&
+            r.role_title === `Technical Interview - ${process.role_title}`
+        )
+      )
+        return;
+      if (stageKey === 'contract_signing') {
+        setContractProcess(process);
+      } else {
+        setSchedulingProcess(process);
+        setSelectedDate(undefined);
+        setSelectedTimeSlot('');
+      }
+    },
+    [interviewRequests]
+  );
 
   const handleInitiateContract = useCallback(() => {
     if (!contractProcess) return;
@@ -124,24 +169,26 @@ export default function EmployerProcessesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Selection Processes</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.employer.processesTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          Track and manage your active hiring pipelines.
+          {lang === 'es'
+            ? 'Monitorea y administra tus procesos de contratación activos.'
+            : 'Track and manage your active hiring pipelines.'}
         </p>
       </div>
 
       <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
         {filterTabs.map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === tab
+              activeTab === tab.key
                 ? 'bg-white text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            {tab}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -149,11 +196,15 @@ export default function EmployerProcessesPage() {
       {filteredProcesses.length === 0 ? (
         <EmptyState
           icon={GitBranch}
-          title="No processes found"
+          title={t.common.noResults}
           description={
-            activeTab === 'All'
-              ? 'You have no selection processes yet. Start by browsing applicants and sending interview requests.'
-              : `No processes with "${activeTab}" status.`
+            activeTab === 'all'
+              ? lang === 'es'
+                ? 'Aún no tienes procesos de selección. Comienza explorando candidatos y enviando solicitudes de entrevista.'
+                : 'You have no selection processes yet. Start by browsing applicants and sending interview requests.'
+              : lang === 'es'
+              ? 'No hay procesos con el estado seleccionado.'
+              : 'No processes with the selected status.'
           }
         />
       ) : (
@@ -186,7 +237,9 @@ export default function EmployerProcessesPage() {
 
                 {process.status !== 'hired' && (
                   <div className="flex items-center gap-1.5 mb-3">
-                    <span className="text-xs text-muted-foreground mr-1">Set status:</span>
+                    <span className="text-xs text-muted-foreground mr-1">
+                      {lang === 'es' ? 'Cambiar estado:' : 'Set status:'}
+                    </span>
                     {(['active', 'on_hold', 'not_selected'] as const).map((s) => (
                       <button
                         key={s}
@@ -198,7 +251,7 @@ export default function EmployerProcessesPage() {
                             : 'bg-white text-muted-foreground border-gray-200 hover:border-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,45%)]'
                         }`}
                       >
-                        {s === 'active' ? 'Active' : s === 'on_hold' ? 'On Hold' : 'Not Selected'}
+                        {(t.badges as Record<string, string>)[s] || s}
                       </button>
                     ))}
                   </div>
@@ -234,9 +287,13 @@ export default function EmployerProcessesPage() {
                     ) : (
                       <>
                         <span className="text-muted-foreground">
-                          Hourly rate:{' '}
+                          {lang === 'es' ? 'Tarifa horaria:' : 'Hourly rate:'}{' '}
                           <span className="font-medium text-foreground">
-                            {process.hourly_rate != null ? `$${process.hourly_rate.toFixed(2)}/hr` : 'Not set'}
+                            {process.hourly_rate != null
+                              ? `${formatCurrency(process.hourly_rate)}/hr`
+                              : lang === 'es'
+                              ? 'No asignada'
+                              : 'Not set'}
                           </span>
                         </span>
                         <Button
@@ -259,10 +316,12 @@ export default function EmployerProcessesPage() {
                   <div className="flex items-center gap-2 mb-3 text-sm">
                     <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
-                      Working since{' '}
+                      {lang === 'es' ? 'Trabajando desde' : 'Working since'}{' '}
                       <span className="font-medium text-foreground">
                         {process.contract_start_date
-                          ? new Date(process.contract_start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                          ? formatDate(process.contract_start_date + 'T00:00:00')
+                          : lang === 'es'
+                          ? 'no definida'
                           : 'unknown'}
                       </span>
                     </span>
@@ -290,10 +349,16 @@ export default function EmployerProcessesPage() {
                     ) : (
                       <>
                         <span className="text-muted-foreground">
-                          {process.contract_end_date ? 'Ends' : 'No end date set'}{' '}
+                          {process.contract_end_date
+                            ? lang === 'es'
+                              ? 'Finaliza'
+                              : 'Ends'
+                            : lang === 'es'
+                            ? 'Sin fecha de fin'
+                            : 'No end date set'}{' '}
                           {process.contract_end_date && (
                             <span className="font-medium text-foreground">
-                              {new Date(process.contract_end_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              {formatDate(process.contract_end_date + 'T00:00:00')}
                             </span>
                           )}
                         </span>
@@ -314,15 +379,21 @@ export default function EmployerProcessesPage() {
                 )}
 
                 {latestTimesheetFor(process) && (
-                  <div className={`flex items-center justify-between gap-2 mb-3 text-sm rounded-lg px-3 py-2 ${
-                    latestTimesheetFor(process)!.status === 'approved'
-                      ? 'bg-emerald-50 border border-emerald-100 text-emerald-800'
-                      : 'bg-blue-50 border border-blue-100 text-blue-800'
-                  }`}>
+                  <div
+                    className={`flex items-center justify-between gap-2 mb-3 text-sm rounded-lg px-3 py-2 ${
+                      latestTimesheetFor(process)!.status === 'approved'
+                        ? 'bg-emerald-50 border border-emerald-100 text-emerald-800'
+                        : 'bg-blue-50 border border-blue-100 text-blue-800'
+                    }`}
+                  >
                     <span className="flex items-center gap-1.5">
                       <ClipboardCheck className="w-4 h-4" />
                       {latestTimesheetFor(process)!.status === 'approved'
-                        ? `Hours approved for ${latestTimesheetFor(process)!.month} — ${latestTimesheetFor(process)!.total_hours}h`
+                        ? lang === 'es'
+                          ? `Horas aprobadas de ${latestTimesheetFor(process)!.month} — ${latestTimesheetFor(process)!.total_hours}h`
+                          : `Hours approved for ${latestTimesheetFor(process)!.month} — ${latestTimesheetFor(process)!.total_hours}h`
+                        : lang === 'es'
+                        ? `Horas enviadas de ${latestTimesheetFor(process)!.month} — en revisión del admin`
                         : `Hours submitted for ${latestTimesheetFor(process)!.month} — pending admin review`}
                     </span>
                     {latestTimesheetFor(process)!.invoice_url && (
@@ -332,7 +403,7 @@ export default function EmployerProcessesPage() {
                         rel="noreferrer"
                         className="underline font-medium flex-shrink-0"
                       >
-                        View invoice
+                        {lang === 'es' ? 'Ver factura' : 'View invoice'}
                       </a>
                     )}
                   </div>
@@ -341,14 +412,14 @@ export default function EmployerProcessesPage() {
                 {hasApprovalPending(process) && (
                   <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
                     <Hourglass className="w-3.5 h-3.5" />
-                    Awaiting Admin Approval
+                    {lang === 'es' ? 'Esperando Aprobación del Admin' : 'Awaiting Admin Approval'}
                   </div>
                 )}
 
                 {hasPendingForProcess(process) && (
                   <div className="flex items-center gap-1.5 mb-3 text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
                     <Hourglass className="w-3.5 h-3.5" />
-                    Awaiting candidate response
+                    {lang === 'es' ? 'Esperando respuesta del candidato' : 'Awaiting candidate response'}
                   </div>
                 )}
 
@@ -368,22 +439,22 @@ export default function EmployerProcessesPage() {
                   <div className="mb-3 flex items-center gap-2">
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(process.contract_url!, '_blank')}>
                       <Eye className="w-4 h-4" />
-                      View Contract
+                      {lang === 'es' ? 'Ver Contrato' : 'View Contract'}
                     </Button>
-                    <span className="text-xs text-emerald-600 font-medium">Finalized</span>
+                    <span className="text-xs text-emerald-600 font-medium">
+                      {lang === 'es' ? 'Finalizado' : 'Finalized'}
+                    </span>
                   </div>
                 )}
 
                 {process.notes && (
                   <p className="text-sm text-muted-foreground mb-2">
-                    <span className="font-medium text-foreground">Notes:</span> {process.notes}
+                    <span className="font-medium text-foreground">{t.common.notes}:</span> {process.notes}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Started{' '}
-                  {new Date(process.created_at).toLocaleDateString('en-US', {
-                    month: 'short', day: 'numeric', year: 'numeric',
-                  })}
+                  {lang === 'es' ? 'Iniciado el' : 'Started'}{' '}
+                  {formatDate(process.created_at)}
                 </p>
               </div>
             );
@@ -391,43 +462,62 @@ export default function EmployerProcessesPage() {
         </div>
       )}
 
-      <Dialog open={!!schedulingProcess} onOpenChange={(open) => { if (!open) { setSchedulingProcess(null); setSelectedTimeSlot(''); } }}>
+      <Dialog
+        open={!!schedulingProcess}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSchedulingProcess(null);
+            setSelectedTimeSlot('');
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Schedule Technical Interview</DialogTitle>
+            <DialogTitle>
+              {lang === 'es' ? 'Agendar Entrevista Técnica' : 'Schedule Technical Interview'}
+            </DialogTitle>
             <DialogDescription>
               {schedulingProcess && (
-                <>Select a date and time slot for the technical interview with {getApplicantById(schedulingProcess.applicant_id)?.display_name || 'the candidate'} for {schedulingProcess.role_title}.</>
+                <>
+                  {lang === 'es'
+                    ? `Selecciona fecha y hora para la entrevista técnica con ${getApplicantById(schedulingProcess.applicant_id)?.display_name || 'el candidato'} para el rol ${schedulingProcess.role_title}.`
+                    : `Select a date and time slot for the technical interview with ${getApplicantById(schedulingProcess.applicant_id)?.display_name || 'the candidate'} for ${schedulingProcess.role_title}.`}
+                </>
               )}
             </DialogDescription>
           </DialogHeader>
 
-          {/* Availability badges */}
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Globe className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Available Slots ({schedulingTimezone})</span>
+              <span className="text-sm font-medium text-foreground">
+                {lang === 'es' ? 'Horarios Disponibles' : 'Available Slots'} ({schedulingTimezone})
+              </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {schedulingSlots.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No availability slots set.</p>
+                <p className="text-xs text-muted-foreground">
+                  {lang === 'es' ? 'Sin horarios asignados.' : 'No availability slots set.'}
+                </p>
               ) : (
                 schedulingSlots.map((slot) => (
                   <Badge key={slot.id} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
                     <Clock className="w-3 h-3 mr-1" />
-                    {DAY_NAMES[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
+                    {dayNames[slot.day_of_week % 7]}: {slot.start_time.split(':').slice(0, 2).join(':')} - {slot.end_time.split(':').slice(0, 2).join(':')}
                   </Badge>
                 ))
               )}
             </div>
           </div>
 
-          {/* Calendar */}
           <div className="flex justify-center py-2">
             <Calendar
               mode="single"
               selected={selectedDate}
-              onSelect={(day) => { setSelectedDate(day); setSelectedTimeSlot(''); }}
+              onSelect={(day) => {
+                setSelectedDate(day);
+                setSelectedTimeSlot('');
+              }}
               disabled={(day) => {
                 const dayOfWeek = day.getDay();
                 return !schedulingSlots.some((s) => (s.day_of_week % 7) === dayOfWeek);
@@ -436,11 +526,10 @@ export default function EmployerProcessesPage() {
             />
           </div>
 
-          {/* Time slots for selected day */}
           {selectedDate && slotsForSelectedDay.length > 0 && (
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
-                Select Time Slot <span className="text-red-500">*</span>
+                {lang === 'es' ? 'Seleccionar Horario' : 'Select Time Slot'} <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {slotsForSelectedDay.flatMap((slot) => {
@@ -475,45 +564,65 @@ export default function EmployerProcessesPage() {
 
           {selectedDate && (
             <p className="text-sm text-center text-muted-foreground">
-              Selected: <span className="font-medium text-foreground">{format(selectedDate, 'PPP')}</span>
-              {selectedTimeSlot && <> at <span className="font-medium text-foreground">{selectedTimeSlot}</span></>}
+              {lang === 'es' ? 'Seleccionado:' : 'Selected:'}{' '}
+              <span className="font-medium text-foreground">{formatDate(selectedDate)}</span>
+              {selectedTimeSlot && (
+                <>
+                  {' '}
+                  {lang === 'es' ? 'a las' : 'at'}{' '}
+                  <span className="font-medium text-foreground">{selectedTimeSlot}</span>
+                </>
+              )}
             </p>
           )}
 
           <DialogFooter className="gap-2">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t.common.cancel}</Button>
             </DialogClose>
             <Button onClick={handleSchedule} disabled={!selectedDate || !selectedTimeSlot}>
-              Schedule Interview
+              {lang === 'es' ? 'Confirmar Entrevista' : 'Schedule Interview'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!contractProcess} onOpenChange={(open) => { if (!open) setContractProcess(null); }}>
+      <Dialog
+        open={!!contractProcess}
+        onOpenChange={(open) => {
+          if (!open) setContractProcess(null);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Initiate Contract Signing</DialogTitle>
+            <DialogTitle>
+              {lang === 'es' ? 'Iniciar Firma de Contrato' : 'Initiate Contract Signing'}
+            </DialogTitle>
             <DialogDescription>
               {contractProcess && (
-                <>An approval request will be sent to the administrator to initiate contract signing for {getApplicantById(contractProcess.applicant_id)?.display_name || 'the candidate'} for {contractProcess.role_title}.</>
+                <>
+                  {lang === 'es'
+                    ? `Se enviará una solicitud de aprobación al administrador para iniciar la firma de contrato de ${getApplicantById(contractProcess.applicant_id)?.display_name || 'el candidato'} para el rol ${contractProcess.role_title}.`
+                    : `An approval request will be sent to the administrator to initiate contract signing for ${getApplicantById(contractProcess.applicant_id)?.display_name || 'the candidate'} for ${contractProcess.role_title}.`}
+                </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
             <FileSignature className="w-8 h-8 text-blue-600" />
             <p className="text-sm text-blue-800">
-              A request for approval will be sent to the admin. The process will advance only after admin approval.
+              {lang === 'es'
+                ? 'Se enviará una solicitud de aprobación al administrador. El proceso avanzará tras su aprobación.'
+                : 'A request for approval will be sent to the admin. The process will advance only after admin approval.'}
             </p>
           </div>
           <DialogFooter className="gap-2">
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline">{t.common.cancel}</Button>
             </DialogClose>
             <Button onClick={handleInitiateContract} className="gap-2">
               <FileSignature className="w-4 h-4" />
-              Send Approval Request
+              {lang === 'es' ? 'Enviar Solicitud' : 'Send Approval Request'}
             </Button>
           </DialogFooter>
         </DialogContent>

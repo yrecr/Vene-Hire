@@ -10,22 +10,26 @@ import { deleteAccount } from '@/lib/supabase-service';
 import { demoGuard } from '@/lib/demo';
 import { DeleteAccountDialog } from '@/components/delete-account-dialog';
 import { CircleCheck, CircleAlert, TriangleAlert } from 'lucide-react';
+import { useT } from '@/lib/i18n';
+import Link from 'next/link';
 
 const TABS = ['profile', 'system', 'security', 'about'] as const;
 type Tab = typeof TABS[number];
-const TAB_LABELS: Record<Tab, string> = {
-  profile: 'Profile',
-  system: 'System Settings',
-  security: 'Security',
-  about: 'About',
-};
 
 interface AccountSettingsShellProps {
   profileContent: ReactNode;
 }
 
 export function AccountSettingsShell({ profileContent }: AccountSettingsShellProps) {
+  const { t, lang } = useT();
   const [tab, setTab] = useState<Tab>('profile');
+
+  const tabLabels: Record<Tab, string> = {
+    profile: t.nav.profile,
+    system: t.nav.systemSettings,
+    security: t.nav.changePassword,
+    about: t.nav.about,
+  };
 
   useEffect(() => {
     const applyHash = () => {
@@ -39,21 +43,23 @@ export function AccountSettingsShell({ profileContent }: AccountSettingsShellPro
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-foreground">Account Settings</h2>
+      <h2 className="text-2xl font-bold text-foreground">
+        {lang === 'es' ? 'Configuración de Cuenta' : 'Account Settings'}
+      </h2>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {TABS.map((t) => (
+        {TABS.map((tabKey) => (
           <Button
-            key={t}
-            variant={tab === t ? 'default' : 'outline'}
+            key={tabKey}
+            variant={tab === tabKey ? 'default' : 'outline'}
             size="sm"
             onClick={() => {
-              setTab(t);
-              window.location.hash = t;
+              setTab(tabKey);
+              window.location.hash = tabKey;
             }}
             className="rounded-full"
           >
-            {TAB_LABELS[t]}
+            {tabLabels[tabKey]}
           </Button>
         ))}
       </div>
@@ -67,13 +73,16 @@ export function AccountSettingsShell({ profileContent }: AccountSettingsShellPro
 }
 
 function SystemSettingsTab() {
+  const { lang } = useT();
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
       <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200 mb-3">
-        Coming soon
+        {lang === 'es' ? 'Próximamente' : 'Coming soon'}
       </span>
       <p className="text-sm text-muted-foreground">
-        System-wide preferences (appearance, language, and more) will live here in a future update.
+        {lang === 'es'
+          ? 'Las preferencias del sistema (apariencia, idioma y más) se pueden gestionar desde los selectores del menú superior.'
+          : 'System-wide preferences (appearance, language, and more) can be managed using the top header toggles.'}
       </p>
     </div>
   );
@@ -81,6 +90,7 @@ function SystemSettingsTab() {
 
 function SecurityTab() {
   const { currentUser } = useAuth();
+  const { t, lang } = useT();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -92,11 +102,14 @@ function SecurityTab() {
     setStatus(null);
 
     if (newPassword.length < 8) {
-      setStatus({ type: 'error', message: 'New password must be at least 8 characters.' });
+      setStatus({ type: 'error', message: t.errors.passwordTooShort });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setStatus({ type: 'error', message: 'New password and confirmation do not match.' });
+      setStatus({
+        type: 'error',
+        message: lang === 'es' ? 'Las contraseñas no coinciden.' : 'New password and confirmation do not match.',
+      });
       return;
     }
 
@@ -114,7 +127,10 @@ function SecurityTab() {
         password: currentPassword,
       });
       if (verifyError) {
-        setStatus({ type: 'error', message: 'Current password is incorrect.' });
+        setStatus({
+          type: 'error',
+          message: lang === 'es' ? 'La contraseña actual es incorrecta.' : 'Current password is incorrect.',
+        });
         setLoading(false);
         return;
       }
@@ -128,7 +144,10 @@ function SecurityTab() {
       return;
     }
 
-    setStatus({ type: 'success', message: 'Password updated successfully.' });
+    setStatus({
+      type: 'success',
+      message: lang === 'es' ? 'Contraseña actualizada correctamente.' : 'Password updated successfully.',
+    });
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -136,10 +155,12 @@ function SecurityTab() {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-md">
-      <h3 className="font-semibold text-foreground mb-4">Change Password</h3>
+      <h3 className="font-semibold text-foreground mb-4">{t.nav.changePassword}</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="current-password">Current password</Label>
+          <Label htmlFor="current-password">
+            {lang === 'es' ? 'Contraseña actual' : 'Current password'}
+          </Label>
           <Input
             id="current-password"
             type="password"
@@ -149,7 +170,9 @@ function SecurityTab() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="new-password">New password</Label>
+          <Label htmlFor="new-password">
+            {lang === 'es' ? 'Nueva contraseña' : 'New password'}
+          </Label>
           <Input
             id="new-password"
             type="password"
@@ -159,7 +182,9 @@ function SecurityTab() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="confirm-password">Confirm new password</Label>
+          <Label htmlFor="confirm-password">
+            {lang === 'es' ? 'Confirmar nueva contraseña' : 'Confirm new password'}
+          </Label>
           <Input
             id="confirm-password"
             type="password"
@@ -169,13 +194,27 @@ function SecurityTab() {
           />
         </div>
         {status && (
-          <div className={`flex items-center gap-2 text-sm ${status.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
-            {status.type === 'success' ? <CircleCheck className="w-4 h-4 flex-shrink-0" /> : <CircleAlert className="w-4 h-4 flex-shrink-0" />}
+          <div
+            className={`flex items-center gap-2 text-sm ${
+              status.type === 'success' ? 'text-emerald-600' : 'text-red-600'
+            }`}
+          >
+            {status.type === 'success' ? (
+              <CircleCheck className="w-4 h-4 flex-shrink-0" />
+            ) : (
+              <CircleAlert className="w-4 h-4 flex-shrink-0" />
+            )}
             {status.message}
           </div>
         )}
         <Button type="submit" disabled={loading}>
-          {loading ? 'Updating...' : 'Update Password'}
+          {loading
+            ? lang === 'es'
+              ? 'Actualizando...'
+              : 'Updating...'
+            : lang === 'es'
+            ? 'Actualizar Contraseña'
+            : 'Update Password'}
         </Button>
       </form>
 
@@ -186,6 +225,7 @@ function SecurityTab() {
 
 function DangerZone() {
   const { currentUser, logout } = useAuth();
+  const { lang } = useT();
   const [open, setOpen] = useState(false);
 
   if (!currentUser?.email) return null;
@@ -200,18 +240,24 @@ function DangerZone() {
     <div className="mt-8 pt-6 border-t border-gray-100">
       <h3 className="font-semibold text-red-600 flex items-center gap-2 mb-1">
         <TriangleAlert className="w-4 h-4" />
-        Danger Zone
+        {lang === 'es' ? 'Zona de Peligro' : 'Danger Zone'}
       </h3>
       <p className="text-sm text-muted-foreground mb-3">
-        Permanently delete your account and everything tied to it. This cannot be undone.
+        {lang === 'es'
+          ? 'Elimina permanentemente tu cuenta y todo lo vinculado a ella. Esta acción no se puede deshacer.'
+          : 'Permanently delete your account and everything tied to it. This cannot be undone.'}
       </p>
-      <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => setOpen(true)}>
-        Delete my account
+      <Button
+        variant="outline"
+        className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+        onClick={() => setOpen(true)}
+      >
+        {lang === 'es' ? 'Eliminar mi cuenta' : 'Delete my account'}
       </Button>
       <DeleteAccountDialog
         open={open}
         onOpenChange={setOpen}
-        targetLabel="your account"
+        targetLabel={lang === 'es' ? 'tu cuenta' : 'your account'}
         confirmText={currentUser.email}
         onConfirm={handleDelete}
       />
@@ -220,6 +266,8 @@ function DangerZone() {
 }
 
 function AboutTab() {
+  const { t, lang } = useT();
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 max-w-md space-y-3">
       <div className="flex items-center gap-2">
@@ -227,10 +275,13 @@ function AboutTab() {
         <span className="text-lg font-bold text-foreground">VeneHire</span>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed">
-        Preparing production-ready software engineers through intensive training, real-world simulation, and rigorous evaluation.
+        {t.footer.tagline}
       </p>
       <p className="text-xs text-muted-foreground">
-        Need help? <a href="/contact" className="text-[hsl(210,100%,45%)] hover:underline">Contact us</a>.
+        {lang === 'es' ? '¿Necesitas ayuda? ' : 'Need help? '}
+        <Link href="/contact" className="text-[hsl(210,100%,45%)] hover:underline">
+          {t.footer.contact}
+        </Link>.
       </p>
     </div>
   );
