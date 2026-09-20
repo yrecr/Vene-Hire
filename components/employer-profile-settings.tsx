@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { demoGuard } from '@/lib/demo';
 
 export function EmployerProfileSettings() {
   const { currentUser } = useAuth();
@@ -43,6 +44,7 @@ export function EmployerProfileSettings() {
 
   const handleSave = async () => {
     if (!employerProfile) return;
+    if (demoGuard('Save company profile')) return;
     setSaving(true);
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -3,7 +3,8 @@ import Link from 'next/link';
 const footerLinks = {
   platform: [
     { href: '/talent', label: 'Browse Talent' },
-    { href: '/request-sign-up', label: 'Request Access' },
+    { href: '/request-sign-up', label: 'Register' },
+    { href: '/demo', label: 'Try Demo' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
   ],

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { clearDemoCookie } from '@/lib/demo';
 import { Mail, Lock, ArrowRight, CircleAlert as AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Reaching the real login means leaving the demo sandbox.
+  useEffect(() => { clearDemoCookie(); }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

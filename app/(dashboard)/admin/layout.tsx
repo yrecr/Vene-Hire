@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DashboardSidebar, type SidebarLink } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { DemoBanner } from '@/components/demo-banner';
 import {
   LayoutDashboard,
   UserCog,
@@ -41,6 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
+        <DemoBanner />
         <DashboardHeader
           title="Admin Dashboard"
           onMenuClick={() => setSidebarOpen(true)}

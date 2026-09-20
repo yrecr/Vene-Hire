@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth';
 import { deleteAccount } from '@/lib/supabase-service';
+import { demoGuard } from '@/lib/demo';
 import { DeleteAccountDialog } from '@/components/delete-account-dialog';
 import { CircleCheck, CircleAlert, TriangleAlert } from 'lucide-react';
 
@@ -98,6 +99,8 @@ function SecurityTab() {
       setStatus({ type: 'error', message: 'New password and confirmation do not match.' });
       return;
     }
+
+    if (demoGuard('Change password')) return;
 
     setLoading(true);
     const supabase = createBrowserClient(

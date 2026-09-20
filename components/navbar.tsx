@@ -85,14 +85,14 @@ export function Navbar() {
                     Sign In
                   </Button>
                 </Link>
-                <Link href="/request-sign-up?type=applicant">
+                <Link href="/request-sign-up">
                   <Button variant="outline" size="sm" className="text-sm font-medium">
-                    Apply as Talent
+                    Register
                   </Button>
                 </Link>
-                <Link href="/request-sign-up">
+                <Link href="/demo">
                   <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
-                    Request a Demo
+                    Demo
                   </Button>
                 </Link>
               </>
@@ -146,14 +146,14 @@ export function Navbar() {
                       Sign In
                     </Button>
                   </Link>
-                  <Link href="/request-sign-up?type=applicant" onClick={() => setMobileOpen(false)}>
+                  <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
                     <Button variant="outline" className="w-full" size="sm">
-                      Apply as Talent
+                      Register
                     </Button>
                   </Link>
-                  <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
+                  <Link href="/demo" onClick={() => setMobileOpen(false)}>
                     <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
-                      Request a Demo
+                      Demo
                     </Button>
                   </Link>
                 </>

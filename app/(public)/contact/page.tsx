@@ -156,14 +156,14 @@ export default function ContactPage() {
 
               <div className="pt-6 border-t border-gray-100">
                 <p className="text-sm text-muted-foreground mb-4">
-                  Looking to request a demo instead?
+                  Want to try the platform?
                 </p>
-                <Link href="/request-sign-up">
+                <Link href="/demo">
                   <Button
                     variant="outline"
                     className="border-gray-200 hover:bg-gray-50"
                   >
-                    Request a Demo <ArrowRight className="w-4 h-4 ml-2" />
+                    Try Demo <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               </div>

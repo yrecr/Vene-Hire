@@ -2,21 +2,22 @@ import type {
   TalentProfile, TalentSkill, AccessRequest, Bootcamp, Enrollment, Resource,
   Profile, EmployerProfile, AvailabilitySlot, SelectionProcess,
   InterviewRequest, Notification, Vacancy, Candidate,
+  ContractApprovalRequest, Timesheet, TimesheetEvent, ContactMessage,
 } from '@/types';
 
 // ponytail: demo users removed — auth is Supabase-only now
 
 // ─── Profiles ────────────────────────────────────────────
 export const mockProfiles: Profile[] = [
-  { id: 'p-admin1', auth_user_id: 'auth-admin1', full_name: 'Admin User', email: 'admin@demo.com', role: 'admin', company_name: 'VeneHire', status: 'active', created_at: '2024-01-01' },
-  { id: 'p-admin2', auth_user_id: 'auth-admin2', full_name: 'Operations Admin', email: 'admin2@demo.com', role: 'admin', company_name: 'VeneHire', status: 'active', created_at: '2024-01-01' },
-  { id: 'p-sofia', auth_user_id: 'auth-sofia', full_name: 'Sofia Ramirez', email: 'sofia.backend@demo.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-01' },
-  { id: 'p-daniel', auth_user_id: 'auth-daniel', full_name: 'Daniel Torres', email: 'daniel.ai@demo.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-05' },
-  { id: 'p-camila', auth_user_id: 'auth-camila', full_name: 'Camila Vega', email: 'camila.csharp@demo.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-10' },
-  { id: 'p-juan', auth_user_id: 'auth-juan', full_name: 'Juan Herrera', email: 'juan.fullstack@demo.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-15' },
-  { id: 'p-acme', auth_user_id: 'auth-acme', full_name: 'ACME Hiring Team', email: 'talent@acme.com', role: 'employer', company_name: 'ACME Corp', status: 'active', created_at: '2024-03-01' },
-  { id: 'p-innova', auth_user_id: 'auth-innova', full_name: 'InnovaSoft Recruiting', email: 'hr@innovasoft.com', role: 'employer', company_name: 'InnovaSoft', status: 'active', created_at: '2024-03-05' },
-  { id: 'p-next', auth_user_id: 'auth-next', full_name: 'NextLayer Talent Team', email: 'hiring@nextlayer.com', role: 'employer', company_name: 'NextLayer', status: 'active', created_at: '2024-03-10' },
+  { id: 'p-admin1', auth_user_id: 'auth-admin1', full_name: 'Admin User', email: 'admin@example.com', role: 'admin', company_name: 'VeneHire', status: 'active', created_at: '2024-01-01' },
+  { id: 'p-admin2', auth_user_id: 'auth-admin2', full_name: 'Operations Admin', email: 'admin2@example.com', role: 'admin', company_name: 'VeneHire', status: 'active', created_at: '2024-01-01' },
+  { id: 'p-sofia', auth_user_id: 'auth-sofia', full_name: 'Sofia Ramirez', email: 'sofia.backend@example.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-01' },
+  { id: 'p-daniel', auth_user_id: 'auth-daniel', full_name: 'Daniel Torres', email: 'daniel.ai@example.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-05' },
+  { id: 'p-camila', auth_user_id: 'auth-camila', full_name: 'Camila Vega', email: 'camila.csharp@example.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-10' },
+  { id: 'p-juan', auth_user_id: 'auth-juan', full_name: 'Juan Herrera', email: 'juan.fullstack@example.com', role: 'applicant', company_name: null, status: 'active', created_at: '2024-02-15' },
+  { id: 'p-acme', auth_user_id: 'auth-acme', full_name: 'ACME Hiring Team', email: 'talent@acme-example.com', role: 'employer', company_name: 'ACME Corp', status: 'active', created_at: '2024-03-01' },
+  { id: 'p-innova', auth_user_id: 'auth-innova', full_name: 'InnovaSoft Recruiting', email: 'hr@innovasoft-example.com', role: 'employer', company_name: 'InnovaSoft', status: 'active', created_at: '2024-03-05' },
+  { id: 'p-next', auth_user_id: 'auth-next', full_name: 'NextLayer Talent Team', email: 'hiring@nextlayer-example.com', role: 'employer', company_name: 'NextLayer', status: 'active', created_at: '2024-03-10' },
 ];
 
 // ─── Employer Profiles ───────────────────────────────────
@@ -212,12 +213,12 @@ export const mockInterviewRequests: InterviewRequest[] = [
 
 // ─── Access Requests ─────────────────────────────────────
 export const mockAccessRequests: AccessRequest[] = [
-  { id: 'ar1', request_type: 'employer', full_name: 'John Smith', company: 'TechCorp Inc.', email: 'john@techcorp.com', country: 'United States', hiring_need: 'Full Stack Developer', candidate_slug: 'sofia-ramirez', message: 'Looking for a backend engineer. Sofia looks great.', status: 'pending', created_at: '2024-04-20', reviewed_by: null },
-  { id: 'ar2', request_type: 'employer', full_name: 'Sarah Johnson', company: 'StartupXYZ', email: 'sarah@startupxyz.io', country: 'Canada', hiring_need: 'Backend Engineer', candidate_slug: null, message: 'Need 2 backend engineers for our platform.', status: 'contacted', created_at: '2024-04-18', reviewed_by: null },
-  { id: 'ar3', request_type: 'applicant', full_name: 'Pedro Vasquez', company: '', email: 'pedro@gmail.com', country: 'Venezuela', hiring_need: 'Backend Developer', candidate_slug: null, message: 'Backend developer with 2 years experience. Want to join the bootcamp.', status: 'pending', created_at: '2024-04-19', reviewed_by: null },
-  { id: 'ar4', request_type: 'employer', full_name: 'Michael Brown', company: 'FinanceFlow', email: 'michael@financeflow.com', country: 'United Kingdom', hiring_need: 'DevOps Engineer', candidate_slug: 'diego-ramirez', message: 'Looking for a DevOps engineer.', status: 'approved', created_at: '2024-04-15', reviewed_by: null },
-  { id: 'ar5', request_type: 'applicant', full_name: 'Maria Rodriguez', company: '', email: 'maria.r@outlook.com', country: 'Colombia', hiring_need: 'Frontend Developer', candidate_slug: null, message: 'Frontend developer looking for international opportunities.', status: 'approved', created_at: '2024-04-12', reviewed_by: null },
-  { id: 'ar6', request_type: 'employer', full_name: 'Lisa Chen', company: 'HealthTech Solutions', email: 'lisa@healthtech.com', country: 'Australia', hiring_need: 'Mobile Developer', candidate_slug: null, message: 'Building a health monitoring app.', status: 'rejected', created_at: '2024-04-10', reviewed_by: null },
+  { id: 'ar1', request_type: 'employer', full_name: 'John Smith', company: 'TechCorp Inc.', email: 'john@techcorp-example.com', country: 'United States', hiring_need: 'Full Stack Developer', candidate_slug: 'sofia-ramirez', message: 'Looking for a backend engineer. Sofia looks great.', status: 'pending', created_at: '2024-04-20', reviewed_by: null },
+  { id: 'ar2', request_type: 'employer', full_name: 'Sarah Johnson', company: 'StartupXYZ', email: 'sarah@startupxyz-example.com', country: 'Canada', hiring_need: 'Backend Engineer', candidate_slug: null, message: 'Need 2 backend engineers for our platform.', status: 'contacted', created_at: '2024-04-18', reviewed_by: null },
+  { id: 'ar3', request_type: 'applicant', full_name: 'Pedro Vasquez', company: '', email: 'pedro.v@example.com', country: 'Venezuela', hiring_need: 'Backend Developer', candidate_slug: null, message: 'Backend developer with 2 years experience. Want to join the bootcamp.', status: 'pending', created_at: '2024-04-19', reviewed_by: null },
+  { id: 'ar4', request_type: 'employer', full_name: 'Michael Brown', company: 'FinanceFlow', email: 'michael@financeflow-example.com', country: 'United Kingdom', hiring_need: 'DevOps Engineer', candidate_slug: 'diego-ramirez', message: 'Looking for a DevOps engineer.', status: 'approved', created_at: '2024-04-15', reviewed_by: null },
+  { id: 'ar5', request_type: 'applicant', full_name: 'Maria Rodriguez', company: '', email: 'maria.r@example.com', country: 'Colombia', hiring_need: 'Frontend Developer', candidate_slug: null, message: 'Frontend developer looking for international opportunities.', status: 'approved', created_at: '2024-04-12', reviewed_by: null },
+  { id: 'ar6', request_type: 'employer', full_name: 'Lisa Chen', company: 'HealthTech Solutions', email: 'lisa@healthtech-example.com', country: 'Australia', hiring_need: 'Mobile Developer', candidate_slug: null, message: 'Building a health monitoring app.', status: 'rejected', created_at: '2024-04-10', reviewed_by: null },
 ];
 
 // ─── Notifications ───────────────────────────────────────
@@ -355,3 +356,65 @@ export function getInterviewsForEmployer(employerId: string) {
 export function getNotificationsForUser(userId: string) {
   return mockNotifications.filter((n) => n.user_id === userId);
 }
+
+// ─── Contract Approval Requests ─────────────────────────
+export const mockContractApprovalRequests: ContractApprovalRequest[] = [
+  {
+    id: 'car1',
+    process_id: 'sp2',
+    employer_id: 'ep-innova',
+    applicant_id: 'tp-daniel',
+    status: 'pending',
+    notes: 'Contract review requested for Daniel Torres (AI / ML Engineer).',
+    created_at: '2024-04-15T11:00:00Z',
+    reviewed_at: null,
+  },
+];
+
+// ─── Timesheets & Events ────────────────────────────────
+export const mockTimesheets: Timesheet[] = [
+  {
+    id: 'ts-1',
+    process_id: 'sp2',
+    month: '2024-04',
+    days: [
+      { date: '2024-04-01', hours: 8, note: 'Onboarding and architecture review' },
+      { date: '2024-04-02', hours: 8, note: 'Model training pipeline setup' },
+      { date: '2024-04-03', hours: 8, note: 'FastAPI endpoint integration' },
+      { date: '2024-04-04', hours: 8, note: 'Testing and documentation' },
+      { date: '2024-04-05', hours: 8, note: 'Weekly demo and retro' },
+    ],
+    total_hours: 40,
+    status: 'submitted',
+    invoice_url: null,
+    created_at: '2024-04-05T18:00:00Z',
+    updated_at: '2024-04-05T18:00:00Z',
+  },
+];
+
+export const mockTimesheetEvents: TimesheetEvent[] = [
+  {
+    id: 'tse-1',
+    timesheet_id: 'ts-1',
+    event_type: 'submitted',
+    actor_profile_id: 'p-daniel',
+    comment: 'Timesheet submitted for week 1 of April.',
+    created_at: '2024-04-05T18:00:00Z',
+  },
+];
+
+// ─── Contact Messages ────────────────────────────────────
+export const mockContactMessages: ContactMessage[] = [
+  {
+    id: 'cm-1',
+    name: 'Carlos Mendoza',
+    email: 'carlos.mendoza@example.com',
+    subject: 'Partnership Inquiry',
+    message: 'Interested in partnering with VeneHire for tech training.',
+    status: 'new',
+    created_at: '2024-04-18T10:00:00Z',
+  },
+];
+
+// ─── Shortlist ───────────────────────────────────────────
+export const mockShortlistedIds: string[] = ['tp-sofia', 'tp-daniel'];

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { DashboardSidebar, type SidebarLink } from '@/components/dashboard-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { DemoBanner } from '@/components/demo-banner';
 import { LayoutDashboard, MessageSquare, GitBranch, FileSignature, Clock } from 'lucide-react';
 
 const applicantLinks: SidebarLink[] = [
@@ -25,6 +26,7 @@ export default function ApplicantLayout({ children }: { children: React.ReactNod
         onClose={() => setSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
+        <DemoBanner />
         <DashboardHeader
           title="Applicant Dashboard"
           onMenuClick={() => setSidebarOpen(true)}

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { getDemoUser, isDemoMode, exitDemo } from '@/lib/demo';
 
 export interface AuthUser {
   id: string;
@@ -29,6 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // In demo mode, use fixed demo profile — skip /api/auth/me entirely
+    const demoUser = getDemoUser();
+    if (demoUser) {
+      setCurrentUser(demoUser);
+      setLoading(false);
+      return;
+    }
+
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((data) => {
@@ -39,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // In demo mode, exit demo instead of calling API
+    if (isDemoMode()) {
+      exitDemo();
+      return;
+    }
+
     await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     setCurrentUser(null);
   }, []);
