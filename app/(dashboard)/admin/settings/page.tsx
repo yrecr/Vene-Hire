@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import * as api from '@/lib/supabase-service';
 
 function AdminProfile() {
+  const { t } = useT();
   const { currentUser } = useAuth();
   const { profiles, setProfiles } = useData();
   const [isEditing, setIsEditing] = useState(false);
@@ -53,13 +55,13 @@ function AdminProfile() {
         {!isEditing && (
           <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setIsEditing(true)}>
             <Pencil className="w-3.5 h-3.5" />
-            Edit
+            {t.common.edit}
           </Button>
         )}
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="admin-full-name">Full name</Label>
+        <Label htmlFor="admin-full-name">{t.admin.fullNameLabel}</Label>
         {isEditing ? (
           <Input id="admin-full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
         ) : (
@@ -68,26 +70,28 @@ function AdminProfile() {
       </div>
 
       <div>
-        <p className="text-sm text-muted-foreground">Email</p>
+        <p className="text-sm text-muted-foreground">{t.admin.colEmail}</p>
         <p className="font-medium text-foreground">{currentUser?.email}</p>
       </div>
       <div>
-        <p className="text-sm text-muted-foreground">Role</p>
-        <p className="font-medium text-foreground capitalize">{currentUser?.role}</p>
+        <p className="text-sm text-muted-foreground">{t.admin.colRole}</p>
+        <p className="font-medium text-foreground capitalize">
+          {currentUser?.role ? (t.badges as Record<string, string>)[currentUser.role] || currentUser.role : ''}
+        </p>
       </div>
 
       {isEditing && (
         <div className="flex items-center gap-2 pt-2">
           <Button size="sm" className="gap-1.5" disabled={saving || !fullName.trim()} onClick={handleSave}>
             <Save className="w-3.5 h-3.5" />
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? t.common.saving : t.common.save}
           </Button>
           <Button
             variant="outline" size="sm" className="gap-1.5" disabled={saving}
             onClick={() => { setIsEditing(false); setFullName(profile?.full_name || ''); }}
           >
             <X className="w-3.5 h-3.5" />
-            Cancel
+            {t.common.cancel}
           </Button>
         </div>
       )}

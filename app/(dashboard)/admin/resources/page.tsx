@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { PageLoading } from '@/components/page-loading';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import type { Resource } from '@/types';
@@ -44,6 +45,7 @@ const selectClassName =
   'rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs capitalize focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]';
 
 export default function ResourcesPage() {
+  const { t, formatDate } = useT();
   const { resources, bootcamps, isHydrated, createResource, updateResourceVisibility } = useData();
   const { toast } = useToast();
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -73,11 +75,11 @@ export default function ResourcesPage() {
     if (bootcampId) formData.append('bootcamp_id', bootcampId);
     try {
       await createResource(formData);
-      toast({ title: 'Resource uploaded' });
+      toast({ title: t.admin.resourceUploadedToast });
       setUploadOpen(false);
       resetForm();
     } catch {
-      toast({ title: 'Upload failed', description: 'Please try again.', variant: 'destructive' });
+      toast({ title: t.errors.uploadFailed, description: t.common.tryAgain, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -87,19 +89,19 @@ export default function ResourcesPage() {
     try {
       await updateResourceVisibility(id, next);
     } catch {
-      toast({ title: 'Failed to update visibility', description: 'Please try again.', variant: 'destructive' });
+      toast({ title: t.admin.failedUpdateVisibilityToast, description: t.common.tryAgain, variant: 'destructive' });
     }
   };
 
-  const columns: DataTableColumn<Resource>[] = [
+  const columns: DataTableColumn<Resource>[] = useMemo(() => [
     {
       key: 'title',
-      header: 'Title',
+      header: t.admin.colTitle,
       render: (item) => <span className="font-medium text-foreground">{item.title}</span>,
     },
     {
       key: 'description',
-      header: 'Description',
+      header: t.admin.colDescription,
       render: (item) => (
         <span className="text-muted-foreground line-clamp-1 max-w-xs">
           {item.description}
@@ -108,7 +110,7 @@ export default function ResourcesPage() {
     },
     {
       key: 'visibility',
-      header: 'Visibility',
+      header: t.admin.resourceVisibilityLabel,
       render: (item) => (
         <select
           value={item.visibility}
@@ -116,14 +118,16 @@ export default function ResourcesPage() {
           className={selectClassName}
         >
           {visibilityOptions.map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>
+              {opt === 'all' ? t.admin.tabAll : (t.badges as Record<string, string>)[opt] || opt}
+            </option>
           ))}
         </select>
       ),
     },
     {
       key: 'type',
-      header: 'Type',
+      header: t.admin.colType,
       render: (item) => (
         <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-700">
           {getFileType(item.file_path)}
@@ -132,10 +136,10 @@ export default function ResourcesPage() {
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t.admin.colDate,
       render: (item) => (
         <span className="text-muted-foreground">
-          {new Date(item.created_at).toLocaleDateString('en-US', {
+          {formatDate(item.created_at, {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -143,7 +147,7 @@ export default function ResourcesPage() {
         </span>
       ),
     },
-  ];
+  ], [t, formatDate]);
 
   if (!isHydrated) {
     return (
@@ -156,30 +160,30 @@ export default function ResourcesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">Resources</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.admin.resources}</h2>
           <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            Beta
+            {t.admin.betaBadge}
           </span>
         </div>
         <Button size="sm" className="gap-2" onClick={() => setUploadOpen(true)}>
           <Plus className="w-4 h-4" />
-          Upload Resource
+          {t.admin.uploadResourceBtn}
         </Button>
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={resources} pageSize={10} emptyMessage="No resources uploaded yet." />
+      <DataTable columns={columns} data={resources} pageSize={10} emptyMessage={t.admin.noResourcesUploaded} />
 
       {/* Upload dialog */}
       <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetForm(); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Upload Resource</DialogTitle>
-            <DialogDescription>Add a new downloadable resource for the platform.</DialogDescription>
+            <DialogTitle>{t.admin.uploadResourceModalTitle}</DialogTitle>
+            <DialogDescription>{t.admin.uploadResourceModalDesc}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">File (PDF)</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.admin.filePdfLabel}</label>
               <input
                 type="file"
                 accept="application/pdf"
@@ -188,46 +192,48 @@ export default function ResourcesPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Title</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.admin.resourceTitleLabel}</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
-                placeholder="Resource title"
+                placeholder={t.admin.resourceTitlePlaceholder}
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Description</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.admin.resourceDescLabel}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
                 rows={3}
-                placeholder="Short description"
+                placeholder={t.admin.resourceDescPlaceholder}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Visibility</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.admin.resourceVisibilityLabel}</label>
                 <select
                   value={visibility}
                   onChange={(e) => setVisibility(e.target.value as Resource['visibility'])}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
                 >
                   {visibilityOptions.map((opt) => (
-                    <option key={opt} value={opt} className="capitalize">{opt === 'all' ? 'All' : opt}</option>
+                    <option key={opt} value={opt} className="capitalize">
+                      {opt === 'all' ? t.admin.tabAll : (t.badges as Record<string, string>)[opt] || opt}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Bootcamp (optional)</label>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.admin.bootcampOptionalLabel}</label>
                 <select
                   value={bootcampId}
                   onChange={(e) => setBootcampId(e.target.value)}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
                 >
-                  <option value="">None</option>
+                  <option value="">{t.admin.noneOption}</option>
                   {bootcamps.map((bc) => (
                     <option key={bc.id} value={bc.id}>{bc.title}</option>
                   ))}
@@ -237,10 +243,10 @@ export default function ResourcesPage() {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setUploadOpen(false)} disabled={submitting}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleUpload} disabled={submitting || !file || !title.trim()}>
-              {submitting ? 'Uploading...' : 'Upload'}
+              {submitting ? t.admin.uploadingBtn : t.admin.uploadBtn}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import { SkillBar } from '@/components/skill-bar';
 import { ProfileAvatar } from '@/components/profile-avatar';
 import { Button } from '@/components/ui/button';
@@ -25,14 +26,8 @@ function toEmbedUrl(url: string): string {
   return url;
 }
 
-const availabilityConfig: Record<string, { label: string; className: string }> = {
-  Available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  'In Training': { label: 'In Training', className: 'bg-amber-50 text-amber-700 border-amber-200' },
-  Hired: { label: 'Hired', className: 'bg-gray-50 text-gray-700 border-gray-200' },
-  'On Hold': { label: 'On Hold', className: 'bg-blue-50 text-blue-700 border-blue-200' },
-};
-
 export default function AdminApplicantDetailPage() {
+  const { t } = useT();
   const params = useParams();
   const id = params.id as string;
   const { getApplicantById } = useData();
@@ -41,6 +36,13 @@ export default function AdminApplicantDetailPage() {
 
   const talent = getApplicantById(id);
 
+  const availabilityConfig: Record<string, { label: string; className: string }> = useMemo(() => ({
+    Available: { label: t.badges.available, className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+    'In Training': { label: t.badges.in_training, className: 'bg-amber-50 text-amber-700 border-amber-200' },
+    Hired: { label: t.badges.hired, className: 'bg-gray-50 text-gray-700 border-gray-200' },
+    'On Hold': { label: t.badges.on_hold, className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  }), [t]);
+
   if (!talent) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
@@ -48,14 +50,14 @@ export default function AdminApplicantDetailPage() {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Briefcase className="w-8 h-8 text-gray-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Applicant not found</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.admin.applicantNotFound}</h1>
           <p className="text-gray-500 mb-8">
-            The applicant profile you are looking for does not exist or has been removed.
+            {t.admin.applicantNotFoundDesc}
           </p>
           <Link href="/admin/applicants">
             <Button variant="outline" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
-              Back to Applicants
+              {t.admin.backToApplicants}
             </Button>
           </Link>
         </div>
@@ -64,7 +66,7 @@ export default function AdminApplicantDetailPage() {
   }
 
   const availability = availabilityConfig[talent.availability_status] ?? {
-    label: talent.availability_status,
+    label: (t.badges as Record<string, string>)[talent.availability_status.toLowerCase().replace(' ', '_')] || talent.availability_status,
     className: 'bg-gray-50 text-gray-700 border-gray-200',
   };
 
@@ -74,7 +76,7 @@ export default function AdminApplicantDetailPage() {
         <Link href="/admin/applicants">
           <Button variant="ghost" className="gap-2 text-gray-600 hover:text-gray-900 -ml-2">
             <ArrowLeft className="w-4 h-4" />
-            Back to Applicants
+            {t.admin.backToApplicants}
           </Button>
         </Link>
       </div>
@@ -111,18 +113,18 @@ export default function AdminApplicantDetailPage() {
                 </Badge>
                 <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
                   <Globe className="w-3.5 h-3.5 mr-1.5" />
-                  {talent.english_level} English
+                  {t.admin.englishLevelBadge.replace('{level}', talent.english_level)}
                 </Badge>
                 <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
                   <Briefcase className="w-3.5 h-3.5 mr-1.5" />
-                  {talent.years_experience} years experience
+                  {t.admin.yearsExpBadge.replace('{years}', String(talent.years_experience))}
                 </Badge>
                 <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
-                  {talent.public_visible ? 'Visible' : 'Hidden'}
+                  {talent.public_visible ? t.admin.visibleBadge : t.admin.hiddenBadge}
                 </Badge>
                 {talent.featured && (
                   <Badge variant="outline" className="bg-white text-gray-700 border-gray-200 px-3 py-1 text-sm font-medium">
-                    Featured
+                    {t.admin.featuredBadge}
                   </Badge>
                 )}
               </div>
@@ -145,30 +147,30 @@ export default function AdminApplicantDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.admin.aboutHeading}</h2>
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
             </div>
 
             {talent.resume_url && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Resume</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.admin.resumeHeading}</h2>
                 <button
                   onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
                   className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
                 >
                   <FileText className="w-5 h-5" />
-                  <span className="text-base font-medium">View Resume</span>
+                  <span className="text-base font-medium">{t.admin.viewResumeBtn}</span>
                 </button>
               </div>
             )}
 
             <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
               <DialogContent className="max-w-4xl h-[80vh]">
-                <DialogTitle className="sr-only">Resume</DialogTitle>
+                <DialogTitle className="sr-only">{t.admin.resumeHeading}</DialogTitle>
                 <iframe
                   src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
                   className="w-full h-full border-0 rounded-lg"
-                  title="Resume"
+                  title={t.admin.resumeHeading}
                 />
               </DialogContent>
             </Dialog>
@@ -177,7 +179,7 @@ export default function AdminApplicantDetailPage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <div className="flex items-center gap-2 mb-5">
                   <Play className="w-5 h-5 text-gray-700" />
-                  <h2 className="text-xl font-semibold text-gray-900">Introduction Video</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t.admin.introVideoHeading}</h2>
                 </div>
                 <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: '16 / 9' }}>
                   <iframe
@@ -194,7 +196,7 @@ export default function AdminApplicantDetailPage() {
 
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8 sticky top-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Skills</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">{t.admin.skillsHeading}</h2>
               <div className="space-y-5">
                 {talent.skills?.map((skill) => (
                   <SkillBar key={skill.id} name={skill.skill_name} score={skill.score} />

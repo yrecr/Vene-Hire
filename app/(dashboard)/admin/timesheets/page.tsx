@@ -12,11 +12,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import type { Timesheet } from '@/types';
 
 const EVENT_ICON = { submitted: Send, approved: CheckCircle2, rejected: CircleX } as const;
 
 export default function AdminTimesheetsPage() {
+  const { t, formatDate } = useT();
   const { timesheets, timesheetEvents, selectionProcesses, getApplicantById, getEmployerById, getProcessById, profiles, reviewTimesheet, isHydrated } = useData();
   const { toast } = useToast();
   const [viewing, setViewing] = useState<Timesheet | null>(null);
@@ -25,11 +27,11 @@ export default function AdminTimesheetsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const rows = useMemo(() => {
-    return [...timesheets].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).map((t) => {
-      const process = selectionProcesses.find((p) => p.id === t.process_id);
+    return [...timesheets].sort((a, b) => b.updated_at.localeCompare(a.updated_at)).map((tItem) => {
+      const process = selectionProcesses.find((p) => p.id === tItem.process_id);
       const applicant = process ? getApplicantById(process.applicant_id) : undefined;
       const employer = process ? getEmployerById(process.employer_id) : undefined;
-      return { ...t, applicantName: applicant?.display_name || 'Unknown', companyName: employer?.company_name || 'Unknown' };
+      return { ...tItem, applicantName: applicant?.display_name || 'Unknown', companyName: employer?.company_name || 'Unknown' };
     });
   }, [timesheets, selectionProcesses, getApplicantById, getEmployerById]);
 
@@ -47,59 +49,59 @@ export default function AdminTimesheetsPage() {
   const handleReview = async (decision: 'approved' | 'rejected') => {
     if (!reviewing) return;
     if (decision === 'rejected' && !rejectComment.trim()) {
-      toast({ title: 'Add a comment', description: 'Let the engineer know what to correct before rejecting.', variant: 'destructive' });
+      toast({ title: t.admin.addCommentToastTitle, description: t.admin.addCommentToastDesc, variant: 'destructive' });
       return;
     }
     const process = getProcessById(reviewing.process_id);
     if (decision === 'approved' && process?.hourly_rate == null) {
-      toast({ title: 'Set an hourly rate first', description: 'The employer needs to set an hourly rate for this process before hours can be approved.', variant: 'destructive' });
+      toast({ title: t.admin.setHourlyRateToastTitle, description: t.admin.setHourlyRateToastDesc, variant: 'destructive' });
       return;
     }
     setSubmitting(true);
     try {
       await reviewTimesheet(reviewing.id, decision, rejectComment.trim() || undefined);
-      toast({ title: decision === 'approved' ? 'Hours approved' : 'Sent back for corrections' });
+      toast({ title: decision === 'approved' ? t.admin.hoursApprovedToast : t.admin.sentBackToast });
       setReviewing(null);
       setRejectComment('');
     } catch (err) {
-      toast({ title: 'Could not review hours', description: err instanceof Error ? err.message : 'Try again.', variant: 'destructive' });
+      toast({ title: t.admin.couldNotReviewToast, description: err instanceof Error ? err.message : t.errors.networkFailure, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
-  const columns: DataTableColumn<(typeof rows)[number]>[] = [
-    { key: 'applicant', header: 'Applicant', render: (r) => <span className="font-medium text-foreground">{r.applicantName}</span> },
-    { key: 'company', header: 'Company', render: (r) => <span className="text-muted-foreground">{r.companyName}</span> },
-    { key: 'month', header: 'Month', render: (r) => <span className="text-muted-foreground">{r.month}</span> },
-    { key: 'hours', header: 'Hours', render: (r) => <span className="text-muted-foreground">{r.total_hours}h</span> },
-    { key: 'status', header: 'Status', render: (r) => <RoleBadge role={r.status} /> },
+  const columns: DataTableColumn<(typeof rows)[number]>[] = useMemo(() => [
+    { key: 'applicant', header: t.admin.colApplicant, render: (r) => <span className="font-medium text-foreground">{r.applicantName}</span> },
+    { key: 'company', header: t.admin.colCompany, render: (r) => <span className="text-muted-foreground">{r.companyName}</span> },
+    { key: 'month', header: t.admin.colMonth, render: (r) => <span className="text-muted-foreground">{r.month}</span> },
+    { key: 'hours', header: t.admin.colHours, render: (r) => <span className="text-muted-foreground">{r.total_hours}h</span> },
+    { key: 'status', header: t.admin.colStatus, render: (r) => <RoleBadge role={r.status} /> },
     {
       key: 'invoice',
-      header: 'Billing Statement',
+      header: t.admin.colBillingStatement,
       render: (r) => r.invoice_url ? (
         <a href={r.invoice_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[hsl(210,100%,45%)] hover:underline text-sm">
-          <FileText className="w-3.5 h-3.5" /> View
+          <FileText className="w-3.5 h-3.5" /> {t.admin.viewLink}
         </a>
       ) : <span className="text-xs text-muted-foreground">—</span>,
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.admin.colActions,
       render: (r) => (
         <div className="flex items-center gap-1">
           {r.status === 'submitted' && (
             <Button size="sm" onClick={() => setReviewing(r)}>
-              Review
+              {t.admin.reviewBtn}
             </Button>
           )}
           <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>
-            History
+            {t.admin.historyBtn}
           </Button>
         </div>
       ),
     },
-  ];
+  ], [t]);
 
   if (!isHydrated) {
     return (
@@ -110,7 +112,7 @@ export default function AdminTimesheetsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold text-foreground">Hours & Billing</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.admin.timesheets}</h2>
         <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
           {timesheets.length}
         </span>
@@ -119,10 +121,10 @@ export default function AdminTimesheetsPage() {
       {rows.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center">
           <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No hours have been reported yet.</p>
+          <p className="text-sm text-muted-foreground">{t.admin.noHoursReported}</p>
         </div>
       ) : (
-        <DataTable columns={columns} data={rows} pageSize={10} emptyMessage="No timesheets submitted yet." />
+        <DataTable columns={columns} data={rows} pageSize={10} emptyMessage={t.admin.noTimesheetsSubmitted} />
       )}
 
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
@@ -130,27 +132,32 @@ export default function AdminTimesheetsPage() {
           {viewing && (
             <>
               <DialogHeader>
-                <DialogTitle>Timesheet History</DialogTitle>
-                <DialogDescription>{viewing.month} — {viewing.total_hours}h total</DialogDescription>
+                <DialogTitle>{t.admin.timesheetHistoryTitle}</DialogTitle>
+                <DialogDescription>
+                  {viewing.month} — {t.admin.totalHoursSubtitle.replace('{hours}', String(viewing.total_hours))}
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-3">
                 {viewingEvents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No events recorded.</p>
+                  <p className="text-sm text-muted-foreground">{t.admin.noEventsRecorded}</p>
                 ) : (
                   viewingEvents.map((e) => {
                     const Icon = EVENT_ICON[e.event_type];
+                    const translatedAction = (t.badges as Record<string, string>)[e.event_type] || e.event_type;
                     return (
                       <div key={e.id} className="flex items-start gap-3">
                         <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
                           e.event_type === 'approved' ? 'text-emerald-600' : e.event_type === 'rejected' ? 'text-red-600' : 'text-blue-600'
                         }`} />
                         <div>
-                          <p className="text-sm text-foreground capitalize">
-                            <span className="font-medium">{e.actorName}</span> {e.event_type} the hours
+                          <p className="text-sm text-foreground">
+                            {t.admin.actorReviewedHours
+                              .replace('{actor}', e.actorName)
+                              .replace('{action}', translatedAction)}
                           </p>
                           {e.comment && <p className="text-xs text-muted-foreground mt-0.5">&quot;{e.comment}&quot;</p>}
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {new Date(e.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            {formatDate(e.created_at, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                           </p>
                         </div>
                       </div>
@@ -166,12 +173,12 @@ export default function AdminTimesheetsPage() {
       <Dialog open={!!reviewing} onOpenChange={(open) => { if (!open) { setReviewing(null); setRejectComment(''); } }}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Review Reported Hours</DialogTitle>
+            <DialogTitle>{t.admin.reviewHoursTitle}</DialogTitle>
             <DialogDescription>
               {reviewing && (() => {
                 const p = getProcessById(reviewing.process_id);
                 const applicantName = p ? getApplicantById(p.applicant_id)?.display_name : undefined;
-                return `${applicantName || 'Unknown'} — ${reviewing.month} — ${reviewing.total_hours}h total`;
+                return `${applicantName || 'Unknown'} — ${reviewing.month} — ${t.admin.totalHoursSubtitle.replace('{hours}', String(reviewing.total_hours))}`;
               })()}
             </DialogDescription>
           </DialogHeader>
@@ -181,7 +188,7 @@ export default function AdminTimesheetsPage() {
               {reviewing.days.map((d) => (
                 <div key={d.date} className="text-center bg-gray-50 rounded-lg py-2">
                   <p className="text-xs text-muted-foreground">
-                    {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {formatDate(d.date + 'T00:00:00', { month: 'short', day: 'numeric' })}
                   </p>
                   <p className="text-sm font-semibold text-foreground">{d.hours}h</p>
                 </div>
@@ -190,11 +197,11 @@ export default function AdminTimesheetsPage() {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">Comment (required if rejecting)</label>
+            <label className="text-sm font-medium text-foreground">{t.admin.commentRequiredLabel}</label>
             <Textarea
               value={rejectComment}
               onChange={(e) => setRejectComment(e.target.value)}
-              placeholder="e.g. Add the hours missing on Tuesday"
+              placeholder={t.admin.commentPlaceholder}
               rows={3}
             />
           </div>
@@ -207,7 +214,7 @@ export default function AdminTimesheetsPage() {
               disabled={submitting}
             >
               <CircleX className="w-4 h-4" />
-              Reject
+              {t.admin.rejectRequest}
             </Button>
             <Button
               className="gap-1.5"
@@ -215,7 +222,7 @@ export default function AdminTimesheetsPage() {
               disabled={submitting}
             >
               <CheckCircle2 className="w-4 h-4" />
-              Approve
+              {t.admin.approveRequest}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import { PageLoading } from '@/components/page-loading';
 import {
   Bell,
@@ -23,6 +24,7 @@ const typeIcons: Record<string, typeof Bell> = {
 };
 
 export default function AdminNotificationsPage() {
+  const { t, formatDate } = useT();
   const { currentUser } = useAuth();
   const { getNotificationsForUser, isHydrated } = useData();
   // 'p-admin1' fallback matches the demo seed admin — mirrors the same pattern
@@ -38,8 +40,7 @@ export default function AdminNotificationsPage() {
   };
 
   const formatTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    return formatDate(dateStr, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -59,17 +60,17 @@ export default function AdminNotificationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.admin.notifications}</h2>
           {unreadCount > 0 && (
             <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-red-50 text-red-600 border border-red-200">
-              {unreadCount} unread
+              {t.admin.unreadCountBadge.replace('{count}', String(unreadCount))}
             </span>
           )}
         </div>
         {unreadCount > 0 && (
           <Button variant="outline" size="sm" onClick={handleMarkAllRead} className="gap-2">
             <CheckCheck className="w-4 h-4" />
-            Mark all as read
+            {t.admin.markAllReadBtn}
           </Button>
         )}
       </div>
@@ -79,11 +80,12 @@ export default function AdminNotificationsPage() {
         {notifications.length === 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <Bell className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No notifications yet.</p>
+            <p className="text-muted-foreground">{t.admin.noNotificationsYet}</p>
           </div>
         )}
         {notifications.map((notification) => {
           const Icon = typeIcons[notification.type] || Info;
+          const translatedType = (t.badges as Record<string, string>)[notification.type] || notification.type;
           return (
             <div
               key={notification.id}
@@ -133,7 +135,7 @@ export default function AdminNotificationsPage() {
                     : 'bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)]'
                 }`}
               >
-                {notification.type}
+                {translatedType}
               </span>
             </div>
           );
