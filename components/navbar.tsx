@@ -8,6 +8,7 @@ import { Menu, X, LogOut } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { NotificationCenter } from '@/components/notification-center';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -97,14 +98,18 @@ export function Navbar() {
                 </Link>
               </>
             )}
+            <ThemeToggle />
           </div>
 
-          <button
-            className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle />
+            <button
+              className="p-2 rounded-lg hover:bg-secondary transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
 

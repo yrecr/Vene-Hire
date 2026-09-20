@@ -165,7 +165,7 @@ export function ProcessTimeline({
 
   function getLabelColor(index: number): string {
     const stepState = getStepState(index);
-    if (stepState === 'completed') return 'text-emerald-700';
+    if (stepState === 'completed') return 'text-emerald-700 dark:text-emerald-400';
     if (stepState === 'current') {
       if (status === 'not_selected') return 'text-red-700';
       if (status === 'on_hold') return 'text-amber-700';

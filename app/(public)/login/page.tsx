@@ -56,7 +56,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
       <div className="max-w-md mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
           <div className="flex items-center justify-center gap-2 mb-8">
             <img src="/logo.png" alt="VeneHire" className="w-10 h-10 object-contain" />
             <span className="text-xl font-bold text-gray-900">VeneHire</span>
@@ -68,7 +68,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-3 mb-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 p-3 mb-6 text-sm text-red-600 bg-red-50 border border-red-200 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-400 rounded-lg">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
