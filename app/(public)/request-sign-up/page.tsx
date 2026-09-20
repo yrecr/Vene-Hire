@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import { Send, CircleCheck as CheckCircle2, ArrowLeft, Building2, ShieldCheck, Clock, Users, Loader as Loader2, CircleAlert as AlertCircle } from 'lucide-react';
 
 const countries = [
@@ -31,60 +32,6 @@ const countries = [
   'Other',
 ];
 
-const employerValueProps = [
-  {
-    icon: ShieldCheck,
-    title: 'Manually Reviewed Access',
-    description:
-      'Every request is reviewed by our team to ensure a quality experience for both companies and candidates.',
-  },
-  {
-    icon: Clock,
-    title: 'Response Within 24 Hours',
-    description:
-      'Our team will reach out to you within one business day to discuss your hiring needs.',
-  },
-  {
-    icon: Users,
-    title: 'Pre-Evaluated Talent',
-    description:
-      'All candidates have been rigorously assessed on technical skills, communication, and collaboration.',
-  },
-  {
-    icon: Building2,
-    title: 'Tailored Matching',
-    description:
-      'We match your requirements with the best-fit engineers from our curated talent pool.',
-  },
-];
-
-const applicantValueProps = [
-  {
-    icon: ShieldCheck,
-    title: 'Manually Reviewed Access',
-    description:
-      'Every application is reviewed by our team to keep the talent pool high quality.',
-  },
-  {
-    icon: Clock,
-    title: 'Response Within 24 Hours',
-    description:
-      'Our team will reach out to you within one business day about next steps.',
-  },
-  {
-    icon: Users,
-    title: 'Curated Companies',
-    description:
-      'Once approved, you get a profile in front of vetted companies actively hiring.',
-  },
-  {
-    icon: Building2,
-    title: 'Built for International Remote',
-    description:
-      'Our process is designed to get you ready for remote roles with global teams.',
-  },
-];
-
 type RequestType = 'employer' | 'applicant';
 
 interface FormData {
@@ -99,6 +46,7 @@ interface FormData {
 
 function RequestDemoForm({ initialType, candidateParam }: { initialType: RequestType; candidateParam: string }) {
   const { setAccessRequests } = useData();
+  const { t, lang } = useT();
 
   const [requestType, setRequestType] = useState<RequestType>(initialType);
   const [formData, setFormData] = useState<FormData>({
@@ -115,6 +63,69 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
   const [error, setError] = useState<string | null>(null);
 
   const isApplicant = requestType === 'applicant';
+
+  const employerValueProps = [
+    {
+      icon: ShieldCheck,
+      title: lang === 'es' ? 'Acceso Revisado Manualmente' : 'Manually Reviewed Access',
+      description: lang === 'es'
+        ? 'Cada solicitud es evaluada por nuestro equipo para asegurar una experiencia de calidad.'
+        : 'Every request is reviewed by our team to ensure a quality experience for both companies and candidates.',
+    },
+    {
+      icon: Clock,
+      title: lang === 'es' ? 'Respuesta en Menos de 24 Horas' : 'Response Within 24 Hours',
+      description: lang === 'es'
+        ? 'Nos pondremos en contacto contigo en un plazo de un día hábil.'
+        : 'Our team will reach out to you within one business day to discuss your hiring needs.',
+    },
+    {
+      icon: Users,
+      title: lang === 'es' ? 'Talento Pre-Evaluado' : 'Pre-Evaluated Talent',
+      description: lang === 'es'
+        ? 'Todos los ingenieros superaron pruebas rigurosas de código y habilidades blandas.'
+        : 'All candidates have been rigorously assessed on technical skills, communication, and collaboration.',
+    },
+    {
+      icon: Building2,
+      title: lang === 'es' ? 'Conexión a la Medida' : 'Tailored Matching',
+      description: lang === 'es'
+        ? 'Conectamos tus requerimientos con los mejores perfiles de nuestro grupo de talento.'
+        : 'We match your requirements with the best-fit engineers from our curated talent pool.',
+    },
+  ];
+
+  const applicantValueProps = [
+    {
+      icon: ShieldCheck,
+      title: lang === 'es' ? 'Admisión Selectiva' : 'Manually Reviewed Access',
+      description: lang === 'es'
+        ? 'Evaluamos cada postulación para mantener la excelencia del grupo de talento.'
+        : 'Every application is reviewed by our team to keep the talent pool high quality.',
+    },
+    {
+      icon: Clock,
+      title: lang === 'es' ? 'Respuesta en 24 Horas' : 'Response Within 24 Hours',
+      description: lang === 'es'
+        ? 'Te escribiremos en menos de 24 horas con los pasos a seguir.'
+        : 'Our team will reach out to you within one business day about next steps.',
+    },
+    {
+      icon: Users,
+      title: lang === 'es' ? 'Empresas Destacadas' : 'Curated Companies',
+      description: lang === 'es'
+        ? 'Una vez aprobado, tu perfil se presentará ante empresas que están contratando activamente.'
+        : 'Once approved, you get a profile in front of vetted companies actively hiring.',
+    },
+    {
+      icon: Building2,
+      title: lang === 'es' ? 'Enfoque Remoto Global' : 'Built for International Remote',
+      description: lang === 'es'
+        ? 'Diseñado para prepararte e impulsarte hacia puestos remotos internacionales.'
+        : 'Our process is designed to get you ready for remote roles with global teams.',
+    },
+  ];
+
   const valueProps = isApplicant ? applicantValueProps : employerValueProps;
 
   const handleChange = (
@@ -132,11 +143,11 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
       : formData.fullName.trim() && formData.company.trim() && formData.email.trim() && formData.country && formData.hiringNeed.trim();
 
     if (!requiredOk) {
-      setError('Please fill in all required fields.');
+      setError(lang === 'es' ? 'Por favor completa todos los campos obligatorios.' : 'Please fill in all required fields.');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      setError('Please enter a valid email address.');
+      setError(t.errors.invalidEmail);
       return;
     }
 
@@ -158,16 +169,17 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
       reviewed_by: null,
     };
 
-    // Awaited and checked — previously fire-and-forget, so a failed insert here
-    // told the candidate "submitted" while the admin never saw the request.
-    // Routed through an API route (not a direct client insert) so the server
-    // can rate-limit it — the RLS policy alone can't do that.
     const res = await fetch('/api/access-requests/create', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        request_type: entry.request_type, full_name: entry.full_name,
-        company: entry.company, email: entry.email, country: entry.country,
-        hiring_need: entry.hiring_need, candidate_slug: entry.candidate_slug,
+        request_type: entry.request_type,
+        full_name: entry.full_name,
+        company: entry.company,
+        email: entry.email,
+        country: entry.country,
+        hiring_need: entry.hiring_need,
+        candidate_slug: entry.candidate_slug,
         message: entry.message,
       }),
     });
@@ -176,7 +188,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
 
     if (!res.ok) {
       const resBody = await res.json().catch(() => ({}));
-      setError(resBody.error || 'Something went wrong submitting your request. Please try again.');
+      setError(resBody.error || t.common.somethingWentWrong);
       return;
     }
 
@@ -193,14 +205,13 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
             <h1 className="text-3xl font-bold text-foreground mb-4">
-              Request Submitted Successfully
+              {t.auth.requestSuccessTitle}
             </h1>
             <p className="text-muted-foreground text-lg mb-2">
-              Our team will review your request and reach out within 24 hours.
+              {t.auth.requestSuccessSubtitle}
             </p>
             <p className="text-muted-foreground text-sm mb-10">
-              Access is reviewed manually to ensure the best experience for all
-              parties.
+              {t.auth.reviewedManually}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/">
@@ -209,12 +220,12 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                   className="px-6 h-11 border-gray-200 hover:bg-gray-50"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Home
+                  {t.auth.backToHome}
                 </Button>
               </Link>
               <Link href="/talent">
                 <Button className="px-6 h-11 bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25">
-                  Browse Talent
+                  {t.auth.browseTalent}
                 </Button>
               </Link>
             </div>
@@ -237,24 +248,20 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Home
+          {t.auth.backToHome}
         </Link>
 
         {/* Header */}
         <div className="max-w-2xl mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight mb-4">
-            {isApplicant ? 'Apply as Talent' : 'Register'}
+            {isApplicant ? t.auth.applyAsTalent : t.auth.registerTitle}
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            {isApplicant
-              ? 'Want to join our talent pool? Tell us about yourself below and our team will review your application.'
-              : 'To request interviews or gain access to additional candidate details, please submit your request below. Our team will review your request and contact you directly.'}
+            {isApplicant ? t.auth.registerApplicantDesc : t.auth.registerCompanyDesc}
           </p>
           <div className="mt-4 inline-flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40 dark:text-blue-300 rounded-lg px-4 py-2.5">
             <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-            <span>
-              Access is reviewed manually to ensure quality for all parties.
-            </span>
+            <span>{t.auth.reviewedManually}</span>
           </div>
         </div>
 
@@ -268,7 +275,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               requestType === 'employer' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            I&apos;m a Company
+            {t.auth.imCompany}
           </button>
           <button
             type="button"
@@ -278,7 +285,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               requestType === 'applicant' ? 'bg-white text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            I&apos;m a Candidate
+            {t.auth.imCandidate}
           </button>
         </div>
 
@@ -298,7 +305,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                 {/* Full Name */}
                 <div className="space-y-2">
                   <Label htmlFor="fullName">
-                    Full Name <span className="text-red-500">*</span>
+                    {t.common.name} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="fullName"
@@ -316,13 +323,13 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                   {!isApplicant && (
                     <div className="space-y-2">
                       <Label htmlFor="company">
-                        Company Name <span className="text-red-500">*</span>
+                        {t.auth.companyName} <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="company"
                         name="company"
                         type="text"
-                        placeholder="Acme Inc."
+                        placeholder={t.auth.companyPlaceholder}
                         value={formData.company}
                         onChange={handleChange}
                         required
@@ -331,7 +338,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                   )}
                   <div className="space-y-2">
                     <Label htmlFor="email">
-                      {isApplicant ? 'Email' : 'Work Email'} <span className="text-red-500">*</span>
+                      {t.auth.emailLabel} <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="email"
@@ -348,7 +355,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                 {/* Country */}
                 <div className="space-y-2">
                   <Label htmlFor="country">
-                    Country <span className="text-red-500">*</span>
+                    {t.auth.countryLabel} <span className="text-red-500">*</span>
                   </Label>
                   <Select
                     value={formData.country}
@@ -357,7 +364,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                     }
                   >
                     <SelectTrigger id="country">
-                      <SelectValue placeholder="Select your country" />
+                      <SelectValue placeholder={t.auth.countryPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
                       {countries.map((country) => (
@@ -372,13 +379,13 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                 {/* Hiring Need / Role of Interest */}
                 <div className="space-y-2">
                   <Label htmlFor="hiringNeed">
-                    {isApplicant ? 'Tech Stack / Role of Interest' : 'Role / Hiring Need'} <span className="text-red-500">*</span>
+                    {isApplicant ? t.talent.roleFilter : t.auth.hiringNeedLabel} <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="hiringNeed"
                     name="hiringNeed"
                     type="text"
-                    placeholder={isApplicant ? 'e.g. React, Node.js, Backend Engineer' : 'e.g. Full-Stack Engineer, React Developer'}
+                    placeholder={isApplicant ? 'e.g. React, Node.js, Backend Engineer' : t.auth.hiringNeedPlaceholder}
                     value={formData.hiringNeed}
                     onChange={handleChange}
                     required
@@ -389,9 +396,9 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                 {!isApplicant && (
                   <div className="space-y-2">
                     <Label htmlFor="candidateSlug">
-                      Candidate of Interest{' '}
+                      {t.auth.candidateSlugLabel}{' '}
                       <span className="text-muted-foreground font-normal">
-                        (optional)
+                        ({t.common.optional})
                       </span>
                     </Label>
                     <Input
@@ -408,15 +415,15 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                 {/* Message */}
                 <div className="space-y-2">
                   <Label htmlFor="message">
-                    Message{' '}
+                    {t.auth.messageOptional}{' '}
                     <span className="text-muted-foreground font-normal">
-                      (optional)
+                      ({t.common.optional})
                     </span>
                   </Label>
                   <Textarea
                     id="message"
                     name="message"
-                    placeholder="Tell us more about your team, timeline, or any questions you have..."
+                    placeholder={lang === 'es' ? 'Cuéntanos sobre tus necesidades o preguntas...' : 'Tell us more about your team, timeline, or any questions you have...'}
                     rows={4}
                     value={formData.message}
                     onChange={handleChange}
@@ -432,12 +439,12 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Submitting...
+                      {t.auth.submittingRequestBtn}
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4 mr-2" />
-                      Submit Request
+                      {t.auth.submitRequestBtn}
                     </>
                   )}
                 </Button>
@@ -449,7 +456,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
           <div className="lg:col-span-2">
             <div className="sticky top-32 space-y-6">
               <h2 className="text-lg font-semibold text-foreground mb-2">
-                What to Expect
+                {lang === 'es' ? 'Qué esperar' : 'What to Expect'}
               </h2>
               <div className="space-y-5">
                 {valueProps.map((prop) => (
@@ -475,11 +482,12 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               {/* Trust badge */}
               <div className="mt-8 p-5 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 border border-blue-100/60">
                 <p className="text-sm text-blue-900 font-medium mb-1">
-                  Built for growing teams
+                  {lang === 'es' ? 'Diseñado para equipos en crecimiento' : 'Built for growing teams'}
                 </p>
                 <p className="text-xs text-blue-700/80 leading-relaxed">
-                  Our talent is pre-trained through real-world agile simulations
-                  and rigorous evaluations.
+                  {lang === 'es'
+                    ? 'Nuestro talento es capacitado mediante simulaciones ágiles reales y evaluaciones exigentes.'
+                    : 'Our talent is pre-trained through real-world agile simulations and rigorous evaluations.'}
                 </p>
               </div>
             </div>
@@ -495,8 +503,6 @@ function RequestDemoFormLoader() {
   const candidateParam = searchParams.get('candidate') || '';
   const typeParam: RequestType = searchParams.get('type') === 'applicant' ? 'applicant' : 'employer';
 
-  // Remount on type change so the toggle reflects a fresh ?type= navigation
-  // (e.g. clicking "Apply as Talent" while already on this page).
   return <RequestDemoForm key={typeParam} initialType={typeParam} candidateParam={candidateParam} />;
 }
 
