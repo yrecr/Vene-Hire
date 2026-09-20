@@ -9,10 +9,12 @@ import { DeleteAccountDialog } from '@/components/delete-account-dialog';
 import type { Profile } from '@/types';
 import { Plus, Search, Pencil, Trash2, X, Save } from 'lucide-react';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import * as api from '@/lib/supabase-service';
 import { demoGuard, isDemoMode } from '@/lib/demo';
 
 export default function UserManagementPage() {
+  const { t, formatDate } = useT();
   const { profiles: contextProfiles, setProfiles, isHydrated } = useData();
   const [profiles, setLocalProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState('');
@@ -66,10 +68,10 @@ export default function UserManagementPage() {
     sync(profiles.filter((p) => p.id !== id));
   }, [profiles, sync]);
 
-  const columns: DataTableColumn<Profile>[] = [
+  const columns: DataTableColumn<Profile>[] = useMemo(() => [
     {
       key: 'name',
-      header: 'Name',
+      header: t.admin.colName,
       render: (item) =>
         editId === item.id ? (
           <input value={editData.full_name || ''} onChange={(e) => setEditData((d) => ({ ...d, full_name: e.target.value }))}
@@ -78,7 +80,7 @@ export default function UserManagementPage() {
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t.admin.colEmail,
       render: (item) =>
         editId === item.id ? (
           <input value={editData.email || ''} onChange={(e) => setEditData((d) => ({ ...d, email: e.target.value }))}
@@ -87,20 +89,20 @@ export default function UserManagementPage() {
     },
     {
       key: 'role',
-      header: 'Role',
+      header: t.admin.colRole,
       render: (item) =>
         editId === item.id ? (
           <select value={editData.role || 'applicant'} onChange={(e) => setEditData((d) => ({ ...d, role: e.target.value as Profile['role'] }))}
             className="rounded border border-gray-300 px-2 py-1 text-sm">
-            <option value="admin">Admin</option>
-            <option value="employer">Employer</option>
-            <option value="applicant">Applicant</option>
+            <option value="admin">{t.badges.admin}</option>
+            <option value="employer">{t.badges.employer}</option>
+            <option value="applicant">{t.badges.applicant}</option>
           </select>
         ) : <RoleBadge role={item.role} />,
     },
     {
       key: 'company',
-      header: 'Company',
+      header: t.admin.colCompany,
       render: (item) =>
         editId === item.id ? (
           <input value={editData.company_name || ''} onChange={(e) => setEditData((d) => ({ ...d, company_name: e.target.value }))}
@@ -109,23 +111,23 @@ export default function UserManagementPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t.admin.colStatus,
       render: (item) =>
         editId === item.id ? (
           <select value={editData.status || 'active'} onChange={(e) => setEditData((d) => ({ ...d, status: e.target.value as Profile['status'] }))}
             className="rounded border border-gray-300 px-2 py-1 text-sm">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
+            <option value="active">{t.badges.active}</option>
+            <option value="inactive">{t.badges.inactive}</option>
+            <option value="pending">{t.badges.pending}</option>
           </select>
         ) : <RoleBadge role={item.status} />,
     },
     {
       key: 'created',
-      header: 'Created',
+      header: t.admin.colCreated,
       render: (item) => (
         <span className="text-muted-foreground">
-          {new Date(item.created_at).toLocaleDateString('en-US', {
+          {formatDate(item.created_at, {
             month: 'short', day: 'numeric', year: 'numeric',
           })}
         </span>
@@ -133,7 +135,7 @@ export default function UserManagementPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.admin.colActions,
       render: (item) =>
         editId === item.id ? (
           <div className="flex gap-1">
@@ -155,7 +157,7 @@ export default function UserManagementPage() {
           </div>
         ),
     },
-  ];
+  ], [t, formatDate, editId, editData, saveEdit, startEdit]);
 
   if (!isHydrated) {
     return (
@@ -167,14 +169,14 @@ export default function UserManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">User Management</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.admin.userManagement}</h2>
           <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
             {profiles.length}
           </span>
         </div>
         <Button onClick={() => setShowCreate(!showCreate)} className="gap-2">
           <Plus className="w-4 h-4" />
-          Create User
+          {t.admin.createUserBtn}
         </Button>
       </div>
 
@@ -186,20 +188,20 @@ export default function UserManagementPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Search by name, email, role, or company..."
+          placeholder={t.admin.searchUsersPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] bg-white"
         />
       </div>
 
-      <DataTable columns={columns} data={filtered} pageSize={10} emptyMessage="No users match your search." />
+      <DataTable columns={columns} data={filtered} pageSize={10} emptyMessage={t.admin.noUsersMatch} />
 
       {deleting && (
         <DeleteAccountDialog
           open={!!deleting}
           onOpenChange={(open) => !open && setDeleting(null)}
-          targetLabel={`${deleting.full_name}'s account`}
+          targetLabel={t.admin.userAccountLabel.replace('{name}', deleting.full_name)}
           confirmText={deleting.email}
           onConfirm={() => deleteUser(deleting.id)}
         />
@@ -209,6 +211,7 @@ export default function UserManagementPage() {
 }
 
 function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; onCancel: () => void }) {
+  const { t } = useT();
   const [data, setData] = useState({ full_name: '', email: '', password: '', role: 'applicant' as Profile['role'], status: 'active' as Profile['status'], company_name: '' });
   const [accessMode, setAccessMode] = useState<'invite' | 'password'>('invite');
   const [creating, setCreating] = useState(false);
@@ -218,11 +221,11 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
     if (demoGuard('create a user')) return;
     if (!data.full_name.trim() || !data.email.trim()) return;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
-      setCreateError('Please enter a valid email address.');
+      setCreateError(t.errors.invalidEmail);
       return;
     }
     if (accessMode === 'password' && data.password.length < 8) {
-      setCreateError('The password must be at least 8 characters.');
+      setCreateError(t.errors.passwordTooShort);
       return;
     }
     setCreating(true);
@@ -253,7 +256,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
 
     if (!res.ok) {
       const err = await res.json();
-      setCreateError(err.error || 'Failed to create user');
+      setCreateError(err.error || t.errors.failedToCreateUser);
       setCreating(false);
       return;
     }
@@ -265,7 +268,7 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold text-foreground">Create New User</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t.admin.createNewUserModalTitle}</h3>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onCancel}><X className="w-4 h-4" /></Button>
       </div>
       {createError && (
@@ -273,66 +276,66 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
-          <input type="text" placeholder="Enter full name" value={data.full_name}
+          <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.fullNameLabel}</label>
+          <input type="text" placeholder={t.admin.enterFullName} value={data.full_name}
             onChange={(e) => setData((d) => ({ ...d, full_name: e.target.value }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Email</label>
-          <input type="email" placeholder="Enter email address" value={data.email}
+          <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.colEmail}</label>
+          <input type="email" placeholder={t.admin.enterEmailAddress} value={data.email}
             onChange={(e) => setData((d) => ({ ...d, email: e.target.value }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
         </div>
         <div className="md:col-span-2 lg:col-span-3">
-          <label className="block text-sm font-medium text-foreground mb-1.5">Access</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.accessLabel}</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer text-sm ${accessMode === 'invite' ? 'border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5' : 'border-gray-200'}`}>
               <input type="radio" name="accessMode" className="mt-1" checked={accessMode === 'invite'} onChange={() => setAccessMode('invite')} />
               <span>
-                <span className="block font-medium text-foreground">Send an invitation email</span>
-                <span className="block text-muted-foreground">The user receives a link and chooses their own password.</span>
+                <span className="block font-medium text-foreground">{t.admin.sendInviteEmail}</span>
+                <span className="block text-muted-foreground">{t.admin.sendInviteEmailDesc}</span>
               </span>
             </label>
             <label className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 cursor-pointer text-sm ${accessMode === 'password' ? 'border-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/5' : 'border-gray-200'}`}>
               <input type="radio" name="accessMode" className="mt-1" checked={accessMode === 'password'} onChange={() => setAccessMode('password')} />
               <span>
-                <span className="block font-medium text-foreground">Set a password myself</span>
-                <span className="block text-muted-foreground">The account is created active, with no email sent.</span>
+                <span className="block font-medium text-foreground">{t.admin.setPasswordMyself}</span>
+                <span className="block text-muted-foreground">{t.admin.setPasswordMyselfDesc}</span>
               </span>
             </label>
           </div>
         </div>
         {accessMode === 'password' && (
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
-            <input type="text" placeholder="At least 8 characters" value={data.password}
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t.auth.passwordLabel}</label>
+            <input type="text" placeholder={t.admin.atLeast8Chars} value={data.password}
               onChange={(e) => setData((d) => ({ ...d, password: e.target.value }))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Role</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.colRole}</label>
           <select value={data.role} onChange={(e) => setData((d) => ({ ...d, role: e.target.value as Profile['role'] }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]">
-            <option value="admin">Admin</option>
-            <option value="applicant">Applicant</option>
-            <option value="employer">Employer</option>
+            <option value="admin">{t.badges.admin}</option>
+            <option value="applicant">{t.badges.applicant}</option>
+            <option value="employer">{t.badges.employer}</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Status</label>
+          <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.colStatus}</label>
           <select value={data.status} onChange={(e) => setData((d) => ({ ...d, status: e.target.value as Profile['status'] }))}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
+            <option value="active">{t.badges.active}</option>
+            <option value="inactive">{t.badges.inactive}</option>
+            <option value="pending">{t.badges.pending}</option>
           </select>
         </div>
         {data.role === 'employer' && (
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Company Name</label>
-            <input type="text" placeholder="Enter company name" value={data.company_name}
+            <label className="block text-sm font-medium text-foreground mb-1.5">{t.admin.companyNameLabel}</label>
+            <input type="text" placeholder={t.admin.enterCompanyName} value={data.company_name}
               onChange={(e) => setData((d) => ({ ...d, company_name: e.target.value }))}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]" />
           </div>
@@ -340,9 +343,9 @@ function CreateUserForm({ onSave, onCancel }: { onSave: (p: Profile) => void; on
       </div>
       <div className="flex items-center gap-3 pt-2">
         <Button className="gap-2" disabled={creating} onClick={handleCreate}>
-          {creating ? 'Creating...' : <><Plus className="w-4 h-4" /> Create</>}
+          {creating ? t.admin.creatingUser : <><Plus className="w-4 h-4" /> {t.admin.createBtn}</>}
         </Button>
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button variant="outline" onClick={onCancel}>{t.common.cancel}</Button>
       </div>
     </div>
   );

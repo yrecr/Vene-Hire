@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { RoleBadge } from '@/components/role-badge';
 import { useData } from '@/lib/data-context';
 import { PageLoading } from '@/components/page-loading';
+import { useT } from '@/lib/i18n';
 
 export default function ApplicantInterviewsPage() {
+  const { t, lang, formatDate } = useT();
+  const isEs = lang === 'es';
   const { currentUser } = useAuth();
   const { interviewRequests, respondToInterview, talentProfiles, employerProfiles, isHydrated, refreshAll } = useData();
 
@@ -36,8 +39,8 @@ export default function ApplicantInterviewsPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to view your interviews.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{isEs ? 'Inicia sesión con una cuenta de aplicante para ver tus entrevistas.' : 'Sign in with an applicant account to view your interviews.'}</p>
         </div>
       </div>
     );
@@ -53,11 +56,11 @@ export default function ApplicantInterviewsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Interview Requests</h2>
-          <p className="text-muted-foreground mt-1">View and manage interview requests from employers.</p>
+          <h2 className="text-2xl font-bold text-foreground">{t.applicant.interviewsTitle}</h2>
+          <p className="text-muted-foreground mt-1">{isEs ? 'Consulta y gestiona las solicitudes de entrevista de las empresas.' : 'View and manage interview requests from employers.'}</p>
         </div>
         <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
-          <p className="text-muted-foreground">Could not find your talent profile. Contact support if this persists.</p>
+          <p className="text-muted-foreground">{isEs ? 'No se pudo encontrar tu perfil de talento. Contacta con soporte si esto continúa.' : 'Could not find your talent profile. Contact support if this persists.'}</p>
         </div>
       </div>
     );
@@ -66,9 +69,9 @@ export default function ApplicantInterviewsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Interview Requests</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.applicant.interviewsTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          View and manage interview requests from employers.
+          {isEs ? 'Consulta y gestiona las solicitudes de entrevista de las empresas.' : 'View and manage interview requests from employers.'}
         </p>
       </div>
 
@@ -77,9 +80,9 @@ export default function ApplicantInterviewsPage() {
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center mx-auto mb-4">
             <MessageSquare className="w-7 h-7 text-[hsl(210,100%,45%)]" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-1">No interview requests yet</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-1">{isEs ? 'No tienes solicitudes de entrevista aún' : 'No interview requests yet'}</h3>
           <p className="text-sm text-muted-foreground">
-            When employers are interested in your profile, their requests will appear here.
+            {isEs ? 'Cuando las empresas se interesen por tu perfil, sus solicitudes aparecerán aquí.' : 'When employers are interested in your profile, their requests will appear here.'}
           </p>
         </div>
       ) : (
@@ -102,7 +105,7 @@ export default function ApplicantInterviewsPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-foreground">
-                        {employer?.company_name || 'Unknown Company'}
+                        {employer?.company_name || (isEs ? 'Empresa Desconocida' : 'Unknown Company')}
                       </h4>
                       <p className="text-xs text-muted-foreground">
                         {interview.role_title}
@@ -116,7 +119,7 @@ export default function ApplicantInterviewsPage() {
                   <div className="flex items-center gap-2 mb-3">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {new Date(interview.requested_date).toLocaleDateString('en-US', {
+                      {formatDate(interview.requested_date, {
                         weekday: 'long',
                         month: 'long',
                         day: 'numeric',
@@ -138,7 +141,7 @@ export default function ApplicantInterviewsPage() {
                       onClick={() => respondToInterview(interview.id, 'accepted')}
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      Accept
+                      {isEs ? 'Aceptar' : 'Accept'}
                     </Button>
                     <Button
                       variant="outline"
@@ -147,7 +150,7 @@ export default function ApplicantInterviewsPage() {
                       onClick={() => respondToInterview(interview.id, 'declined')}
                     >
                       <XCircle className="w-4 h-4" />
-                      Decline
+                      {isEs ? 'Rechazar' : 'Decline'}
                     </Button>
                   </div>
                 )}
@@ -156,7 +159,7 @@ export default function ApplicantInterviewsPage() {
                   <div className="pt-2 border-t border-gray-100">
                     <span className="text-sm font-medium text-emerald-600 flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4" />
-                      Accepted — waiting for the employer to share a meeting link.
+                      {isEs ? 'Aceptada — esperando que la empresa comparta el enlace de la reunión.' : 'Accepted — waiting for the employer to share a meeting link.'}
                     </span>
                   </div>
                 )}
@@ -165,7 +168,7 @@ export default function ApplicantInterviewsPage() {
                   <div className="pt-2 border-t border-gray-100">
                     <span className="text-sm font-medium text-red-600 flex items-center gap-1.5">
                       <XCircle className="w-4 h-4" />
-                      Declined
+                      {isEs ? 'Rechazada' : 'Declined'}
                     </span>
                   </div>
                 )}
@@ -173,7 +176,7 @@ export default function ApplicantInterviewsPage() {
                 {interview.status === 'scheduled' && (
                   <div className="pt-2 border-t border-gray-100">
                     <span className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-1">
-                      Meeting scheduled
+                      {isEs ? 'Reunión programada' : 'Meeting scheduled'}
                     </span>
                     {interview.meeting_url && (
                       <a
@@ -182,7 +185,7 @@ export default function ApplicantInterviewsPage() {
                         rel="noreferrer"
                         className="text-sm text-[hsl(210,100%,45%)] hover:underline flex items-center gap-1"
                       >
-                        Join meeting <ExternalLink className="w-3.5 h-3.5" />
+                        {isEs ? 'Unirse a la reunión' : 'Join meeting'} <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     )}
                   </div>
@@ -192,7 +195,9 @@ export default function ApplicantInterviewsPage() {
                   <div className="pt-2 border-t border-gray-100">
                     <span className={`text-sm font-medium flex items-center gap-1.5 ${interview.outcome === 'passed' ? 'text-emerald-600' : 'text-red-600'}`}>
                       {interview.outcome === 'passed' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                      Result: {interview.outcome === 'passed' ? 'Passed' : 'Not selected'}
+                      {isEs
+                        ? `Resultado: ${interview.outcome === 'passed' ? 'Aprobado' : 'No seleccionado'}`
+                        : `Result: ${interview.outcome === 'passed' ? 'Passed' : 'Not selected'}`}
                     </span>
                     {interview.outcome_notes && (
                       <p className="text-sm text-muted-foreground mt-1">{interview.outcome_notes}</p>
@@ -201,7 +206,8 @@ export default function ApplicantInterviewsPage() {
                 )}
 
                 <p className="text-xs text-muted-foreground mt-3">
-                  Requested {new Date(interview.created_at).toLocaleDateString('en-US', {
+                  {isEs ? 'Solicitada el ' : 'Requested '}
+                  {formatDate(interview.created_at, {
                     month: 'short', day: 'numeric', year: 'numeric',
                   })}
                 </p>

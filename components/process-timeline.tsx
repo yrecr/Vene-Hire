@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CircleCheck, CircleX, CirclePause, CalendarPlus, Video, FileText } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 interface ProcessTimelineProps {
   currentStage: 'intro_interview' | 'technical_interview' | 'contract_signing';
@@ -11,36 +12,10 @@ interface ProcessTimelineProps {
   onStageClick?: (stageKey: string) => void;
 }
 
-const stages = [
-  { key: 'intro_interview', label: 'Intro Interview' },
-  { key: 'technical_interview', label: 'Technical Interview' },
-  { key: 'contract_signing', label: 'Contract Signing' },
-] as const;
+const stageKeys = ['intro_interview', 'technical_interview', 'contract_signing'] as const;
 
 function getStageIndex(stage: string): number {
-  return stages.findIndex((s) => s.key === stage);
-}
-
-function formatDate(date: string | null | undefined): string | null {
-  if (!date) return null;
-  try {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
-    });
-  } catch { return null; }
-}
-
-function formatTime(date: string | null | undefined): string | null {
-  if (!date) return null;
-  try {
-    const d = new Date(date);
-    const startH = d.getHours().toString().padStart(2, '0');
-    const startM = d.getMinutes().toString().padStart(2, '0');
-    const end = new Date(d.getTime() + 60 * 60 * 1000);
-    const endH = end.getHours().toString().padStart(2, '0');
-    const endM = end.getMinutes().toString().padStart(2, '0');
-    return `${startH}:${startM} - ${endH}:${endM}`;
-  } catch { return null; }
+  return stageKeys.indexOf(stage as any);
 }
 
 export function ProcessTimeline({
@@ -52,8 +27,35 @@ export function ProcessTimeline({
   meetingUrl,
   onStageClick,
 }: ProcessTimelineProps) {
+  const { t, formatDate: i18nFormatDate } = useT();
   const currentIndex = getStageIndex(currentStage);
   const [joinUrl, setJoinUrl] = useState<string | null>(null);
+
+  const stages = [
+    { key: 'intro_interview', label: t.processTimeline.introInterview },
+    { key: 'technical_interview', label: t.processTimeline.technicalInterview },
+    { key: 'contract_signing', label: t.processTimeline.contractSigning },
+  ] as const;
+
+  function formatDate(date: string | null | undefined): string | null {
+    if (!date) return null;
+    try {
+      return i18nFormatDate(date);
+    } catch { return null; }
+  }
+
+  function formatTime(date: string | null | undefined): string | null {
+    if (!date) return null;
+    try {
+      const d = new Date(date);
+      const startH = d.getHours().toString().padStart(2, '0');
+      const startM = d.getMinutes().toString().padStart(2, '0');
+      const end = new Date(d.getTime() + 60 * 60 * 1000);
+      const endH = end.getHours().toString().padStart(2, '0');
+      const endM = end.getMinutes().toString().padStart(2, '0');
+      return `${startH}:${startM} - ${endH}:${endM}`;
+    } catch { return null; }
+  }
 
   function getStepDate(index: number): string | null {
     if (index === 0) return formatDate(introDate);
@@ -215,23 +217,23 @@ export function ProcessTimeline({
                 <Video className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-foreground">Join Meeting</h3>
-                <p className="text-xs text-muted-foreground">The interview link is ready</p>
+                <h3 className="font-semibold text-sm text-foreground">{t.processTimeline.joinMeeting}</h3>
+                <p className="text-xs text-muted-foreground">{t.processTimeline.interviewLinkReady}</p>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">Do you want to open the meeting link now?</p>
+            <p className="text-sm text-muted-foreground mb-4">{t.processTimeline.openMeetingPrompt}</p>
             <div className="flex items-center gap-2 justify-end">
               <button
                 onClick={() => setJoinUrl(null)}
                 className="px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={() => { window.open(joinUrl, '_blank'); setJoinUrl(null); }}
                 className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Join Now
+                {t.processTimeline.joinNow}
               </button>
             </div>
           </div>

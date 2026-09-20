@@ -8,10 +8,12 @@ import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { demoGuard } from '@/lib/demo';
+import { useT } from '@/lib/i18n';
 
 export function EmployerProfileSettings() {
   const { currentUser } = useAuth();
   const { employerProfiles } = useData();
+  const { t, lang, formatDate } = useT();
   const [saving, setSaving] = useState(false);
 
   const employerProfile = employerProfiles.find((e) => e.id === currentUser?.employer_profile_id);
@@ -30,8 +32,6 @@ export function EmployerProfileSettings() {
   const [paymentMethod, setPaymentMethod] = useState(employerProfile?.payment_method || '');
   const [paymentDetails, setPaymentDetails] = useState(employerProfile?.payment_details || '');
 
-  // employerProfile arrives asynchronously (data-context hydrates after mount) —
-  // resync local fields once it loads, but never clobber an in-progress edit.
   useEffect(() => {
     if (isEditing || !employerProfile) return;
     setCompanyName(employerProfile.company_name || '');
@@ -72,12 +72,21 @@ export function EmployerProfileSettings() {
     setIsEditing(false);
   };
 
+  const statusLabel =
+    (t.badges as Record<string, string>)[employerProfile?.status || 'active'] ||
+    employerProfile?.status ||
+    'active';
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Company Profile</h3>
-          <p className="text-sm text-muted-foreground">Manage your company information and hiring preferences.</p>
+          <h3 className="text-lg font-semibold text-foreground">{t.employer.settingsTitle}</h3>
+          <p className="text-sm text-muted-foreground">
+            {lang === 'es'
+              ? 'Administra la información de tu empresa y preferencias de contratación.'
+              : 'Manage your company information and hiring preferences.'}
+          </p>
         </div>
         {!isEditing ? (
           <Button
@@ -87,7 +96,7 @@ export function EmployerProfileSettings() {
             onClick={() => setIsEditing(true)}
           >
             <Pencil className="w-4 h-4" />
-            Edit
+            {t.common.edit}
           </Button>
         ) : (
           <div className="flex gap-2">
@@ -98,7 +107,7 @@ export function EmployerProfileSettings() {
               onClick={handleCancel}
             >
               <X className="w-4 h-4" />
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button
               size="sm"
@@ -107,7 +116,7 @@ export function EmployerProfileSettings() {
               disabled={saving}
             >
               <Save className="w-4 h-4" />
-              Save
+              {saving ? t.common.saving : t.common.save}
             </Button>
           </div>
         )}
@@ -120,10 +129,10 @@ export function EmployerProfileSettings() {
           </div>
           <div>
             <h3 className="text-xl font-bold text-foreground">
-              {companyName || 'Company Name'}
+              {companyName || (lang === 'es' ? 'Nombre de Empresa' : 'Company Name')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Contact: {contactName || 'Not set'}
+              {lang === 'es' ? 'Contacto:' : 'Contact:'} {contactName || (lang === 'es' ? 'No asignado' : 'Not set')}
             </p>
           </div>
         </div>
@@ -131,79 +140,79 @@ export function EmployerProfileSettings() {
         <div className="space-y-5">
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Company Name
+              {t.auth.companyName}
             </label>
             {isEditing ? (
               <Input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Enter company name"
+                placeholder={t.auth.companyPlaceholder}
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5">
-                {companyName || 'Not set'}
+                {companyName || (lang === 'es' ? 'No asignado' : 'Not set')}
               </p>
             )}
           </div>
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Contact Name
+              {lang === 'es' ? 'Nombre de Contacto' : 'Contact Name'}
             </label>
             {isEditing ? (
               <Input
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
-                placeholder="Enter contact name"
+                placeholder="Jane Doe"
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5">
-                {contactName || 'Not set'}
+                {contactName || (lang === 'es' ? 'No asignado' : 'Not set')}
               </p>
             )}
           </div>
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Company Summary
+              {lang === 'es' ? 'Resumen de la Empresa' : 'Company Summary'}
             </label>
             {isEditing ? (
               <textarea
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                placeholder="Describe your company..."
+                placeholder={lang === 'es' ? 'Describe tu empresa...' : 'Describe your company...'}
                 rows={4}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 whitespace-pre-wrap">
-                {summary || 'No summary provided.'}
+                {summary || (lang === 'es' ? 'Sin descripción proporcionada.' : 'No summary provided.')}
               </p>
             )}
           </div>
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Hiring Needs
+              {t.auth.hiringNeedLabel}
             </label>
             {isEditing ? (
               <textarea
                 value={hiringNeeds}
                 onChange={(e) => setHiringNeeds(e.target.value)}
-                placeholder="Describe your current hiring needs..."
+                placeholder={t.auth.hiringNeedPlaceholder}
                 rows={3}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)] resize-none"
               />
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 whitespace-pre-wrap">
-                {hiringNeeds || 'No hiring needs specified.'}
+                {hiringNeeds || (lang === 'es' ? 'Sin necesidades especificadas.' : 'No hiring needs specified.')}
               </p>
             )}
           </div>
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Payment Method
+              {lang === 'es' ? 'Método de Pago' : 'Payment Method'}
             </label>
             {isEditing ? (
               <select
@@ -211,14 +220,14 @@ export function EmployerProfileSettings() {
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
               >
-                <option value="">Not set</option>
+                <option value="">{lang === 'es' ? 'No asignado' : 'Not set'}</option>
                 <option value="deal">DEAL</option>
-                <option value="bank_transfer">Bank transfer</option>
-                <option value="other">Other</option>
+                <option value="bank_transfer">{lang === 'es' ? 'Transferencia bancaria' : 'Bank transfer'}</option>
+                <option value="other">{lang === 'es' ? 'Otro' : 'Other'}</option>
               </select>
             ) : (
               <p className="text-sm text-muted-foreground bg-gray-50 rounded-lg px-3 py-2.5 capitalize">
-                {employerProfile?.payment_method?.replace('_', ' ') || 'Not set'}
+                {employerProfile?.payment_method?.replace('_', ' ') || (lang === 'es' ? 'No asignado' : 'Not set')}
               </p>
             )}
           </div>
@@ -226,8 +235,8 @@ export function EmployerProfileSettings() {
           {(isEditing || paymentDetails) && (
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
-                Payment Details
-                <span className="text-muted-foreground font-normal"> (optional)</span>
+                {lang === 'es' ? 'Detalles de Pago' : 'Payment Details'}
+                <span className="text-muted-foreground font-normal"> ({t.common.optional})</span>
               </label>
               {isEditing ? (
                 <Input
@@ -245,19 +254,16 @@ export function EmployerProfileSettings() {
 
           <div>
             <label className="text-sm font-medium text-foreground mb-1.5 block">
-              Account Status
+              {lang === 'es' ? 'Estado de la Cuenta' : 'Account Status'}
             </label>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200 capitalize">
-                {employerProfile?.status || 'active'}
+                {statusLabel}
               </span>
               <span className="text-xs text-muted-foreground">
-                Member since{' '}
+                {lang === 'es' ? 'Miembro desde ' : 'Member since '}
                 {employerProfile
-                  ? new Date(employerProfile.created_at).toLocaleDateString(
-                      'en-US',
-                      { month: 'long', year: 'numeric' }
-                    )
+                  ? formatDate(employerProfile.created_at, { month: 'long', year: 'numeric' })
                   : 'N/A'}
               </span>
             </div>

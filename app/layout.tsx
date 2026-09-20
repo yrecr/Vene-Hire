@@ -1,10 +1,12 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import { cookies } from 'next/headers';
 import { AuthProvider } from '@/lib/auth';
 import { DataProvider } from '@/lib/data-context';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
+import { I18nProvider, type Lang } from '@/lib/i18n';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -66,8 +68,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = cookies();
+  const langCookie = cookieStore.get('venehire_lang')?.value;
+  const initialLang: Lang = langCookie === 'es' ? 'es' : 'en';
+
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={initialLang} className={inter.variable} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -81,12 +87,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <DataProvider>
-              {children}
-              <Toaster />
-            </DataProvider>
-          </AuthProvider>
+          <I18nProvider initialLang={initialLang}>
+            <AuthProvider>
+              <DataProvider>
+                {children}
+                <Toaster />
+              </DataProvider>
+            </AuthProvider>
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

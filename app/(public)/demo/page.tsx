@@ -2,42 +2,45 @@
 
 import { enterDemo, type DemoRole } from '@/lib/demo';
 import { ShieldCheck, Building2, User, Play } from 'lucide-react';
-
-const roles: { role: DemoRole; icon: typeof ShieldCheck; title: string; description: string }[] = [
-  {
-    role: 'admin',
-    icon: ShieldCheck,
-    title: 'Administrator',
-    description: 'Full platform control: manage users, review hiring processes, approve contracts, and oversee resources.',
-  },
-  {
-    role: 'employer',
-    icon: Building2,
-    title: 'Employer',
-    description: 'Browse talent, request interviews, manage hiring pipelines, and track active processes.',
-  },
-  {
-    role: 'applicant',
-    icon: User,
-    title: 'Applicant',
-    description: 'View your profile, track interview processes, manage availability, and review contracts.',
-  },
-];
+import { useT } from '@/lib/i18n';
 
 export default function DemoPage() {
+  const { t } = useT();
+
+  const roles: { role: DemoRole; icon: typeof ShieldCheck; title: string; description: string }[] = [
+    {
+      role: 'admin',
+      icon: ShieldCheck,
+      title: t.demo.adminTitle,
+      description: t.demo.adminDesc,
+    },
+    {
+      role: 'employer',
+      icon: Building2,
+      title: t.demo.employerTitle,
+      description: t.demo.employerDesc,
+    },
+    {
+      role: 'applicant',
+      icon: User,
+      title: t.demo.applicantTitle,
+      description: t.demo.applicantDesc,
+    },
+  ];
+
   return (
     <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 dark:from-blue-950/20 dark:via-background dark:to-teal-950/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
           <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/10 rounded-full mb-6">
-            Interactive Demo
+            {t.demo.pageBadge}
           </span>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-[1.1] mb-4">
-            Try Vene<span className="gradient-text">Hire</span>
+            {t.demo.pageTitle.split(' ')[0]} <span className="gradient-text">{t.demo.pageTitle.split(' ').slice(1).join(' ') || 'VeneHire'}</span>
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            Explore the platform from any role. No account needed — sample data only, nothing is saved.
+            {t.demo.pageSubtitle}
           </p>
         </div>
 
@@ -58,7 +61,7 @@ export default function DemoPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">{description}</p>
                 <span className="inline-flex items-center gap-2 text-sm font-medium text-[hsl(210,100%,45%)] group-hover:gap-3 transition-all duration-300">
                   <Play className="w-4 h-4" />
-                  Enter demo
+                  {t.demo.enterDemo}
                 </span>
               </div>
             </button>
@@ -67,7 +70,7 @@ export default function DemoPage() {
 
         {/* Disclaimer */}
         <p className="text-center text-xs text-muted-foreground mt-10">
-          Demo sessions use sample data and expire after 24 hours. No real data is read or written.
+          {t.demo.disclaimer}
         </p>
       </div>
     </div>

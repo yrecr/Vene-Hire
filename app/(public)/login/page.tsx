@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { useT } from '@/lib/i18n';
 
 const rolePath: Record<string, string> = {
   admin: '/admin',
@@ -16,13 +17,16 @@ const rolePath: Record<string, string> = {
 };
 
 export default function LoginPage() {
+  const { t } = useT();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Reaching the real login means leaving the demo sandbox.
-  useEffect(() => { clearDemoCookie(); }, []);
+  useEffect(() => {
+    clearDemoCookie();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +44,7 @@ export default function LoginPage() {
       });
 
       if (authError || !data.session) {
-        setError(authError?.message ?? 'Login failed');
+        setError(authError?.message ?? t.auth.loginFailed);
         setLoading(false);
         return;
       }
@@ -48,7 +52,7 @@ export default function LoginPage() {
       const role = (data.session.user.user_metadata?.role as string) || '';
       window.location.href = rolePath[role] || '/';
     } catch {
-      setError('Network error');
+      setError(t.auth.networkError);
       setLoading(false);
     }
   };
@@ -63,8 +67,8 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-500 mt-1">Sign in to access your dashboard</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t.auth.welcomeBack}</h1>
+            <p className="text-gray-500 mt-1">{t.auth.signInDesc}</p>
           </div>
 
           {error && (
@@ -76,13 +80,13 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.auth.emailLabel}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t.auth.emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -92,13 +96,13 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.auth.passwordLabel}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={t.auth.passwordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
@@ -109,10 +113,10 @@ export default function LoginPage() {
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
-                'Signing in...'
+                t.auth.signingIn
               ) : (
                 <span className="flex items-center justify-center gap-2">
-                  Sign In
+                  {t.auth.signInBtn}
                   <ArrowRight className="w-4 h-4" />
                 </span>
               )}
@@ -120,11 +124,11 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-gray-400 mt-8">
-            Access is by invitation only.{' '}
+            {t.auth.invitationOnly}{' '}
             <Link href="/contact" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
-              Contact us
+              {t.auth.contactUsLink}
             </Link>{' '}
-            to learn more.
+            {t.auth.toLearnMore}
           </p>
         </div>
       </div>

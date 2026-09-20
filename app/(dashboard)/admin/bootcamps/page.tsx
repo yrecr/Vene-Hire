@@ -3,6 +3,7 @@
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import { PageLoading } from '@/components/page-loading';
 import { Plus, Calendar, Users } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const studentCounts: Record<string, number> = {
 };
 
 export default function BootcampsPage() {
+  const { t, formatDate } = useT();
   const { bootcamps, isHydrated } = useData();
 
   if (!isHydrated) {
@@ -26,18 +28,18 @@ export default function BootcampsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">Bootcamps</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.admin.bootcamps}</h2>
           <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-            Coming soon
+            {t.admin.comingSoonBadge}
           </span>
         </div>
-        <Button size="sm" className="gap-2" disabled title="Bootcamp management is coming in a future update">
+        <Button size="sm" className="gap-2" disabled title={t.admin.bootcampComingSoonTooltip}>
           <Plus className="w-4 h-4" />
-          Create Bootcamp
+          {t.admin.createBootcampBtn}
         </Button>
       </div>
       <p className="text-sm text-muted-foreground -mt-4">
-        This module isn&apos;t operational yet — it&apos;ll be enabled in a future update.
+        {t.admin.bootcampNotice}
       </p>
 
       {/* Bootcamp Cards */}
@@ -63,14 +65,14 @@ export default function BootcampsPage() {
                 <Calendar className="w-4 h-4 shrink-0" />
                 <span>
                   {bootcamp.start_date
-                    ? new Date(bootcamp.start_date).toLocaleDateString('en-US', {
+                    ? formatDate(bootcamp.start_date, {
                         month: 'short',
                         day: 'numeric',
                       })
                     : 'TBD'}
                   {' - '}
                   {bootcamp.end_date
-                    ? new Date(bootcamp.end_date).toLocaleDateString('en-US', {
+                    ? formatDate(bootcamp.end_date, {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
@@ -81,7 +83,7 @@ export default function BootcampsPage() {
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="w-4 h-4 shrink-0" />
-                <span>{studentCounts[bootcamp.id] ?? 0} students enrolled</span>
+                <span>{t.admin.studentsEnrolled.replace('{count}', String(studentCounts[bootcamp.id] ?? 0))}</span>
               </div>
             </div>
           </div>

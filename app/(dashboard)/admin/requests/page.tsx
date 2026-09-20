@@ -11,15 +11,15 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import type { AccessRequest } from '@/types';
 import { Eye, CircleCheck, CircleX } from 'lucide-react';
 import { demoGuard, isDemoMode } from '@/lib/demo';
 
-const statusTabs = ['All', 'Pending', 'Contacted', 'Approved', 'Rejected'] as const;
-const typeTabs = ['All', 'Applicant Requests', 'Employer Requests'] as const;
 const UNDO_WINDOW_MS = 6000;
 
 export default function AccessRequestsPage() {
+  const { t, formatDate } = useT();
   const {
     accessRequests, setAccessRequests, updateAccessRequestStatus,
     setProfiles, profiles, isHydrated,
@@ -29,6 +29,20 @@ export default function AccessRequestsPage() {
   const [viewing, setViewing] = useState<AccessRequest | null>(null);
   const { toast } = useToast();
   const pendingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const typeTabs = useMemo(() => [
+    { id: 'All', label: t.admin.tabAll },
+    { id: 'Applicant Requests', label: t.admin.tabApplicantRequests },
+    { id: 'Employer Requests', label: t.admin.tabEmployerRequests },
+  ], [t]);
+
+  const statusTabs = useMemo(() => [
+    { id: 'All', label: t.admin.tabAll },
+    { id: 'Pending', label: t.admin.tabPending },
+    { id: 'Contacted', label: t.admin.tabContacted },
+    { id: 'Approved', label: t.admin.tabApproved },
+    { id: 'Rejected', label: t.admin.tabRejected },
+  ], [t]);
 
   useEffect(() => {
     const timers = pendingTimers.current;
@@ -78,11 +92,11 @@ export default function AccessRequestsPage() {
     };
 
     toast({
-      title: status === 'approved' ? 'Request approved' : 'Request rejected',
-      description: `${req.full_name} — this takes effect in a few seconds.`,
+      title: status === 'approved' ? t.admin.requestApprovedToast : t.admin.requestRejectedToast,
+      description: t.admin.requestTakesEffect.replace('{name}', req.full_name),
       action: (
-        <ToastAction altText="Undo" onClick={undo}>
-          Undo
+        <ToastAction altText={t.admin.undoBtn} onClick={undo}>
+          {t.admin.undoBtn}
         </ToastAction>
       ),
     });
@@ -94,7 +108,7 @@ export default function AccessRequestsPage() {
         commitApproval(req);
       }
     }, UNDO_WINDOW_MS);
-  }, [setAccessRequests, updateAccessRequestStatus, commitApproval, toast]);
+  }, [setAccessRequests, updateAccessRequestStatus, commitApproval, toast, t]);
 
   const filteredRequests = useMemo(() => {
     let result = accessRequests;
@@ -114,52 +128,52 @@ export default function AccessRequestsPage() {
     return result;
   }, [accessRequests, activeStatusFilter, activeTypeFilter]);
 
-  const columns: DataTableColumn<AccessRequest>[] = [
+  const columns: DataTableColumn<AccessRequest>[] = useMemo(() => [
     {
       key: 'name',
-      header: 'Name',
+      header: t.admin.colName,
       render: (item) => <span className="font-medium text-foreground">{item.full_name}</span>,
     },
     {
       key: 'request_type',
-      header: 'Type',
+      header: t.admin.colRole,
       render: (item) => <RoleBadge role={item.request_type} />,
     },
     {
       key: 'company',
-      header: 'Company',
+      header: t.admin.colCompany,
       render: (item) => <span className="text-muted-foreground">{item.company || '-'}</span>,
     },
     {
       key: 'email',
-      header: 'Email',
+      header: t.admin.colEmail,
       render: (item) => <span className="text-muted-foreground">{item.email}</span>,
     },
     {
       key: 'role',
-      header: 'Role / Need',
+      header: t.admin.colRoleNeed,
       render: (item) => <span className="text-muted-foreground">{item.hiring_need}</span>,
     },
     {
       key: 'candidate',
-      header: 'Candidate',
+      header: t.admin.colCandidate,
       render: (item) => (
         <span className="text-muted-foreground">
-          {item.candidate_slug || 'General'}
+          {item.candidate_slug || t.admin.generalCandidate}
         </span>
       ),
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t.admin.colStatus,
       render: (item) => <RoleBadge role={item.status} />,
     },
     {
       key: 'date',
-      header: 'Date',
+      header: t.admin.colDate,
       render: (item) => (
         <span className="text-muted-foreground">
-          {new Date(item.created_at).toLocaleDateString('en-US', {
+          {formatDate(item.created_at, {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -169,7 +183,7 @@ export default function AccessRequestsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.admin.colActions,
       render: (item) => (
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setViewing(item)}>
@@ -192,13 +206,13 @@ export default function AccessRequestsPage() {
             </>
           ) : (
             <span className="text-xs text-muted-foreground italic">
-              {item.status === 'approved' ? 'Approved' : 'Rejected'}
+              {item.status === 'approved' ? t.admin.tabApproved : t.admin.tabRejected}
             </span>
           )}
         </div>
       ),
     },
-  ];
+  ], [t, formatDate, decide]);
 
   if (!isHydrated) {
     return (
@@ -210,7 +224,7 @@ export default function AccessRequestsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold text-foreground">Access Requests</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.admin.accessRequests}</h2>
         <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
           {accessRequests.length}
         </span>
@@ -221,13 +235,13 @@ export default function AccessRequestsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {typeTabs.map((tab) => (
             <Button
-              key={tab}
-              variant={activeTypeFilter === tab ? 'default' : 'outline'}
+              key={tab.id}
+              variant={activeTypeFilter === tab.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setActiveTypeFilter(tab)}
+              onClick={() => setActiveTypeFilter(tab.id)}
               className="rounded-full"
             >
-              {tab}
+              {tab.label}
             </Button>
           ))}
         </div>
@@ -236,20 +250,20 @@ export default function AccessRequestsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {statusTabs.map((tab) => (
             <Button
-              key={tab}
-              variant={activeStatusFilter === tab ? 'default' : 'outline'}
+              key={tab.id}
+              variant={activeStatusFilter === tab.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setActiveStatusFilter(tab)}
+              onClick={() => setActiveStatusFilter(tab.id)}
               className="rounded-full"
             >
-              {tab}
+              {tab.label}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={filteredRequests} pageSize={10} emptyMessage="No access requests match these filters." />
+      <DataTable columns={columns} data={filteredRequests} pageSize={10} emptyMessage={t.admin.noRequestsMatch} />
 
       {/* Detail dialog */}
       <Dialog open={!!viewing} onOpenChange={(open) => !open && setViewing(null)}>
@@ -262,34 +276,34 @@ export default function AccessRequestsPage() {
               </DialogHeader>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Type</span>
+                  <span className="text-muted-foreground">{t.admin.colRole}</span>
                   <RoleBadge role={viewing.request_type} />
                 </div>
                 {viewing.company && (
                   <div className="flex justify-between gap-4">
-                    <span className="text-muted-foreground">Company</span>
+                    <span className="text-muted-foreground">{t.admin.colCompany}</span>
                     <span className="text-foreground">{viewing.company}</span>
                   </div>
                 )}
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Country</span>
+                  <span className="text-muted-foreground">{t.admin.countryLabel}</span>
                   <span className="text-foreground">{viewing.country || '—'}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Role / Need</span>
+                  <span className="text-muted-foreground">{t.admin.colRoleNeed}</span>
                   <span className="text-foreground text-right">{viewing.hiring_need || '—'}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Candidate of interest</span>
-                  <span className="text-foreground">{viewing.candidate_slug || 'General'}</span>
+                  <span className="text-muted-foreground">{t.admin.candidateOfInterest}</span>
+                  <span className="text-foreground">{viewing.candidate_slug || t.admin.generalCandidate}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Status</span>
+                  <span className="text-muted-foreground">{t.admin.colStatus}</span>
                   <RoleBadge role={viewing.status} />
                 </div>
                 {viewing.message && (
                   <div>
-                    <p className="text-muted-foreground mb-1">Message</p>
+                    <p className="text-muted-foreground mb-1">{t.admin.messageLabel}</p>
                     <p className="text-foreground bg-gray-50 rounded-lg p-3 leading-relaxed">
                       {viewing.message}
                     </p>

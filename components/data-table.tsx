@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useT } from '@/lib/i18n';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -29,8 +30,10 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T extends { id: string }>({
-  columns, data, onRowClick, emptyMessage = 'No records found.', pageSize,
+  columns, data, onRowClick, emptyMessage, pageSize,
 }: DataTableProps<T>) {
+  const { t } = useT();
+  const resolvedEmpty = emptyMessage ?? t.dataTable.noRecords;
   const [page, setPage] = useState(1);
   const totalPages = pageSize ? Math.max(1, Math.ceil(data.length / pageSize)) : 1;
 
@@ -61,7 +64,7 @@ export function DataTable<T extends { id: string }>({
                 <TableCell colSpan={columns.length} className="py-16 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Inbox className="w-8 h-8 opacity-40" />
-                    <span className="text-sm">{emptyMessage}</span>
+                    <span className="text-sm">{resolvedEmpty}</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -86,13 +89,14 @@ export function DataTable<T extends { id: string }>({
       {pageSize && data.length > 0 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
           <span className="text-xs text-muted-foreground">
-            {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, data.length)} of {data.length}
+            {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, data.length)} {t.dataTable.of} {data.length}
           </span>
           <div className="flex items-center gap-1.5">
             <Button
               variant="outline" size="sm" className="h-8 w-8 p-0"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
+              aria-label={t.dataTable.previousPage}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -103,6 +107,7 @@ export function DataTable<T extends { id: string }>({
               variant="outline" size="sm" className="h-8 w-8 p-0"
               disabled={page >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              aria-label={t.dataTable.nextPage}
             >
               <ChevronRight className="w-4 h-4" />
             </Button>

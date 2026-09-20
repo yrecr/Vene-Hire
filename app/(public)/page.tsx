@@ -8,48 +8,65 @@ import { ProfileAvatar } from '@/components/profile-avatar';
 import { TalentCarousel } from '@/components/talent-carousel';
 import { Reveal } from '@/components/reveal';
 import { useData } from '@/lib/data-context';
-import { ArrowRight, Clock, ShieldCheck, Users, Search, Play, MessageSquare, Rocket, CircleCheck as CheckCircle2, ChartBar as BarChart3, Target, GitBranch, Code as Code2, UserCheck, TrendingUp, Layers, Award } from 'lucide-react';
-
-const trustItems = [
-  { icon: Clock, label: 'Faster Hiring', value: 'Pre-Screened' },
-  { icon: ShieldCheck, label: 'Pre-Evaluated', value: 'Every Engineer' },
-  { icon: Users, label: 'Curated Pool', value: 'Skill-Matched' },
-  { icon: Target, label: 'Fit Assessed', value: 'Before You Meet' },
-];
-
-const steps = [
-  { icon: Search, title: 'Browse Talent', description: 'Explore our curated pool of pre-trained, production-ready engineers.' },
-  { icon: Play, title: 'Review Profiles', description: 'Watch intro videos and review detailed technical profiles.' },
-  { icon: MessageSquare, title: 'Request Interview', description: 'Register to start the evaluation process with your chosen candidate.' },
-  { icon: Rocket, title: 'Get Started', description: 'Receive guided onboarding and integrate talent into your team.' },
-];
-
-const leadValueProp = {
-  icon: CheckCircle2,
-  title: 'Ready from Day One',
-  description: 'Engineers trained through real-world project simulations, agile practices, and code reviews -- not textbook exercises. By the time you meet them, they have already shipped, reviewed, and iterated in a team setting.',
-};
-
-const supportingValueProps = [
-  { icon: Clock, title: 'Faster Hiring Cycle', description: 'Skip the months of sourcing and screening. Our talent is pre-evaluated and interview-ready.' },
-  { icon: ShieldCheck, title: 'Lower Hiring Risk', description: 'Every engineer passes rigorous technical and soft-skill evaluations before being listed.' },
-  { icon: BarChart3, title: 'Pre-Evaluated Engineers', description: 'Detailed skill assessments, project portfolios, and performance metrics for every candidate.' },
-  { icon: Users, title: 'Real-World Agile Simulation', description: 'Candidates work in sprint teams with standups, retrospectives, and peer code reviews.' },
-  { icon: TrendingUp, title: 'Scalable Talent Pipeline', description: 'Continuous cohorts ensure a steady supply of trained engineers for growing teams.' },
-];
-
-const bootcampFeatures = [
-  { icon: Code2, title: 'Production-Grade Projects', description: 'Engineers build real applications with modern tech stacks, from architecture to deployment.' },
-  { icon: GitBranch, title: 'Agile & Scrum Practices', description: 'Daily standups, sprint planning, retrospectives, and cross-functional collaboration.' },
-  { icon: UserCheck, title: 'Peer Code Reviews', description: 'Every PR is reviewed by peers and mentors, building habits of quality and accountability.' },
-  { icon: Layers, title: 'Collaboration Tools', description: 'GitHub, Jira, Slack, Figma -- candidates learn the tools your team already uses.' },
-  { icon: Target, title: 'Practical Evaluation', description: 'Performance assessed on code quality, communication, problem-solving, and teamwork.' },
-  { icon: Award, title: 'Job-Readiness Focus', description: 'Technical interviews, English communication, and professional soft skills training included.' },
-];
+import { useT } from '@/lib/i18n';
+import {
+  ArrowRight,
+  Clock,
+  ShieldCheck,
+  Users,
+  Search,
+  Play,
+  MessageSquare,
+  Rocket,
+  CircleCheck as CheckCircle2,
+  Target,
+  GitBranch,
+  Code as Code2,
+  UserCheck,
+  Layers,
+  Award,
+} from 'lucide-react';
 
 export default function HomePage() {
   const { talentProfiles } = useData();
+  const { t } = useT();
   const featuredTalent = talentProfiles.filter((t) => t.featured);
+
+  const trustItems = [
+    { icon: ShieldCheck, label: t.home.trust1Label, value: t.home.trust1Value },
+    { icon: Clock, label: t.home.trust2Label, value: t.home.trust2Value },
+    { icon: Users, label: t.home.trust3Label, value: t.home.trust3Value },
+    { icon: Target, label: t.home.trust4Label, value: t.home.trust4Value },
+  ];
+
+  const steps = [
+    { icon: Search, title: t.home.step1Title, description: t.home.step1Desc },
+    { icon: Play, title: t.home.step2Title, description: t.home.step2Desc },
+    { icon: MessageSquare, title: t.home.step3Title, description: t.home.step3Desc },
+    { icon: Rocket, title: t.home.step4Title, description: t.home.step4Desc },
+  ];
+
+  const leadValueProp = {
+    icon: CheckCircle2,
+    title: t.home.leadValueTitle,
+    description: t.home.leadValueDesc,
+  };
+
+  const supportingValueProps = [
+    { icon: ShieldCheck, title: t.home.vp1Title, description: t.home.vp1Desc },
+    { icon: Users, title: t.home.vp2Title, description: t.home.vp2Desc },
+    { icon: Clock, title: t.home.vp3Title, description: t.home.vp3Desc },
+  ];
+
+  const bootcampFeatures = [
+    { icon: Code2, title: t.home.feat1Title, description: t.home.feat1Desc },
+    { icon: GitBranch, title: t.home.feat2Title, description: t.home.feat2Desc },
+    { icon: UserCheck, title: t.home.feat3Title, description: t.home.feat3Desc },
+    { icon: Layers, title: t.home.feat4Title, description: t.home.feat4Desc },
+    { icon: Target, title: t.home.feat5Title, description: t.home.feat5Desc },
+    { icon: Award, title: t.home.feat6Title, description: t.home.feat6Desc },
+  ];
+
   return (
     <>
       {/* Hero */}
@@ -61,22 +78,25 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="animate-fade-in-up">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-[hsl(210,100%,45%)] bg-blue-50 dark:bg-blue-950/40 dark:text-blue-300 rounded-full mb-6">
+                {t.home.heroBadge}
+              </span>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-[1.1]">
-                Hire Production-Ready Engineers in{' '}
-                <span className="text-[hsl(210,100%,45%)]">Days, Not Months</span>
+                {t.home.heroTitle}{' '}
+                <span className="text-[hsl(210,100%,45%)]">{t.home.heroTitleHighlight}</span>
               </h1>
               <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-lg">
-                Access pre-trained, pre-evaluated software engineers ready to integrate into your team from day one.
+                {t.home.heroSubtitle}
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <Link href="/request-sign-up">
                   <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
-                    Register <ArrowRight className="w-4 h-4 ml-2" />
+                    {t.home.registerCta} <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
                 <Link href="/talent">
                   <Button variant="outline" size="lg" className="text-base px-8 h-12 border-gray-200 hover:bg-gray-50">
-                    Browse Talent
+                    {t.home.browseTalentCta}
                   </Button>
                 </Link>
               </div>
@@ -90,7 +110,7 @@ export default function HomePage() {
                     <div className="w-3 h-3 rounded-full bg-red-400" />
                     <div className="w-3 h-3 rounded-full bg-amber-400" />
                     <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                    <span className="ml-2 text-xs text-muted-foreground">talent-dashboard</span>
+                    <span className="ml-2 text-xs text-muted-foreground">{t.home.talentDashboard}</span>
                   </div>
                   {featuredTalent.slice(0, 3).map((talent, i) => (
                     <div key={talent.id} className={`flex items-center gap-4 p-3 rounded-xl bg-gray-50/80 animate-fade-in-up stagger-${i + 2}`}>
@@ -104,13 +124,15 @@ export default function HomePage() {
                         <p className="text-xs text-muted-foreground">{talent.title}</p>
                       </div>
                       <span className="px-2.5 py-1 text-[10px] font-medium bg-emerald-50 text-emerald-600 rounded-full">
-                        Available
+                        {t.badges.available}
                       </span>
                     </div>
                   ))}
                   <div className="pt-2 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Showing 3 of {talentProfiles.length} engineers</span>
-                    <span className="text-[hsl(210,100%,45%)] font-medium">View all</span>
+                    <span>{t.home.showingEngineers.replace('{total}', String(talentProfiles.length))}</span>
+                    <Link href="/talent" className="text-[hsl(210,100%,45%)] font-medium hover:underline">
+                      {t.home.viewAllTalent}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -145,8 +167,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <SectionHeader
-              title="From Discovery to Hire in 4 Simple Steps"
-              description="Our streamlined process gets you from browsing talent to integrating engineers into your team as fast as possible."
+              title={t.home.howItWorksTitle}
+              description={t.home.howItWorksSubtitle}
             />
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -160,7 +182,7 @@ export default function HomePage() {
                     <step.icon className="w-7 h-7 text-[hsl(210,100%,45%)]" />
                   </div>
                   <span className="text-xs font-bold text-[hsl(210,100%,45%)] uppercase tracking-wider mb-2 block">
-                    Step {i + 1}
+                    {t.common.details} {i + 1}
                   </span>
                   <h3 className="text-lg font-semibold text-foreground mb-2">{step.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
@@ -171,14 +193,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Talent */}
       {/* Talent Carousel */}
       <section className="py-20 lg:py-28 bg-gray-50/70">
         <Reveal>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
             <SectionHeader
-              title="Discover More Engineers"
-              description="Browse through our growing pool of trained and evaluated software engineers."
+              title={t.home.discoverMoreTitle}
+              description={t.home.discoverMoreSubtitle}
             />
           </div>
         </Reveal>
@@ -190,8 +211,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <SectionHeader
-              title="The Smarter Way to Hire Engineers"
-              description="Our talent accelerator model eliminates the biggest pain points in technical hiring."
+              title={t.home.valuePropHeaderTitle}
+              description={t.home.valuePropHeaderSubtitle}
               align="left"
             />
           </Reveal>
@@ -229,11 +250,11 @@ export default function HomePage() {
           <Reveal>
             <div className="max-w-3xl mx-auto text-center mb-14 lg:mb-16">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-tight">
-                Not Just Recruitment.{' '}
-                <span className="text-teal-400">Real Training.</span>
+                {t.home.bootcampTitle}{' '}
+                <span className="text-teal-400">{t.home.bootcampTitleHighlight}</span>
               </h2>
               <p className="mt-4 text-lg text-gray-400 dark:text-slate-300 leading-relaxed">
-                Our engineers go through an intensive accelerator program that simulates real-world product development.
+                {t.home.bootcampSubtitle}
               </p>
             </div>
           </Reveal>
@@ -257,8 +278,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Reveal>
             <SectionHeader
-              title="Meet Our Top Engineers"
-              description="Hand-picked, production-ready engineers who have completed our rigorous training and evaluation program."
+              title={t.home.topEngineersTitle}
+              description={t.home.topEngineersSubtitle}
             />
           </Reveal>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -271,7 +292,7 @@ export default function HomePage() {
           <div className="text-center mt-10">
             <Link href="/talent">
               <Button variant="outline" size="lg" className="px-8">
-                View All Talent <ArrowRight className="w-4 h-4 ml-2" />
+                {t.home.viewAllTalentBtn} <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
           </div>
@@ -282,21 +303,21 @@ export default function HomePage() {
       <section className="py-20 lg:py-28 bg-white">
         <Reveal className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground tracking-tight leading-tight mb-6">
-            Build Your Team Faster with{' '}
-            <span className="text-[hsl(210,100%,45%)]">Job-Ready Engineers</span>
+            {t.home.finalCtaTitle}{' '}
+            <span className="text-[hsl(210,100%,45%)]">{t.home.finalCtaHighlight}</span>
           </h2>
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Stop spending months on sourcing and screening. Our pre-trained engineers are ready to deliver from day one.
+            {t.home.finalCtaSubtitle}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/request-sign-up">
               <Button size="lg" className="bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all text-base px-8 h-12">
-                Register <ArrowRight className="w-4 h-4 ml-2" />
+                {t.home.registerCta} <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
             <Link href="/talent">
               <Button variant="outline" size="lg" className="text-base px-8 h-12 border-gray-200 hover:bg-gray-50">
-                Browse Talent
+                {t.home.browseTalentCta}
               </Button>
             </Link>
           </div>

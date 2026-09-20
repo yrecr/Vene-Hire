@@ -12,20 +12,19 @@ import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { EmptyState } from '@/components/empty-state';
 import Link from 'next/link';
 import type { TalentProfile } from '@/types';
+import { useT } from '@/lib/i18n';
 
 const technologyTags = [
   'Backend', 'AI', 'C#', '.NET', 'Python', 'Java', 'React', 'Node.js',
   'Cloud', 'TypeScript', 'Docker', 'AWS', 'PostgreSQL', 'Go', 'GraphQL',
 ];
 
-const englishLevels = ['All', 'Fluent', 'Advanced', 'Intermediate'];
-const availabilityOptions = ['All', 'Available', 'In Training', 'On Hold'];
-const experienceLevels = ['All', '1-2 years', '3-4 years', '5+ years'];
-
 export default function EmployerApplicantsPage() {
   const { currentUser } = useAuth();
   const mockData = useData();
   const { isShortlisted, toggleShortlist, talentProfiles } = mockData;
+  const { t, lang } = useT();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [englishFilter, setEnglishFilter] = useState('All');
@@ -41,6 +40,27 @@ export default function EmployerApplicantsPage() {
 
   const employerId = employerProfile?.id ?? '';
 
+  const englishLevels = [
+    { value: 'All', label: t.talent.allEnglish },
+    { value: 'Fluent', label: t.englishLevels.fluent },
+    { value: 'Advanced', label: t.englishLevels.advanced },
+    { value: 'Intermediate', label: t.englishLevels.intermediate },
+  ];
+
+  const availabilityOptions = [
+    { value: 'All', label: t.talent.allAvailability },
+    { value: 'Available', label: t.badges.available },
+    { value: 'In Training', label: t.badges.in_training },
+    { value: 'On Hold', label: t.badges.on_hold },
+  ];
+
+  const experienceLevels = [
+    { value: 'All', label: t.common.all },
+    { value: '1-2 years', label: lang === 'es' ? '1-2 años' : '1-2 years' },
+    { value: '3-4 years', label: lang === 'es' ? '3-4 años' : '3-4 years' },
+    { value: '5+ years', label: lang === 'es' ? '5+ años' : '5+ years' },
+  ];
+
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -49,57 +69,71 @@ export default function EmployerApplicantsPage() {
 
   const filteredApplicants = useMemo(() => {
     return talentProfiles
-      .filter((t) => t.public_visible)
-      // Hired (by anyone) means off the market — showing them here just
-      // invites a duplicate hire that confuses whose hours belong to whom.
-      .filter((t) => t.availability_status !== 'Hired')
-      .filter((t) => {
+      .filter((item) => item.public_visible)
+      .filter((item) => item.availability_status !== 'Hired')
+      .filter((item) => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
-          t.display_name.toLowerCase().includes(q) ||
-          t.title.toLowerCase().includes(q) ||
-          t.summary.toLowerCase().includes(q)
+          item.display_name.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          item.summary.toLowerCase().includes(q)
         );
       })
-      .filter((t) => {
+      .filter((item) => {
         if (selectedTags.length === 0) return true;
         return selectedTags.some(
           (tag) =>
-            t.tech_stack.some((tech) => tech.toLowerCase().includes(tag.toLowerCase())) ||
-            t.title.toLowerCase().includes(tag.toLowerCase()) ||
-            t.summary.toLowerCase().includes(tag.toLowerCase())
+            item.tech_stack.some((tech) => tech.toLowerCase().includes(tag.toLowerCase())) ||
+            item.title.toLowerCase().includes(tag.toLowerCase()) ||
+            item.summary.toLowerCase().includes(tag.toLowerCase())
         );
       })
-      .filter((t) => {
+      .filter((item) => {
         if (englishFilter === 'All') return true;
-        return t.english_level === englishFilter;
+        return item.english_level === englishFilter;
       })
-      .filter((t) => {
+      .filter((item) => {
         if (availabilityFilter === 'All') return true;
-        return t.availability_status === availabilityFilter;
+        return item.availability_status === availabilityFilter;
       })
-      .filter((t) => {
+      .filter((item) => {
         if (experienceFilter === 'All') return true;
-        if (experienceFilter === '1-2 years') return t.years_experience >= 1 && t.years_experience <= 2;
-        if (experienceFilter === '3-4 years') return t.years_experience >= 3 && t.years_experience <= 4;
-        if (experienceFilter === '5+ years') return t.years_experience >= 5;
+        if (experienceFilter === '1-2 years') return item.years_experience >= 1 && item.years_experience <= 2;
+        if (experienceFilter === '3-4 years') return item.years_experience >= 3 && item.years_experience <= 4;
+        if (experienceFilter === '5+ years') return item.years_experience >= 5;
         return true;
       })
-      .filter((t) => !favoritesOnly || isShortlisted(t.id));
-  }, [talentProfiles, searchQuery, selectedTags, englishFilter, availabilityFilter, experienceFilter, favoritesOnly, isShortlisted]);
+      .filter((item) => !favoritesOnly || isShortlisted(item.id));
+  }, [
+    talentProfiles,
+    searchQuery,
+    selectedTags,
+    englishFilter,
+    availabilityFilter,
+    experienceFilter,
+    favoritesOnly,
+    isShortlisted,
+  ]);
 
   function handleRequestInterview(applicant: TalentProfile) {
     setSelectedApplicant(applicant);
     setModalOpen(true);
   }
 
+  const getStatusLabel = (status: string) => {
+    const key = status.toLowerCase().replace(/\s+/g, '_');
+    return (t.badges as Record<string, string>)[key] || status;
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Browse Applicants</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.employer.applicantsTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          Search and filter through our vetted talent pool to find the perfect fit.
+          {lang === 'es'
+            ? 'Busca y filtra entre nuestro grupo de talento pre-evaluado.'
+            : 'Search and filter through our vetted talent pool to find the perfect fit.'}
         </p>
       </div>
 
@@ -107,7 +141,7 @@ export default function EmployerApplicantsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name, title, or skills..."
+            placeholder={t.talent.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -119,14 +153,14 @@ export default function EmployerApplicantsPage() {
           onClick={() => setFavoritesOnly((prev) => !prev)}
         >
           {favoritesOnly ? <Star className="w-4 h-4 fill-current" /> : <StarOff className="w-4 h-4" />}
-          Favorites
+          {lang === 'es' ? 'Favoritos' : 'Favorites'}
         </Button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-foreground">Filters</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t.talent.filters}</h3>
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Technologies</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{t.talent.techFilter}</p>
           <div className="flex flex-wrap gap-2">
             {technologyTags.map((tag) => (
               <button
@@ -145,38 +179,50 @@ export default function EmployerApplicantsPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">English Level</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              {t.talent.englishFilter}
+            </label>
             <select
               value={englishFilter}
               onChange={(e) => setEnglishFilter(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
-              {englishLevels.map((level) => (
-                <option key={level} value={level}>{level}</option>
+              {englishLevels.map((lvl) => (
+                <option key={lvl.value} value={lvl.value}>
+                  {lvl.label}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Availability</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              {t.talent.availabilityFilter}
+            </label>
             <select
               value={availabilityFilter}
               onChange={(e) => setAvailabilityFilter(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
               {availabilityOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Experience</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              {lang === 'es' ? 'Experiencia' : 'Experience'}
+            </label>
             <select
               value={experienceFilter}
               onChange={(e) => setExperienceFilter(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(210,100%,45%)]/20 focus:border-[hsl(210,100%,45%)]"
             >
-              {experienceLevels.map((level) => (
-                <option key={level} value={level}>{level}</option>
+              {experienceLevels.map((lvl) => (
+                <option key={lvl.value} value={lvl.value}>
+                  {lvl.label}
+                </option>
               ))}
             </select>
           </div>
@@ -184,15 +230,15 @@ export default function EmployerApplicantsPage() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Showing{' '}
-        <span className="font-semibold text-foreground">{filteredApplicants.length}</span>{' '}
-        applicant{filteredApplicants.length !== 1 ? 's' : ''}
+        {t.talent.resultsCount
+          .replace('{count}', String(filteredApplicants.length))
+          .replace('{total}', String(talentProfiles.length))}
       </p>
 
       {filteredApplicants.length === 0 ? (
         <EmptyState
-          title="No applicants found"
-          description="Try adjusting your search or filters to find more candidates."
+          title={t.talent.noCandidatesTitle}
+          description={t.talent.noCandidatesDesc}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -219,7 +265,9 @@ export default function EmployerApplicantsPage() {
 
                 <div className="flex flex-wrap gap-1.5 mb-3 min-h-[5rem]">
                   {applicant.tech_stack.slice(0, 5).map((tech) => (
-                    <Badge key={tech} variant="secondary" className="text-xs font-normal">{tech}</Badge>
+                    <Badge key={tech} variant="secondary" className="text-xs font-normal">
+                      {tech}
+                    </Badge>
                   ))}
                 </div>
 
@@ -237,10 +285,10 @@ export default function EmployerApplicantsPage() {
                         : 'bg-gray-100 text-gray-600 border-gray-200'
                     }`}
                   >
-                    {applicant.availability_status}
+                    {getStatusLabel(applicant.availability_status)}
                   </Badge>
                   <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 text-xs">
-                    {applicant.years_experience} yr{applicant.years_experience !== 1 ? 's' : ''} exp
+                    {t.talent.yearsExp.replace('{years}', String(applicant.years_experience))}
                   </Badge>
                 </div>
 
@@ -248,7 +296,7 @@ export default function EmployerApplicantsPage() {
                   <Link href={`/talent/${applicant.slug}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full gap-1.5">
                       <ExternalLink className="w-3.5 h-3.5" />
-                      View Profile
+                      {t.talent.viewProfileBtn}
                     </Button>
                   </Link>
                   <Button
@@ -256,7 +304,7 @@ export default function EmployerApplicantsPage() {
                     size="sm"
                     className="gap-1.5"
                     disabled={!employerId}
-                    title={!employerId ? 'Employer profile not loaded yet' : 'Request Interview'}
+                    title={!employerId ? 'Employer profile not loaded yet' : t.talent.requestInterviewBtn}
                     onClick={() => handleRequestInterview(applicant)}
                   >
                     <MessageSquare className="w-3.5 h-3.5" />

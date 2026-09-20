@@ -7,6 +7,7 @@ import { PageLoading } from '@/components/page-loading';
 import { RoleBadge } from '@/components/role-badge';
 import { Button } from '@/components/ui/button';
 import { useData } from '@/lib/data-context';
+import { useT } from '@/lib/i18n';
 import type { TalentProfile, TalentSkill } from '@/types';
 import { Eye, Check, Minus, Download } from 'lucide-react';
 import { getApplicantCompletionPercent } from '@/lib/profile-completion';
@@ -16,9 +17,6 @@ type TalentWithSkills = TalentProfile & { skills: TalentSkill[] };
 function calcCompletion(p: TalentWithSkills): number {
   return getApplicantCompletionPercent(p);
 }
-
-const visibilityFilters = ['All', 'Visible', 'Hidden'] as const;
-const featuredFilters = ['All', 'Featured', 'Not Featured'] as const;
 
 function csvEscape(value: string | number | boolean): string {
   const str = String(value);
@@ -55,10 +53,23 @@ function exportApplicantsCsv(rows: TalentWithSkills[]) {
 }
 
 export default function ApplicantManagementPage() {
+  const { t } = useT();
   const { talentProfiles, isHydrated } = useData();
   const router = useRouter();
   const [visibilityFilter, setVisibilityFilter] = useState<string>('All');
   const [featuredFilter, setFeaturedFilter] = useState<string>('All');
+
+  const visibilityFilters = useMemo(() => [
+    { id: 'All', label: t.admin.tabAll },
+    { id: 'Visible', label: t.admin.tabVisible },
+    { id: 'Hidden', label: t.admin.tabHidden },
+  ], [t]);
+
+  const featuredFilters = useMemo(() => [
+    { id: 'All', label: t.admin.tabAll },
+    { id: 'Featured', label: t.admin.tabFeatured },
+    { id: 'Not Featured', label: t.admin.tabNotFeatured },
+  ], [t]);
 
   const filteredProfiles = useMemo(() => {
     let result: TalentWithSkills[] = talentProfiles;
@@ -78,10 +89,10 @@ export default function ApplicantManagementPage() {
     return result;
   }, [talentProfiles, visibilityFilter, featuredFilter]);
 
-  const columns: DataTableColumn<TalentWithSkills>[] = [
+  const columns: DataTableColumn<TalentWithSkills>[] = useMemo(() => [
     {
       key: 'photo',
-      header: 'Photo',
+      header: t.admin.colPhoto,
       render: (item) => (
         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
           {item.profile_image_url ? (
@@ -100,7 +111,7 @@ export default function ApplicantManagementPage() {
     },
     {
       key: 'name',
-      header: 'Name',
+      header: t.admin.colName,
       render: (item) => (
         <div>
           <span className="font-medium text-foreground">{item.display_name}</span>
@@ -110,22 +121,22 @@ export default function ApplicantManagementPage() {
     },
     {
       key: 'title',
-      header: 'Title',
+      header: t.admin.colTitle,
       render: (item) => <span className="text-muted-foreground">{item.title}</span>,
     },
     {
       key: 'english',
-      header: 'English Level',
+      header: t.admin.colEnglish,
       render: (item) => <span className="text-muted-foreground">{item.english_level}</span>,
     },
     {
       key: 'availability',
-      header: 'Availability',
+      header: t.admin.colAvailability,
       render: (item) => <RoleBadge role={item.availability_status.toLowerCase().replace(' ', '_')} />,
     },
     {
       key: 'completion',
-      header: 'Profile Completion',
+      header: t.admin.colProfileCompletion,
       render: (item) => (
         <div className="flex items-center gap-2 min-w-[120px]">
           <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -150,7 +161,7 @@ export default function ApplicantManagementPage() {
     },
     {
       key: 'featured',
-      header: 'Featured',
+      header: t.admin.colFeatured,
       render: (item) =>
         item.featured ? (
           <Check className="w-4 h-4 text-emerald-600" />
@@ -160,7 +171,7 @@ export default function ApplicantManagementPage() {
     },
     {
       key: 'visible',
-      header: 'Visible',
+      header: t.admin.colVisible,
       render: (item) =>
         item.public_visible ? (
           <Check className="w-4 h-4 text-emerald-600" />
@@ -170,14 +181,14 @@ export default function ApplicantManagementPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: t.admin.colActions,
       render: (item) => (
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => router.push(`/admin/applicants/${item.id}`)}>
           <Eye className="w-4 h-4" />
         </Button>
       ),
     },
-  ];
+  ], [t, router]);
 
   if (!isHydrated) {
     return (
@@ -190,51 +201,51 @@ export default function ApplicantManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-foreground">Applicants</h2>
+          <h2 className="text-2xl font-bold text-foreground">{t.admin.applicants}</h2>
           <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-[hsl(210,100%,45%)]/10 text-[hsl(210,100%,45%)] border border-[hsl(210,100%,45%)]/20">
             {talentProfiles.length}
           </span>
         </div>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => exportApplicantsCsv(filteredProfiles)}>
           <Download className="w-4 h-4" />
-          Export CSV
+          {t.admin.exportCsvBtn}
         </Button>
       </div>
 
       {/* Filters */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground mr-1">Visibility:</span>
+          <span className="text-sm font-medium text-muted-foreground mr-1">{t.admin.visibilityLabel}</span>
           {visibilityFilters.map((tab) => (
             <Button
-              key={tab}
-              variant={visibilityFilter === tab ? 'default' : 'outline'}
+              key={tab.id}
+              variant={visibilityFilter === tab.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setVisibilityFilter(tab)}
+              onClick={() => setVisibilityFilter(tab.id)}
               className="rounded-full"
             >
-              {tab}
+              {tab.label}
             </Button>
           ))}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground mr-1">Featured:</span>
+          <span className="text-sm font-medium text-muted-foreground mr-1">{t.admin.featuredLabel}</span>
           {featuredFilters.map((tab) => (
             <Button
-              key={tab}
-              variant={featuredFilter === tab ? 'default' : 'outline'}
+              key={tab.id}
+              variant={featuredFilter === tab.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFeaturedFilter(tab)}
+              onClick={() => setFeaturedFilter(tab.id)}
               className="rounded-full"
             >
-              {tab}
+              {tab.label}
             </Button>
           ))}
         </div>
       </div>
 
       {/* Table */}
-      <DataTable columns={columns} data={filteredProfiles} pageSize={10} emptyMessage="No applicants match these filters." />
+      <DataTable columns={columns} data={filteredProfiles} pageSize={10} emptyMessage={t.admin.noApplicantsMatch} />
     </div>
   );
 }

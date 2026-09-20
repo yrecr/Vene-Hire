@@ -12,9 +12,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import type { InterviewRequest } from '@/types';
+import { useT } from '@/lib/i18n';
 
 function AddMeetingLinkForm({ interview }: { interview: InterviewRequest }) {
   const { addMeetingLink } = useData();
+  const { lang } = useT();
   const [url, setUrl] = useState('');
 
   return (
@@ -22,7 +24,7 @@ function AddMeetingLinkForm({ interview }: { interview: InterviewRequest }) {
       <Input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="Paste the Google Meet / Teams link"
+        placeholder={lang === 'es' ? 'Pega el enlace de Google Meet o Teams' : 'Paste the Google Meet / Teams link'}
         className="text-sm"
       />
       <Button
@@ -32,7 +34,7 @@ function AddMeetingLinkForm({ interview }: { interview: InterviewRequest }) {
         onClick={() => addMeetingLink(interview.id, url.trim())}
       >
         <LinkIcon className="w-4 h-4" />
-        Save Link
+        {lang === 'es' ? 'Guardar Enlace' : 'Save Link'}
       </Button>
     </div>
   );
@@ -40,6 +42,7 @@ function AddMeetingLinkForm({ interview }: { interview: InterviewRequest }) {
 
 function ReportOutcomeForm({ interview }: { interview: InterviewRequest }) {
   const { reportInterviewOutcome } = useData();
+  const { lang } = useT();
   const [notes, setNotes] = useState('');
 
   return (
@@ -47,7 +50,7 @@ function ReportOutcomeForm({ interview }: { interview: InterviewRequest }) {
       <Textarea
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Notes about how the interview went (optional)"
+        placeholder={lang === 'es' ? 'Notas sobre la entrevista (opcional)' : 'Notes about how the interview went (optional)'}
         className="text-sm"
         rows={2}
       />
@@ -59,7 +62,7 @@ function ReportOutcomeForm({ interview }: { interview: InterviewRequest }) {
           onClick={() => reportInterviewOutcome(interview.id, 'passed', notes.trim())}
         >
           <CheckCircle2 className="w-4 h-4" />
-          Passed
+          {lang === 'es' ? 'Aprobada' : 'Passed'}
         </Button>
         <Button
           size="sm"
@@ -68,7 +71,7 @@ function ReportOutcomeForm({ interview }: { interview: InterviewRequest }) {
           onClick={() => reportInterviewOutcome(interview.id, 'failed', notes.trim())}
         >
           <XCircle className="w-4 h-4" />
-          Failed
+          {lang === 'es' ? 'No Aprobada' : 'Failed'}
         </Button>
       </div>
     </div>
@@ -78,27 +81,35 @@ function ReportOutcomeForm({ interview }: { interview: InterviewRequest }) {
 export default function EmployerRequestsPage() {
   const { currentUser } = useAuth();
   const { interviewRequests, getApplicantById, employerProfiles } = useData();
+  const { t, lang, formatDate } = useT();
 
-  const employerProfile = currentUser?.employer_profile_id ? employerProfiles.find((e) => e.id === currentUser.employer_profile_id) : undefined;
+  const employerProfile = currentUser?.employer_profile_id
+    ? employerProfiles.find((e) => e.id === currentUser.employer_profile_id)
+    : undefined;
 
   const employerId = employerProfile?.id ?? '';
-
   const interviews = interviewRequests.filter((r) => r.employer_id === employerId);
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Interview Requests</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t.employer.requestsTitle}</h2>
         <p className="text-muted-foreground mt-1">
-          Manage your interview scheduling and requests.
+          {lang === 'es'
+            ? 'Administra la programación y solicitudes de entrevista.'
+            : 'Manage your interview scheduling and requests.'}
         </p>
       </div>
 
       {interviews.length === 0 ? (
         <EmptyState
           icon={MessageSquare}
-          title="No interview requests"
-          description="You haven't made any interview requests yet. Browse applicants to get started."
+          title={lang === 'es' ? 'Sin solicitudes de entrevista' : 'No interview requests'}
+          description={
+            lang === 'es'
+              ? 'Aún no has realizado solicitudes de entrevista. Explora postulantes para comenzar.'
+              : "You haven't made any interview requests yet. Browse applicants to get started."
+          }
         />
       ) : (
         <div className="space-y-4">
@@ -122,9 +133,7 @@ export default function EmployerRequestsPage() {
                       <h3 className="font-semibold text-foreground">
                         {applicant?.display_name || 'Unknown Applicant'}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        {interview.role_title}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{interview.role_title}</p>
                     </div>
                   </div>
                   <RoleBadge role={interview.status} />
@@ -138,18 +147,19 @@ export default function EmployerRequestsPage() {
                   {interview.requested_date && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      {new Date(interview.requested_date).toLocaleDateString('en-US', {
-                        month: 'short', day: 'numeric', year: 'numeric',
-                        hour: 'numeric', minute: '2-digit',
+                      {formatDate(interview.requested_date, {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
                       })}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    Requested{' '}
-                    {new Date(interview.created_at).toLocaleDateString('en-US', {
-                      month: 'short', day: 'numeric', year: 'numeric',
-                    })}
+                    {lang === 'es' ? 'Solicitado el' : 'Requested'}{' '}
+                    {formatDate(interview.created_at)}
                   </span>
                 </div>
 
@@ -157,13 +167,13 @@ export default function EmployerRequestsPage() {
                   <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-1.5 text-sm font-medium text-red-600">
                       <XCircle className="w-4 h-4" />
-                      Declined
+                      {lang === 'es' ? 'Declinada' : 'Declined'}
                     </div>
                     {applicant?.slug && (
                       <NextLink href={`/talent/${applicant.slug}`}>
                         <Button size="sm" variant="outline" className="gap-1.5">
                           <Send className="w-3.5 h-3.5" />
-                          Send New Request
+                          {lang === 'es' ? 'Enviar Nueva Solicitud' : 'Send New Request'}
                         </Button>
                       </NextLink>
                     )}
@@ -174,7 +184,9 @@ export default function EmployerRequestsPage() {
                   <>
                     <div className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-600">
                       <CheckCircle2 className="w-4 h-4" />
-                      Accepted — coordinate the meeting by email, then paste the link here.
+                      {lang === 'es'
+                        ? 'Aceptada — coordina la reunión por correo y pega el enlace aquí.'
+                        : 'Accepted — coordinate the meeting by email, then paste the link here.'}
                     </div>
                     <AddMeetingLinkForm interview={interview} />
                   </>
@@ -183,7 +195,9 @@ export default function EmployerRequestsPage() {
                 {interview.status === 'scheduled' && (
                   <>
                     <div className="mt-3 flex items-center justify-between gap-2">
-                      <span className="text-sm font-medium text-foreground">Meeting scheduled</span>
+                      <span className="text-sm font-medium text-foreground">
+                        {lang === 'es' ? 'Reunión agendada' : 'Meeting scheduled'}
+                      </span>
                       {interview.meeting_url && (
                         <a
                           href={interview.meeting_url}
@@ -191,7 +205,8 @@ export default function EmployerRequestsPage() {
                           rel="noreferrer"
                           className="text-sm text-[hsl(210,100%,45%)] hover:underline flex items-center gap-1"
                         >
-                          Open link <ExternalLink className="w-3.5 h-3.5" />
+                          {lang === 'es' ? 'Abrir enlace' : 'Open link'}{' '}
+                          <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       )}
                     </div>
@@ -201,9 +216,24 @@ export default function EmployerRequestsPage() {
 
                 {interview.status === 'completed' && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <div className={`flex items-center gap-1.5 text-sm font-medium ${interview.outcome === 'passed' ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {interview.outcome === 'passed' ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                      Result: {interview.outcome === 'passed' ? 'Passed' : 'Failed'}
+                    <div
+                      className={`flex items-center gap-1.5 text-sm font-medium ${
+                        interview.outcome === 'passed' ? 'text-emerald-600' : 'text-red-600'
+                      }`}
+                    >
+                      {interview.outcome === 'passed' ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      {lang === 'es' ? 'Resultado:' : 'Result:'}{' '}
+                      {interview.outcome === 'passed'
+                        ? lang === 'es'
+                          ? 'Aprobada'
+                          : 'Passed'
+                        : lang === 'es'
+                        ? 'No Aprobada'
+                        : 'Failed'}
                     </div>
                     {interview.outcome_notes && (
                       <p className="text-sm text-muted-foreground mt-1">{interview.outcome_notes}</p>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { useToast } from '@/hooks/use-toast';
+import { useT } from '@/lib/i18n';
 
 const rolePath: Record<string, string> = {
   admin: '/admin',
@@ -19,10 +20,8 @@ type Phase = 'verifying' | 'ready' | 'invalid';
 
 export default function WelcomePage() {
   const { toast } = useToast();
-  // One shared client for the whole page lifecycle — calling
-  // createBrowserClient() again per auth call risks "Multiple GoTrueClient
-  // instances in the same browser context", which can clobber the cookie
-  // write from setSession() with the one from updateUser().
+  const { t, lang } = useT();
+
   const [supabase] = useState(() =>
     createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,9 +35,6 @@ export default function WelcomePage() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // The invitation link lands here with the session in the URL fragment
-  // (#access_token=...&refresh_token=...). Exchange it for a real session so
-  // the user can set a password, then clear the fragment from the address bar.
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const accessToken = params.get('access_token');
@@ -46,7 +42,12 @@ export default function WelcomePage() {
     const linkError = params.get('error_description');
 
     if (linkError || !accessToken || !refreshToken) {
-      setError(linkError || 'This invitation link is invalid or has already been used.');
+      setError(
+        linkError ||
+          (lang === 'es'
+            ? 'Este enlace de invitación es inválido o ya ha sido utilizado.'
+            : 'This invitation link is invalid or has already been used.')
+      );
       setPhase('invalid');
       return;
     }
@@ -55,7 +56,12 @@ export default function WelcomePage() {
       .setSession({ access_token: accessToken, refresh_token: refreshToken })
       .then(({ data, error: sessionError }) => {
         if (sessionError || !data.session) {
-          setError(sessionError?.message ?? 'This invitation link has expired.');
+          setError(
+            sessionError?.message ??
+              (lang === 'es'
+                ? 'Este enlace de invitación ha expirado.'
+                : 'This invitation link has expired.')
+          );
           setPhase('invalid');
           return;
         }
@@ -63,18 +69,22 @@ export default function WelcomePage() {
         window.history.replaceState(null, '', window.location.pathname);
         setPhase('ready');
       });
-  }, [supabase]);
+  }, [supabase, lang]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t.errors.passwordTooShort);
       return;
     }
     if (password !== confirmPassword) {
-      setError('Password and confirmation do not match.');
+      setError(
+        lang === 'es'
+          ? 'Las contraseñas no coinciden.'
+          : 'Password and confirmation do not match.'
+      );
       return;
     }
 
@@ -83,12 +93,19 @@ export default function WelcomePage() {
 
     if (updateError) {
       setError(updateError.message);
-      toast({ title: 'Could not set password', description: updateError.message, variant: 'destructive' });
+      toast({
+        title: lang === 'es' ? 'No se pudo definir la contraseña' : 'Could not set password',
+        description: updateError.message,
+        variant: 'destructive',
+      });
       setSaving(false);
       return;
     }
 
-    toast({ title: 'Password set', description: 'Taking you to your dashboard...' });
+    toast({
+      title: lang === 'es' ? 'Contraseña configurada' : 'Password set',
+      description: lang === 'es' ? 'Redirigiendo a tu panel...' : 'Taking you to your dashboard...',
+    });
     const role = (data.user?.user_metadata?.role as string) || '';
     window.location.href = rolePath[role] || '/';
   };
@@ -103,22 +120,38 @@ export default function WelcomePage() {
           </div>
 
           {phase === 'verifying' && (
-            <p className="text-center text-gray-500 py-8">Verifying your invitation...</p>
+            <p className="text-center text-gray-500 py-8">
+              {lang === 'es' ? 'Verificando tu invitación...' : 'Verifying your invitation...'}
+            </p>
           )}
 
           {phase === 'invalid' && (
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900">Invitation unavailable</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {lang === 'es' ? 'Invitación no disponible' : 'Invitation unavailable'}
+              </h1>
               <div className="flex items-center gap-2 p-3 my-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg text-left">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
               <p className="text-sm text-gray-500">
-                Ask an administrator to send you a new invitation, or{' '}
-                <Link href="/login" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
-                  sign in
-                </Link>{' '}
-                if you already set a password.
+                {lang === 'es' ? (
+                  <>
+                    Solicita a un administrador una nueva invitación, o{' '}
+                    <Link href="/login" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
+                      inicia sesión
+                    </Link>{' '}
+                    si ya tienes contraseña.
+                  </>
+                ) : (
+                  <>
+                    Ask an administrator to send you a new invitation, or{' '}
+                    <Link href="/login" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
+                      sign in
+                    </Link>{' '}
+                    if you already set a password.
+                  </>
+                )}
               </p>
             </div>
           )}
@@ -126,9 +159,11 @@ export default function WelcomePage() {
           {phase === 'ready' && (
             <>
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">Welcome to VeneHire</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{t.auth.welcomeTitle}</h1>
                 <p className="text-gray-500 mt-1">
-                  Choose a password for {email || 'your account'} to finish setting it up.
+                  {lang === 'es'
+                    ? `Elige una contraseña para ${email || 'tu cuenta'} para completar la configuración.`
+                    : `Choose a password for ${email || 'your account'} to finish setting it up.`}
                 </p>
               </div>
 
@@ -141,13 +176,15 @@ export default function WelcomePage() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="password">New password</Label>
+                  <Label htmlFor="password">
+                    {lang === 'es' ? 'Nueva contraseña' : 'New password'}
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       id="password"
                       type="password"
-                      placeholder="At least 8 characters"
+                      placeholder={lang === 'es' ? 'Al menos 8 caracteres' : 'At least 8 characters'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
@@ -157,13 +194,15 @@ export default function WelcomePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm password</Label>
+                  <Label htmlFor="confirm-password">
+                    {lang === 'es' ? 'Confirmar contraseña' : 'Confirm password'}
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       id="confirm-password"
                       type="password"
-                      placeholder="Repeat your password"
+                      placeholder={lang === 'es' ? 'Repite tu contraseña' : 'Repeat your password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="pl-10"
@@ -174,10 +213,10 @@ export default function WelcomePage() {
 
                 <Button type="submit" className="w-full" disabled={saving}>
                   {saving ? (
-                    'Saving...'
+                    t.common.saving
                   ) : (
                     <span className="flex items-center justify-center gap-2">
-                      Set password and continue
+                      {lang === 'es' ? 'Establecer contraseña y continuar' : 'Set password and continue'}
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   )}

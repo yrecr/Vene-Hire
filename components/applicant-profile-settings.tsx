@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
 import type { AvailabilitySlot, TalentProfile } from '@/types';
+import { useT } from '@/lib/i18n';
 
 function toEmbedUrl(url: string): string {
   if (!url) return url;
@@ -59,7 +60,8 @@ const timezones = [
 const englishLevels = ['Basic', 'Intermediate', 'Advanced', 'Fluent', 'Native'];
 const availabilityStatuses = ['Available', 'Hired', 'In Training', 'On Hold'];
 
-const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const dayNamesEn = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const dayNamesEs = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
 const generalAvailabilityOptions = [
   'Available Immediately',
@@ -75,6 +77,9 @@ const timeSlots = [
 ];
 
 export function ApplicantProfileSettings() {
+  const { t, lang } = useT();
+  const isEs = lang === 'es';
+  const dayNames = isEs ? dayNamesEs : dayNamesEn;
   const { currentUser } = useAuth();
   const {
     talentProfiles,
@@ -184,8 +189,8 @@ export function ApplicantProfileSettings() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-foreground mb-2">Please sign in</h2>
-          <p className="text-muted-foreground">Sign in with an applicant account to edit your profile.</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">{isEs ? 'Por favor inicia sesión' : 'Please sign in'}</h2>
+          <p className="text-muted-foreground">{t.applicant.signInPrompt}</p>
         </div>
       </div>
     );
@@ -324,15 +329,15 @@ export function ApplicantProfileSettings() {
       {/* ===================== Basic Info ===================== */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Basic Info</h3>
+          <h3 className="text-lg font-semibold text-foreground">{isEs ? 'Información Básica' : 'Basic Info'}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Update your profile information to help employers find you.
+            {isEs ? 'Actualiza los datos de tu perfil para que los empleadores puedan encontrarte.' : 'Update your profile information to help employers find you.'}
           </p>
         </div>
 
         {saved && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-            Profile saved successfully!
+            {isEs ? '¡Perfil guardado con éxito!' : 'Profile saved successfully!'}
           </div>
         )}
 
@@ -354,9 +359,9 @@ export function ApplicantProfileSettings() {
                 )}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Profile Photo</p>
+                <p className="text-sm font-medium text-foreground">{isEs ? 'Foto de Perfil' : 'Profile Photo'}</p>
                 <p className="text-xs text-muted-foreground">
-                  {talentProfile.profile_image_url ? 'Photo uploaded' : 'No photo uploaded'}
+                  {talentProfile.profile_image_url ? (isEs ? 'Foto subida' : 'Photo uploaded') : (isEs ? 'Sin foto subida' : 'No photo uploaded')}
                 </p>
               </div>
               <Button
@@ -370,7 +375,7 @@ export function ApplicantProfileSettings() {
                 ) : (
                   <Upload className="w-4 h-4" />
                 )}
-                {photoUploading ? 'Uploading...' : 'Update Photo'}
+                {photoUploading ? (isEs ? 'Subiendo...' : 'Uploading...') : (isEs ? 'Actualizar Foto' : 'Update Photo')}
               </Button>
               <input
                 ref={fileInputRef}
@@ -384,49 +389,49 @@ export function ApplicantProfileSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="displayName">Display Name</Label>
+              <Label htmlFor="displayName">{isEs ? 'Nombre Público' : 'Display Name'}</Label>
               <Input
                 id="displayName"
                 value={displayName}
                 onChange={function (e) { setDisplayName(e.target.value); }}
-                placeholder="Your display name"
+                placeholder={isEs ? 'Tu nombre para mostrar' : 'Your display name'}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">{isEs ? 'Título Profesional' : 'Title'}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={function (e) { setTitle(e.target.value); }}
-                placeholder="e.g. Backend Engineer"
+                placeholder={isEs ? 'ej. Ingeniero Backend' : 'e.g. Backend Engineer'}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
+            <Label htmlFor="summary">{isEs ? 'Resumen' : 'Summary'}</Label>
             <Textarea
               id="summary"
               value={summary}
               onChange={function (e) { setSummary(e.target.value); }}
-              placeholder="A brief summary of your experience and expertise..."
+              placeholder={isEs ? 'Un breve resumen de tu experiencia y especialidad...' : 'A brief summary of your experience and expertise...'}
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
+            <Label htmlFor="bio">{isEs ? 'Biografía' : 'Bio'}</Label>
             <Textarea
               id="bio"
               value={bio}
               onChange={function (e) { setBio(e.target.value); }}
-              placeholder="Tell employers more about your background..."
+              placeholder={isEs ? 'Cuéntale a los empleadores más sobre tu trayectoria...' : 'Tell employers more about your background...'}
               rows={5}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="techStack">Technologies (comma-separated)</Label>
+            <Label htmlFor="techStack">{isEs ? 'Tecnologías (separadas por coma)' : 'Technologies (comma-separated)'}</Label>
             <Input
               id="techStack"
               value={techStack}
@@ -437,10 +442,10 @@ export function ApplicantProfileSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>English Level</Label>
+              <Label>{isEs ? 'Nivel de Inglés' : 'English Level'}</Label>
               <Select value={englishLevel} onValueChange={setEnglishLevel}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
+                  <SelectValue placeholder={isEs ? 'Seleccionar nivel' : 'Select level'} />
                 </SelectTrigger>
                 <SelectContent>
                   {englishLevels.map(function (level) {
@@ -454,7 +459,7 @@ export function ApplicantProfileSettings() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="yearsExperience">Years of Experience</Label>
+              <Label htmlFor="yearsExperience">{isEs ? 'Años de Experiencia' : 'Years of Experience'}</Label>
               <Input
                 id="yearsExperience"
                 type="number"
@@ -468,10 +473,10 @@ export function ApplicantProfileSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>Location / Timezone</Label>
+              <Label>{isEs ? 'Ubicación / Zona Horaria' : 'Location / Timezone'}</Label>
               <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select timezone" />
+                  <SelectValue placeholder={isEs ? 'Seleccionar zona horaria' : 'Select timezone'} />
                 </SelectTrigger>
                 <SelectContent>
                   {timezones.map(function (tz) {
@@ -485,16 +490,16 @@ export function ApplicantProfileSettings() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Availability Status</Label>
+              <Label>{isEs ? 'Estado de Disponibilidad' : 'Availability Status'}</Label>
               <Select value={availabilityStatus} onValueChange={setAvailabilityStatus}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={isEs ? 'Seleccionar estado' : 'Select status'} />
                 </SelectTrigger>
                 <SelectContent>
                   {availabilityStatuses.map(function (status) {
                     return (
                       <SelectItem key={status} value={status}>
-                        {status}
+                        {(t.badges as Record<string, string>)[status.toLowerCase().replace(/\s+/g, '_')] || status}
                       </SelectItem>
                     );
                   })}
@@ -506,7 +511,7 @@ export function ApplicantProfileSettings() {
           <div className="pt-2">
             <Button onClick={handleSaveProfile} className="gap-2">
               <Save className="w-4 h-4" />
-              Save Profile
+              {isEs ? 'Guardar Perfil' : 'Save Profile'}
             </Button>
           </div>
         </div>
@@ -514,7 +519,7 @@ export function ApplicantProfileSettings() {
         {/* Skills */}
         {talentProfile?.skills && talentProfile.skills.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h3 className="text-base font-semibold text-foreground mb-5">Skills</h3>
+            <h3 className="text-base font-semibold text-foreground mb-5">{isEs ? 'Habilidades' : 'Skills'}</h3>
             <div className="space-y-4">
               {talentProfile.skills.map(function (skill) {
                 return (
@@ -529,9 +534,9 @@ export function ApplicantProfileSettings() {
       {/* ===================== Resume ===================== */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Resume</h3>
+          <h3 className="text-lg font-semibold text-foreground">{isEs ? 'Currículum (CV)' : 'Resume'}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Upload your resume so employers can review your experience.
+            {isEs ? 'Sube tu CV para que los empleadores puedan revisar tu experiencia.' : 'Upload your resume so employers can review your experience.'}
           </p>
         </div>
 
@@ -545,7 +550,7 @@ export function ApplicantProfileSettings() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
             <div className="flex items-center gap-3 mb-4">
               <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-              <h3 className="text-base font-semibold text-foreground">Resume Uploaded</h3>
+              <h3 className="text-base font-semibold text-foreground">{isEs ? 'CV Subido' : 'Resume Uploaded'}</h3>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(210,100%,45%)]/10 to-[hsl(170,60%,42%)]/10 flex items-center justify-center">
@@ -562,7 +567,7 @@ export function ApplicantProfileSettings() {
                   <ExternalLink className="w-3 h-3 shrink-0" />
                 </a>
                 <div className="flex items-center gap-3 mt-1">
-                  <span className="text-xs text-muted-foreground">PDF Document</span>
+                  <span className="text-xs text-muted-foreground">{isEs ? 'Documento PDF' : 'PDF Document'}</span>
                 </div>
               </div>
             </div>
@@ -574,7 +579,7 @@ export function ApplicantProfileSettings() {
                 onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
               >
                 <ExternalLink className="w-4 h-4" />
-                View Resume
+                {isEs ? 'Ver CV' : 'View Resume'}
               </Button>
               <Button
                 variant="outline"
@@ -584,13 +589,13 @@ export function ApplicantProfileSettings() {
                 onClick={function () { resumeInputRef.current?.click(); }}
               >
                 <Upload className="w-4 h-4" />
-                Replace
+                {isEs ? 'Reemplazar' : 'Replace'}
               </Button>
             </div>
 
             <div className="mt-4 space-y-2">
               {analysisTriggered ? (
-                <p className="text-xs text-emerald-600">Analysis started — results will appear shortly. Refresh to see updated skills.</p>
+                <p className="text-xs text-emerald-600">{isEs ? 'Análisis iniciado — los resultados aparecerán pronto. Actualiza para ver habilidades.' : 'Analysis started — results will appear shortly. Refresh to see updated skills.'}</p>
               ) : (
                 <Button
                   variant="outline"
@@ -604,7 +609,7 @@ export function ApplicantProfileSettings() {
                   ) : (
                     <Sparkles className="w-4 h-4" />
                   )}
-                  {analyzing ? 'Starting...' : 'Analyze CV with AI'}
+                  {analyzing ? (isEs ? 'Iniciando...' : 'Starting...') : (isEs ? 'Analizar CV con IA' : 'Analyze CV with AI')}
                 </Button>
               )}
               {analyzeError && (
@@ -616,11 +621,11 @@ export function ApplicantProfileSettings() {
 
         <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
           <DialogContent className="max-w-4xl h-[80vh]">
-            <DialogTitle className="sr-only">Resume</DialogTitle>
+            <DialogTitle className="sr-only">{isEs ? 'Currículum' : 'Resume'}</DialogTitle>
             <iframe
               src={`${talentProfile?.resume_url ?? ''}?t=${resumeCacheBuster}`}
               className="w-full h-full border-0 rounded-lg"
-              title="Resume"
+              title={t.applicant.resume}
             />
           </DialogContent>
         </Dialog>
@@ -628,7 +633,7 @@ export function ApplicantProfileSettings() {
         {/* Upload area */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
           <h3 className="text-base font-semibold text-foreground mb-4">
-            {hasResume ? 'Upload a New Resume' : 'Upload Your Resume'}
+            {hasResume ? (isEs ? 'Subir un Nuevo CV' : 'Upload a New Resume') : (isEs ? 'Sube tu CV' : 'Upload Your Resume')}
           </h3>
           <input
             ref={resumeInputRef}
@@ -651,33 +656,33 @@ export function ApplicantProfileSettings() {
               )}
             </div>
             <p className="text-sm font-medium text-foreground mb-1">
-              {resumeUploading ? 'Uploading...' : 'Drop your resume here or click to browse'}
+              {resumeUploading ? (isEs ? 'Subiendo...' : 'Uploading...') : (isEs ? 'Arrastra tu CV aquí o haz clic para explorar' : 'Drop your resume here or click to browse')}
             </p>
             <p className="text-xs text-muted-foreground">
-              Supports PDF, DOC, DOCX (max 10MB)
+              {isEs ? 'Formatos soportados: PDF, DOC, DOCX (máx 10MB)' : 'Supports PDF, DOC, DOCX (max 10MB)'}
             </p>
           </button>
         </div>
 
         {/* Tips */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-base font-semibold text-foreground mb-3">Resume Tips</h3>
+          <h3 className="text-base font-semibold text-foreground mb-3">{isEs ? 'Consejos para el CV' : 'Resume Tips'}</h3>
           <ul className="space-y-2">
             <li className="flex items-start gap-2">
               <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Keep it concise, ideally 1-2 pages.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Mantenlo conciso, preferiblemente de 1 a 2 páginas.' : 'Keep it concise, ideally 1-2 pages.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Highlight relevant technical skills and projects.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Destaca proyectos y habilidades técnicas clave.' : 'Highlight relevant technical skills and projects.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Include measurable achievements and impact metrics.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Incluye logros medibles e indicadores de impacto.' : 'Include measurable achievements and impact metrics.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <FileText className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Use PDF format for best compatibility.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Usa formato PDF para mejor compatibilidad.' : 'Use PDF format for best compatibility.'}</span>
             </li>
           </ul>
         </div>
@@ -686,15 +691,15 @@ export function ApplicantProfileSettings() {
       {/* ===================== Video ===================== */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Video</h3>
+          <h3 className="text-lg font-semibold text-foreground">{isEs ? 'Video' : 'Video'}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Add a video introduction to make your profile stand out to employers.
+            {isEs ? 'Añade una presentación en video para destacar tu perfil ante los empleadores.' : 'Add a video introduction to make your profile stand out to employers.'}
           </p>
         </div>
 
         {videoSaved && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-            Video URL saved successfully!
+            {isEs ? '¡URL del video guardada con éxito!' : 'Video URL saved successfully!'}
           </div>
         )}
 
@@ -706,14 +711,14 @@ export function ApplicantProfileSettings() {
 
         {hasVideo && (
           <div className="bg-white rounded-2xl border border-gray-100 p-6">
-            <h3 className="text-base font-semibold text-foreground mb-4">Current Video</h3>
+            <h3 className="text-base font-semibold text-foreground mb-4">{isEs ? 'Video Actual' : 'Current Video'}</h3>
             <div className="aspect-video rounded-xl overflow-hidden bg-gray-900">
               <iframe
                 src={toEmbedUrl(talentProfile!.video_url!)}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                title="Video introduction"
+                title={t.applicant.videoIntroduction}
               />
             </div>
           </div>
@@ -722,14 +727,14 @@ export function ApplicantProfileSettings() {
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Link2 className="w-5 h-5 text-[hsl(210,100%,45%)]" />
-            <h3 className="text-base font-semibold text-foreground">Paste Your Video URL</h3>
+            <h3 className="text-base font-semibold text-foreground">{isEs ? 'Pega el Enlace de tu Video' : 'Paste Your Video URL'}</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Paste a YouTube or Vimeo embed URL for your video introduction.
+            {isEs ? 'Pega un enlace embed de YouTube o Vimeo para tu presentación en video.' : 'Paste a YouTube or Vimeo embed URL for your video introduction.'}
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="videoUrl">Video URL</Label>
+              <Label htmlFor="videoUrl">{isEs ? 'URL del Video' : 'Video URL'}</Label>
               <Input
                 id="videoUrl"
                 value={videoUrl}
@@ -739,29 +744,29 @@ export function ApplicantProfileSettings() {
             </div>
             <Button onClick={handleSaveVideo} className="gap-2" disabled={videoSaving}>
               <Save className="w-4 h-4" />
-              {videoSaving ? 'Saving...' : 'Save URL'}
+              {videoSaving ? (isEs ? 'Guardando...' : 'Saving...') : (isEs ? 'Guardar URL' : 'Save URL')}
             </Button>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-base font-semibold text-foreground mb-3">Video Tips</h3>
+          <h3 className="text-base font-semibold text-foreground mb-3">{isEs ? 'Consejos para el Video' : 'Video Tips'}</h3>
           <ul className="space-y-2">
             <li className="flex items-start gap-2">
               <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Keep it under 3 minutes.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Mantenlo en menos de 3 minutos.' : 'Keep it under 3 minutes.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Introduce yourself and highlight your key skills.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Preséntate y destaca tus habilidades clave.' : 'Introduce yourself and highlight your key skills.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Speak in English to demonstrate your proficiency.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Habla en inglés para demostrar tu nivel.' : 'Speak in English to demonstrate your proficiency.'}</span>
             </li>
             <li className="flex items-start gap-2">
               <Video className="w-4 h-4 text-[hsl(210,100%,45%)] mt-0.5 shrink-0" />
-              <span className="text-sm text-muted-foreground">Use good lighting and a quiet environment.</span>
+              <span className="text-sm text-muted-foreground">{isEs ? 'Usa buena iluminación y un entorno silencioso.' : 'Use good lighting and a quiet environment.'}</span>
             </li>
           </ul>
         </div>
@@ -770,25 +775,25 @@ export function ApplicantProfileSettings() {
       {/* ===================== Availability ===================== */}
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold text-foreground">Availability</h3>
+          <h3 className="text-lg font-semibold text-foreground">{isEs ? 'Disponibilidad' : 'Availability'}</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Set your availability so employers know when you can interview and start working.
+            {isEs ? 'Configura tu disponibilidad para que las empresas sepan cuándo puedes tener entrevistas e incorporarte.' : 'Set your availability so employers know when you can interview and start working.'}
           </p>
         </div>
 
         {availSaved && (
           <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl text-sm font-medium">
-            Availability saved successfully!
+            {isEs ? '¡Disponibilidad guardada con éxito!' : 'Availability saved successfully!'}
           </div>
         )}
 
         {/* Timezone */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Timezone</h3>
+          <h3 className="text-base font-semibold text-foreground mb-4">{isEs ? 'Zona Horaria' : 'Timezone'}</h3>
           <div className="max-w-sm">
             <Select value={availTimezone} onValueChange={setAvailTimezone}>
               <SelectTrigger>
-                <SelectValue placeholder="Select timezone" />
+                <SelectValue placeholder={isEs ? 'Seleccionar zona horaria' : 'Select timezone'} />
               </SelectTrigger>
               <SelectContent>
                 {timezones.map(function (tz) {
@@ -805,10 +810,17 @@ export function ApplicantProfileSettings() {
 
         {/* General Availability */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">General Availability</h3>
+          <h3 className="text-base font-semibold text-foreground mb-4">{isEs ? 'Disponibilidad General' : 'General Availability'}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {generalAvailabilityOptions.map(function (option) {
               var isSelected = generalAvailability === option;
+              var label = option;
+              if (isEs) {
+                if (option === 'Available Immediately') label = 'Disponible Inmediatamente';
+                else if (option === 'In 2 Weeks') label = 'En 2 Semanas';
+                else if (option === 'In 1 Month') label = 'En 1 Mes';
+                else if (option === 'Not Available') label = 'No Disponible';
+              }
               return (
                 <button
                   key={option}
@@ -835,7 +847,7 @@ export function ApplicantProfileSettings() {
                     'text-sm font-medium ' +
                     (isSelected ? 'text-[hsl(210,100%,45%)]' : 'text-foreground')
                   }>
-                    {option}
+                    {label}
                   </span>
                 </button>
               );
@@ -845,7 +857,7 @@ export function ApplicantProfileSettings() {
 
         {/* Weekly Schedule */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6">
-          <h3 className="text-base font-semibold text-foreground mb-4">Weekly Schedule</h3>
+          <h3 className="text-base font-semibold text-foreground mb-4">{isEs ? 'Horario Semanal' : 'Weekly Schedule'}</h3>
 
           <div className="space-y-3 mb-6">
             {dayNames.map(function (dayName, index) {
@@ -881,7 +893,7 @@ export function ApplicantProfileSettings() {
                         })}
                       </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground italic pt-1">No slots</span>
+                      <span className="text-sm text-muted-foreground italic pt-1">{isEs ? 'Sin horarios' : 'No slots'}</span>
                     )}
                   </div>
                 </div>
@@ -891,10 +903,10 @@ export function ApplicantProfileSettings() {
 
           {/* Add Slot */}
           <div className="border-t border-gray-100 pt-5">
-            <h4 className="text-sm font-semibold text-foreground mb-3">Add Time Slot</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3">{isEs ? 'Añadir Horario' : 'Add Time Slot'}</h4>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
               <div className="space-y-2">
-                <Label>Day</Label>
+                <Label>{isEs ? 'Día' : 'Day'}</Label>
                 <Select value={newDay} onValueChange={setNewDay}>
                   <SelectTrigger>
                     <SelectValue />
@@ -911,7 +923,7 @@ export function ApplicantProfileSettings() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Start Time</Label>
+                <Label>{isEs ? 'Hora de Inicio' : 'Start Time'}</Label>
                 <Select value={newStart} onValueChange={setNewStart}>
                   <SelectTrigger>
                     <SelectValue />
@@ -928,7 +940,7 @@ export function ApplicantProfileSettings() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>End Time</Label>
+                <Label>{isEs ? 'Hora de Fin' : 'End Time'}</Label>
                 <Select value={newEnd} onValueChange={setNewEnd}>
                   <SelectTrigger>
                     <SelectValue />
@@ -946,7 +958,7 @@ export function ApplicantProfileSettings() {
               </div>
               <Button onClick={handleAddSlot} className="gap-2">
                 <Plus className="w-4 h-4" />
-                Add
+                {isEs ? 'Añadir' : 'Add'}
               </Button>
             </div>
           </div>
@@ -956,7 +968,7 @@ export function ApplicantProfileSettings() {
         <div>
           <Button onClick={handleSaveAvailability} className="gap-2">
             <Save className="w-4 h-4" />
-            Save Availability
+            {isEs ? 'Guardar Disponibilidad' : 'Save Availability'}
           </Button>
         </div>
       </div>

@@ -9,20 +9,23 @@ import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { NotificationCenter } from '@/components/notification-center';
 import { ThemeToggle } from '@/components/theme-toggle';
-
-const navLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/talent', label: 'Browse Talent' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-];
+import { LanguageToggle } from '@/components/language-toggle';
+import { useT } from '@/lib/i18n';
 
 export function Navbar() {
   const { currentUser, logout } = useAuth();
   const { notifications } = useData();
+  const { t } = useT();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: '/', label: t.nav.home },
+    { href: '/talent', label: t.nav.browseTalent },
+    { href: '/about', label: t.nav.about },
+    { href: '/contact', label: t.nav.contact },
+  ];
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -59,12 +62,12 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             {currentUser ? (
               <>
                 <Link href={`/${currentUser.role}`}>
                   <Button variant="outline" size="sm" className="text-sm font-medium">
-                    Dashboard
+                    {t.nav.dashboard}
                   </Button>
                 </Link>
                 <NotificationCenter
@@ -75,6 +78,7 @@ export function Navbar() {
                   variant="ghost"
                   size="icon"
                   onClick={() => { logout(); router.push('/'); }}
+                  title={t.nav.signOut}
                 >
                   <LogOut className="w-[18px] h-[18px]" />
                 </Button>
@@ -83,25 +87,27 @@ export function Navbar() {
               <>
                 <Link href="/login">
                   <Button variant="ghost" size="sm" className="text-sm font-medium">
-                    Sign In
+                    {t.nav.signIn}
                   </Button>
                 </Link>
                 <Link href="/request-sign-up">
                   <Button variant="outline" size="sm" className="text-sm font-medium">
-                    Register
+                    {t.nav.register}
                   </Button>
                 </Link>
                 <Link href="/demo">
                   <Button size="sm" className="text-sm font-medium bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] hover:from-[hsl(210,100%,40%)] hover:to-[hsl(210,100%,33%)] text-white shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all">
-                    Demo
+                    {t.nav.demo}
                   </Button>
                 </Link>
               </>
             )}
+            <LanguageToggle />
             <ThemeToggle />
           </div>
 
           <div className="flex items-center gap-1 md:hidden">
+            <LanguageToggle />
             <ThemeToggle />
             <button
               className="p-2 rounded-lg hover:bg-secondary transition-colors"
@@ -131,7 +137,7 @@ export function Navbar() {
                 <>
                   <Link href={`/${currentUser.role}`} onClick={() => setMobileOpen(false)}>
                     <Button variant="outline" className="w-full" size="sm">
-                      Dashboard
+                      {t.nav.dashboard}
                     </Button>
                   </Link>
                   <Button
@@ -141,24 +147,24 @@ export function Navbar() {
                     onClick={() => { logout(); router.push('/'); setMobileOpen(false); }}
                   >
                     <LogOut className="w-[18px] h-[18px] mr-2" />
-                    Sign Out
+                    {t.nav.signOut}
                   </Button>
                 </>
               ) : (
                 <>
                   <Link href="/login" onClick={() => setMobileOpen(false)}>
                     <Button variant="outline" className="w-full" size="sm">
-                      Sign In
+                      {t.nav.signIn}
                     </Button>
                   </Link>
                   <Link href="/request-sign-up" onClick={() => setMobileOpen(false)}>
                     <Button variant="outline" className="w-full" size="sm">
-                      Register
+                      {t.nav.register}
                     </Button>
                   </Link>
                   <Link href="/demo" onClick={() => setMobileOpen(false)}>
                     <Button className="w-full bg-gradient-to-r from-[hsl(210,100%,45%)] to-[hsl(210,100%,38%)] text-white" size="sm">
-                      Demo
+                      {t.nav.demo}
                     </Button>
                   </Link>
                 </>

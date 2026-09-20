@@ -1,7 +1,13 @@
+'use client';
+
+import { useT } from '@/lib/i18n';
+
 /** Shared loading placeholder for dashboard pages gated on `isHydrated`/`loading`. */
 export function PageLoading() {
+  const { t } = useT();
+
   return (
-    <div className="space-y-6 animate-pulse" aria-label="Loading" role="status">
+    <div className="space-y-6 animate-pulse" aria-label={t.common.loading} role="status">
       <div className="h-8 w-48 bg-gray-100 rounded-lg" />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[0, 1, 2, 3].map((i) => (

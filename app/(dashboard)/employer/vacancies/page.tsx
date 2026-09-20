@@ -8,15 +8,7 @@ import { EmptyState } from '@/components/empty-state';
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import type { Vacancy, Candidate } from '@/types';
-
-const iaBadge = (ai_status: Candidate['ai_status']) => {
-  const styles = {
-    Advance: 'bg-emerald-50 text-emerald-600',
-    Hold: 'bg-amber-50 text-amber-600',
-    Reject: 'bg-red-50 text-red-600',
-  };
-  return <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${styles[ai_status]}`}>{ai_status}</span>;
-};
+import { useT } from '@/lib/i18n';
 
 const medalIcon = (i: number) => {
   if (i === 0) return <Medal className="w-4 h-4 text-yellow-500 fill-yellow-500" />;
@@ -28,11 +20,11 @@ const medalIcon = (i: number) => {
 export default function VacanciesPage() {
   const { currentUser } = useAuth();
   const { employerProfiles, isHydrated, vacancies, candidates: allCandidates, createVacancy, updateCandidateStatus } = useData();
+  const { t, lang } = useT();
+
   const employerProfile = employerProfiles.find((e) => e.id === currentUser?.employer_profile_id);
   const employerId = employerProfile?.id || currentUser?.employer_profile_id || '';
 
-  // vacancies is already scoped to this employer server-side via RLS
-  // (fetchVacancies only returns rows the caller owns) — no client filter needed.
   const activeVacancies = vacancies.filter((v) => v.status === 'Open');
   const totalCandidates = allCandidates.filter((c) => vacancies.some((v) => v.id === c.vacancy_id)).length;
   const avgPerVacancy = activeVacancies.length ? (totalCandidates / activeVacancies.length).toFixed(1) : '0';
@@ -43,12 +35,37 @@ export default function VacanciesPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [updatingCandidateId, setUpdatingCandidateId] = useState<string | null>(null);
-  const [newVac, setNewVac] = useState({ title: '', department: '', location: '', employment_type: 'Full-time' as Vacancy['employment_type'], work_mode: 'Remote' as Vacancy['work_mode'] });
+  const [newVac, setNewVac] = useState({
+    title: '',
+    department: '',
+    location: '',
+    employment_type: 'Full-time' as Vacancy['employment_type'],
+    work_mode: 'Remote' as Vacancy['work_mode'],
+  });
+
+  const iaBadge = (ai_status: Candidate['ai_status']) => {
+    const styles = {
+      Advance: 'bg-emerald-50 text-emerald-600',
+      Hold: 'bg-amber-50 text-amber-600',
+      Reject: 'bg-red-50 text-red-600',
+    };
+    const labels = {
+      Advance: lang === 'es' ? 'Avanzar' : 'Advance',
+      Hold: lang === 'es' ? 'En espera' : 'Hold',
+      Reject: lang === 'es' ? 'Descartar' : 'Reject',
+    };
+    return (
+      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${styles[ai_status]}`}>
+        {labels[ai_status]}
+      </span>
+    );
+  };
 
   const vacancyCandidates = useMemo(
-    () => (selectedVacancy
-      ? allCandidates.filter((c) => c.vacancy_id === selectedVacancy.id).sort((a, b) => b.score - a.score)
-      : []),
+    () =>
+      selectedVacancy
+        ? allCandidates.filter((c) => c.vacancy_id === selectedVacancy.id).sort((a, b) => b.score - a.score)
+        : [],
     [selectedVacancy, allCandidates]
   );
 
@@ -59,16 +76,25 @@ export default function VacanciesPage() {
     const now = new Date().toISOString();
     try {
       await createVacancy({
-        id: crypto.randomUUID(), employer_id: employerId,
-        title: newVac.title, department: newVac.department,
-        location: newVac.location, employment_type: newVac.employment_type,
-        work_mode: newVac.work_mode, status: 'Open',
-        published_at: now, created_at: now,
+        id: crypto.randomUUID(),
+        employer_id: employerId,
+        title: newVac.title,
+        department: newVac.department,
+        location: newVac.location,
+        employment_type: newVac.employment_type,
+        work_mode: newVac.work_mode,
+        status: 'Open',
+        published_at: now,
+        created_at: now,
       });
       setNewVac({ title: '', department: '', location: '', employment_type: 'Full-time', work_mode: 'Remote' });
       setShowCreate(false);
     } catch {
-      setCreateError('No se pudo crear la vacante. Intenta de nuevo.');
+      setCreateError(
+        lang === 'es'
+          ? 'No se pudo crear la vacante. Intenta de nuevo.'
+          : 'Failed to create vacancy. Please try again.'
+      );
     } finally {
       setIsCreating(false);
     }
@@ -79,7 +105,7 @@ export default function VacanciesPage() {
     try {
       await updateCandidateStatus(candidateId, status);
     } catch {
-      // optimistic update already reverted by the context on failure
+      // optimistic update
     } finally {
       setUpdatingCandidateId(null);
     }
@@ -97,23 +123,45 @@ export default function VacanciesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Vacantes</h2>
-          <p className="text-muted-foreground mt-1">Gestiona tus vacantes activas y revisa candidatos con análisis IA.</p>
+          <h2 className="text-2xl font-bold text-foreground">{t.employer.vacanciesTitle}</h2>
+          <p className="text-muted-foreground mt-1">
+            {lang === 'es'
+              ? 'Gestiona tus vacantes activas y revisa candidatos con análisis IA.'
+              : 'Manage active vacancies and review candidates with AI evaluation.'}
+          </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>+ Nueva Vacante</Button>
+        <Button onClick={() => setShowCreate(true)}>
+          {lang === 'es' ? '+ Nueva Vacante' : '+ New Vacancy'}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard icon={Briefcase} label="Vacantes Activas" value={activeVacancies.length} />
-        <StatCard icon={Users} label="Total Candidatos" value={totalCandidates} />
-        <StatCard icon={Target} label="Promedio por Vacante" value={avgPerVacancy} />
+        <StatCard
+          icon={Briefcase}
+          label={lang === 'es' ? 'Vacantes Activas' : 'Active Vacancies'}
+          value={activeVacancies.length}
+        />
+        <StatCard
+          icon={Users}
+          label={lang === 'es' ? 'Total Candidatos' : 'Total Candidates'}
+          value={totalCandidates}
+        />
+        <StatCard
+          icon={Target}
+          label={lang === 'es' ? 'Promedio por Vacante' : 'Average per Vacancy'}
+          value={avgPerVacancy}
+        />
       </div>
 
       {vacancies.length === 0 ? (
         <EmptyState
           icon={Briefcase}
-          title="No hay vacantes todavía"
-          description="Crea tu primera vacante para empezar a recibir candidatos evaluados por IA."
+          title={lang === 'es' ? 'No hay vacantes todavía' : 'No vacancies yet'}
+          description={
+            lang === 'es'
+              ? 'Crea tu primera vacante para empezar a recibir candidatos evaluados por IA.'
+              : 'Create your first vacancy to start receiving AI-evaluated candidates.'
+          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -123,20 +171,32 @@ export default function VacanciesPage() {
               <div key={vac.id} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-md transition-shadow flex flex-col">
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="font-semibold text-foreground text-lg leading-tight">{vac.title}</h3>
-                  <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${vac.status === 'Open' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                  <span
+                    className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      vac.status === 'Open' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
                     {vac.status}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-3">
                   <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md">{vac.department}</span>
-                  <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1"><MapPin className="w-3 h-3" />{vac.location}</span>
-                  <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1"><Clock className="w-3 h-3" />{vac.employment_type}</span>
+                  <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {vac.location}
+                  </span>
+                  <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {vac.employment_type}
+                  </span>
                   <span className="text-xs bg-gray-50 text-muted-foreground px-2 py-1 rounded-md">{vac.work_mode}</span>
                 </div>
                 <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-50">
-                  <span className="text-sm text-muted-foreground">{count} aplicante{count !== 1 ? 's' : ''}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {count} {lang === 'es' ? 'postulante(s)' : `applicant${count !== 1 ? 's' : ''}`}
+                  </span>
                   <Button size="sm" variant="outline" onClick={() => setSelectedVacancy(vac)}>
-                    Ver candidatos &rarr;
+                    {lang === 'es' ? 'Ver candidatos →' : 'View candidates →'}
                   </Button>
                 </div>
               </div>
@@ -149,26 +209,59 @@ export default function VacanciesPage() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => !isCreating && setShowCreate(false)}>
           <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-foreground">Nueva Vacante</h3>
-              <button className="p-1.5 rounded-lg hover:bg-gray-100" onClick={() => setShowCreate(false)}><X className="w-5 h-5" /></button>
+              <h3 className="text-lg font-bold text-foreground">
+                {lang === 'es' ? 'Nueva Vacante' : 'New Vacancy'}
+              </h3>
+              <button className="p-1.5 rounded-lg hover:bg-gray-100" onClick={() => setShowCreate(false)}>
+                <X className="w-5 h-5" />
+              </button>
             </div>
             {createError && <p className="text-sm text-red-600 mb-3">{createError}</p>}
             <div className="space-y-3">
-              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Título del cargo" value={newVac.title} onChange={(e) => setNewVac({ ...newVac, title: e.target.value })} />
-              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Departamento" value={newVac.department} onChange={(e) => setNewVac({ ...newVac, department: e.target.value })} />
-              <input className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="Ubicación" value={newVac.location} onChange={(e) => setNewVac({ ...newVac, location: e.target.value })} />
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" value={newVac.employment_type} onChange={(e) => setNewVac({ ...newVac, employment_type: e.target.value as Vacancy['employment_type'] })}>
-                <option>Full-time</option><option>Part-time</option><option>Freelance</option>
+              <input
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                placeholder={lang === 'es' ? 'Título del cargo' : 'Job Title'}
+                value={newVac.title}
+                onChange={(e) => setNewVac({ ...newVac, title: e.target.value })}
+              />
+              <input
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                placeholder={lang === 'es' ? 'Departamento' : 'Department'}
+                value={newVac.department}
+                onChange={(e) => setNewVac({ ...newVac, department: e.target.value })}
+              />
+              <input
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                placeholder={lang === 'es' ? 'Ubicación' : 'Location'}
+                value={newVac.location}
+                onChange={(e) => setNewVac({ ...newVac, location: e.target.value })}
+              />
+              <select
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+                value={newVac.employment_type}
+                onChange={(e) => setNewVac({ ...newVac, employment_type: e.target.value as Vacancy['employment_type'] })}
+              >
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Freelance">Freelance</option>
               </select>
-              <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" value={newVac.work_mode} onChange={(e) => setNewVac({ ...newVac, work_mode: e.target.value as Vacancy['work_mode'] })}>
-                <option>Remote</option><option>Hybrid</option><option>On-site</option>
+              <select
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+                value={newVac.work_mode}
+                onChange={(e) => setNewVac({ ...newVac, work_mode: e.target.value as Vacancy['work_mode'] })}
+              >
+                <option value="Remote">Remote</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="On-site">On-site</option>
               </select>
             </div>
             <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setShowCreate(false)} disabled={isCreating}>Cancelar</Button>
+              <Button variant="outline" onClick={() => setShowCreate(false)} disabled={isCreating}>
+                {t.common.cancel}
+              </Button>
               <Button onClick={handleCreateVacancy} disabled={isCreating || !newVac.title.trim()}>
                 {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Crear Vacante
+                {lang === 'es' ? 'Crear Vacante' : 'Create Vacancy'}
               </Button>
             </div>
           </div>
@@ -181,7 +274,9 @@ export default function VacanciesPage() {
             <div className="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
               <div>
                 <h3 className="text-lg font-bold text-foreground">{selectedVacancy.title}</h3>
-                <p className="text-sm text-muted-foreground">{selectedVacancy.department} &middot; {selectedVacancy.location}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedVacancy.department} &middot; {selectedVacancy.location}
+                </p>
               </div>
               <button className="p-1.5 rounded-lg hover:bg-gray-100" onClick={() => setSelectedVacancy(null)}>
                 <X className="w-5 h-5" />
@@ -190,7 +285,9 @@ export default function VacanciesPage() {
 
             <div className="p-6 space-y-3">
               {vacancyCandidates.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">No hay candidatos para esta vacante.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  {lang === 'es' ? 'No hay candidatos para esta vacante.' : 'No candidates for this vacancy.'}
+                </p>
               ) : (
                 vacancyCandidates.map((cand, i) => (
                   <div key={cand.id} className="border border-gray-100 rounded-xl overflow-hidden">
@@ -214,9 +311,9 @@ export default function VacanciesPage() {
                         className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-muted-foreground disabled:opacity-50"
                         onChange={(e) => handleStatusChange(cand.id, e.target.value as Candidate['manual_status'])}
                       >
-                        <option>Received</option>
-                        <option>Interview</option>
-                        <option>Offer</option>
+                        <option value="Received">{lang === 'es' ? 'Recibido' : 'Received'}</option>
+                        <option value="Interview">{lang === 'es' ? 'Entrevista' : 'Interview'}</option>
+                        <option value="Offer">{lang === 'es' ? 'Oferta' : 'Offer'}</option>
                       </select>
                       <button
                         className="p-1.5 rounded-lg hover:bg-gray-100 text-muted-foreground"
@@ -229,16 +326,22 @@ export default function VacanciesPage() {
                     {expandedCandidate === cand.id && (
                       <div className="px-4 pb-4 pt-0 space-y-4">
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Resumen de Perfil</p>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                            {lang === 'es' ? 'Resumen de Perfil' : 'Profile Summary'}
+                          </p>
                           <p className="text-sm text-foreground">{cand.profile_summary}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Razonamiento del Modelo</p>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                            {lang === 'es' ? 'Razonamiento del Modelo' : 'Model Reasoning'}
+                          </p>
                           <p className="text-sm text-muted-foreground bg-gray-50 p-3 rounded-lg">{cand.ai_reasoning}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Fortalezas</p>
+                            <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">
+                              {lang === 'es' ? 'Fortalezas' : 'Strengths'}
+                            </p>
                             <ul className="space-y-1">
                               {cand.strengths.map((f, j) => (
                                 <li key={j} className="text-sm text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md">{f}</li>
@@ -246,7 +349,9 @@ export default function VacanciesPage() {
                             </ul>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Áreas de Mejora</p>
+                            <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">
+                              {lang === 'es' ? 'Áreas de Mejora' : 'Areas for Improvement'}
+                            </p>
                             <ul className="space-y-1">
                               {cand.improvement_areas.map((a, j) => (
                                 <li key={j} className="text-sm text-red-700 bg-red-50 px-2 py-1 rounded-md">{a}</li>
@@ -255,8 +360,8 @@ export default function VacanciesPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-[10px] text-muted-foreground border-t border-gray-100 pt-3">
-                          <span>Modelo: {cand.ai_model}</span>
-                          <span>Tiempo: {cand.ai_response_time}</span>
+                          <span>{lang === 'es' ? 'Modelo' : 'Model'}: {cand.ai_model}</span>
+                          <span>{lang === 'es' ? 'Tiempo' : 'Time'}: {cand.ai_response_time}</span>
                           <span>Tokens: {cand.ai_total_tokens.toLocaleString()}</span>
                         </div>
                       </div>
