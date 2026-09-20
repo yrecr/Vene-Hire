@@ -227,8 +227,8 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
   return (
     <div className="pt-24 pb-20">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-white to-teal-50/40 -z-10" />
-      <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/30 to-teal-100/20 rounded-full blur-3xl -z-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/60 via-white to-teal-50/40 dark:from-blue-950/20 dark:via-background dark:to-teal-950/20 -z-10" />
+      <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-100/30 to-teal-100/20 dark:from-blue-900/20 dark:to-teal-900/10 rounded-full blur-3xl -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back link */}
@@ -250,7 +250,7 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
               ? 'Want to join our talent pool? Tell us about yourself below and our team will review your application.'
               : 'To request interviews or gain access to additional candidate details, please submit your request below. Our team will review your request and contact you directly.'}
           </p>
-          <div className="mt-4 inline-flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5">
+          <div className="mt-4 inline-flex items-center gap-2 text-sm text-blue-700 bg-blue-50 border border-blue-100 dark:bg-blue-950/30 dark:border-blue-900/40 dark:text-blue-300 rounded-lg px-4 py-2.5">
             <ShieldCheck className="w-4 h-4 flex-shrink-0" />
             <span>
               Access is reviewed manually to ensure quality for all parties.
@@ -286,9 +286,9 @@ function RequestDemoForm({ initialType, candidateParam }: { initialType: Request
         <div className="grid lg:grid-cols-5 gap-12 lg:gap-16">
           {/* Left column: Form */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-6 sm:p-8">
+            <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-black/50 border border-gray-100 p-6 sm:p-8">
               {error && (
-                <div className="mb-6 flex items-start gap-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+                <div className="mb-6 flex items-start gap-3 text-sm text-red-700 bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900/40 dark:text-red-400 rounded-lg px-4 py-3">
                   <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>

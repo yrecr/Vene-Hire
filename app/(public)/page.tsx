@@ -54,9 +54,9 @@ export default function HomePage() {
     <>
       {/* Hero */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 -z-10" />
-        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-100/40 to-teal-100/30 rounded-full blur-3xl -z-10 animate-drift-slow" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 rounded-full blur-3xl -z-10 animate-drift-slower" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 dark:from-blue-950/20 dark:via-background dark:to-teal-950/20 -z-10" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-100/40 to-teal-100/30 dark:from-blue-900/20 dark:to-teal-900/10 rounded-full blur-3xl -z-10 animate-drift-slow" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 dark:from-teal-900/10 dark:to-blue-900/20 rounded-full blur-3xl -z-10 animate-drift-slower" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
@@ -84,8 +84,8 @@ export default function HomePage() {
 
             <div className="relative animate-fade-in-up stagger-2 hidden lg:block">
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-blue-100/50 to-teal-100/50 rounded-3xl blur-2xl" />
-                <div className="relative bg-white rounded-2xl shadow-2xl shadow-gray-200/60 border border-gray-100 p-6 space-y-4">
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-100/50 to-teal-100/50 dark:from-blue-900/20 dark:to-teal-900/20 rounded-3xl blur-2xl" />
+                <div className="relative bg-white rounded-2xl shadow-2xl shadow-gray-200/60 dark:shadow-black/60 border border-gray-100 p-6 space-y-4">
                   <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
                     <div className="w-3 h-3 rounded-full bg-red-400" />
                     <div className="w-3 h-3 rounded-full bg-amber-400" />
@@ -232,7 +232,7 @@ export default function HomePage() {
                 Not Just Recruitment.{' '}
                 <span className="text-teal-400">Real Training.</span>
               </h2>
-              <p className="mt-4 text-lg text-gray-400 leading-relaxed">
+              <p className="mt-4 text-lg text-gray-400 dark:text-slate-300 leading-relaxed">
                 Our engineers go through an intensive accelerator program that simulates real-world product development.
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white mb-1.5">{feature.title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
+                  <p className="text-sm text-gray-400 dark:text-slate-300 leading-relaxed">{feature.description}</p>
                 </div>
               </Reveal>
             ))}

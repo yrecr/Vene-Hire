@@ -9,6 +9,7 @@ import {
 import { useAuth } from '@/lib/auth';
 import { useData } from '@/lib/data-context';
 import { NotificationCenter } from '@/components/notification-center';
+import { ThemeToggle, ThemeMenuSub } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
 
 interface DashboardHeaderProps {
@@ -38,6 +39,7 @@ export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         <NotificationCenter notifications={userNotifications} role={currentUser?.role} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -63,6 +65,8 @@ export function DashboardHeader({ title, onMenuClick }: DashboardHeaderProps) {
             <DropdownMenuItem onClick={() => router.push(`${settingsBase}#about`)} className="gap-2 cursor-pointer">
               <Info className="w-4 h-4" /> About
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <ThemeMenuSub />
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => { logout(); router.push('/'); }} className="gap-2 cursor-pointer text-red-600 focus:text-red-600">
               <LogOut className="w-4 h-4" /> Log Out

@@ -194,7 +194,7 @@ export default function EmployerProcessesPage() {
                         disabled={process.status === s}
                         className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                           process.status === s
-                            ? 'bg-gray-100 text-gray-400 border-gray-100 cursor-default'
+                            ? 'bg-gray-100 text-gray-500 border-gray-100 cursor-default'
                             : 'bg-white text-muted-foreground border-gray-200 hover:border-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,45%)]'
                         }`}
                       >

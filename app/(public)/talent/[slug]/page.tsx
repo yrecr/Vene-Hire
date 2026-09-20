@@ -30,10 +30,10 @@ function toEmbedUrl(url: string): string {
 }
 
 const availabilityConfig: Record<string, { label: string; className: string }> = {
-  Available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  'In Training': { label: 'In Training', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  Available: { label: 'Available', className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40' },
+  'In Training': { label: 'In Training', className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/40' },
   Hired: { label: 'Hired', className: 'bg-gray-50 text-gray-700 border-gray-200' },
-  'On Hold': { label: 'On Hold', className: 'bg-blue-50 text-blue-700 border-blue-200' },
+  'On Hold': { label: 'On Hold', className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40' },
 };
 
 export default function TalentProfilePage() {
@@ -209,11 +209,11 @@ export default function TalentProfilePage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12 text-center shadow-xl">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12 text-center shadow-xl border border-white/10">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
             Interested in {talent.display_name}?
           </h2>
-          <p className="text-gray-300 mb-8 max-w-xl mx-auto">
+          <p className="text-gray-300 dark:text-slate-300 mb-8 max-w-xl mx-auto">
             Get in touch to learn more about this candidate or explore our full talent pool for your hiring needs.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -224,7 +224,7 @@ export default function TalentProfilePage() {
             ) : isEmployer && employerId ? (
               <Button
                 size="lg"
-                className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
+                className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 gap-2 w-full sm:w-auto"
                 onClick={() => setModalOpen(true)}
               >
                 Request Interview
@@ -234,7 +234,7 @@ export default function TalentProfilePage() {
               <Link href={`/request-sign-up?candidate=${talent.slug}`}>
                 <Button
                   size="lg"
-                  className="bg-white text-gray-900 hover:bg-gray-100 gap-2 w-full sm:w-auto"
+                  className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 gap-2 w-full sm:w-auto"
                 >
                   Request Interview
                   <ArrowRight className="w-4 h-4" />
@@ -246,7 +246,7 @@ export default function TalentProfilePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white gap-2 w-full sm:w-auto"
+                  className="bg-transparent border-white/30 text-white hover:bg-white/10 hover:text-white gap-2 w-full sm:w-auto"
                 >
                   Register
                 </Button>

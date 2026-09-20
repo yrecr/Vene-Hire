@@ -64,9 +64,9 @@ export default function AboutPage() {
     <>
       {/* Hero */}
       <section className="relative pt-24 pb-20 lg:pt-36 lg:pb-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 -z-10" />
-        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-100/40 to-teal-100/30 rounded-full blur-3xl -z-10" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 rounded-full blur-3xl -z-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 dark:from-blue-950/20 dark:via-background dark:to-teal-950/20 -z-10" />
+        <div className="absolute top-20 right-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-100/40 to-teal-100/30 dark:from-blue-900/20 dark:to-teal-900/10 rounded-full blur-3xl -z-10" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-teal-100/30 to-blue-100/20 dark:from-teal-900/10 dark:to-blue-900/20 rounded-full blur-3xl -z-10" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <span className="inline-block px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[hsl(210,100%,45%)] bg-[hsl(210,100%,45%)]/10 rounded-full mb-6">
@@ -234,7 +234,7 @@ export default function AboutPage() {
                 Themselves
               </span>
             </h2>
-            <p className="mt-4 text-lg text-gray-400 leading-relaxed">
+            <p className="mt-4 text-lg text-gray-400 dark:text-slate-300 leading-relaxed">
               We measure our success by the outcomes we create for engineers and
               companies alike.
             </p>
@@ -251,7 +251,7 @@ export default function AboutPage() {
                 <p className="text-3xl sm:text-4xl font-bold text-white">
                   {stat.value}
                 </p>
-                <p className="text-sm text-gray-400 mt-2">{stat.label}</p>
+                <p className="text-sm text-gray-400 dark:text-slate-300 mt-2">{stat.label}</p>
               </div>
             ))}
           </div>

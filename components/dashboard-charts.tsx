@@ -23,10 +23,20 @@ export function TrendCard({
       <h3 className="text-sm font-semibold text-foreground mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={data} margin={{ left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-          <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="#94a3b8" interval="preserveStartEnd" />
-          <YAxis allowDecimals={false} tick={{ fontSize: 11 }} stroke="#94a3b8" width={30} />
-          <Tooltip />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" interval="preserveStartEnd" />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} stroke="hsl(var(--border))" width={30} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: 'hsl(var(--card))',
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--card-foreground))',
+              borderRadius: '0.75rem',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            }}
+            itemStyle={{ color: 'hsl(var(--foreground))' }}
+            labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+          />
           <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
@@ -51,7 +61,17 @@ export function DonutCard({ title, data }: { title: string; data: { name: string
                   <Cell key={i} fill={DONUT_COLORS[i % DONUT_COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  borderColor: 'hsl(var(--border))',
+                  color: 'hsl(var(--card-foreground))',
+                  borderRadius: '0.75rem',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                }}
+                itemStyle={{ color: 'hsl(var(--foreground))' }}
+                labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+              />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex-1 space-y-1.5">

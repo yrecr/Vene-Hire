@@ -33,6 +33,22 @@
     --success-foreground: 0 0% 100%;
     --warning: 35 92% 50%;
     --warning-foreground: 0 0% 100%;
+
+    /* Surface white token */
+    --surface-white: 0 0% 100%;
+
+    /* Gray scale (light mode) */
+    --gray-50: 210 20% 98%;
+    --gray-100: 220 14% 96%;
+    --gray-200: 220 13% 91%;
+    --gray-300: 216 12% 84%;
+    --gray-400: 218 11% 65%;
+    --gray-500: 220 9% 46%;
+    --gray-600: 215 14% 34%;
+    --gray-700: 217 19% 27%;
+    --gray-800: 215 28% 17%;
+    --gray-900: 222 47% 11%;
+    --gray-950: 224 71% 4%;
   }
 
   .dark {
@@ -42,12 +58,12 @@
     --card-foreground: 210 20% 96%;
     --popover: 222 25% 12%;
     --popover-foreground: 210 20% 96%;
-    --primary: 210 100% 50%;
+    --primary: 210 100% 45%;
     --primary-foreground: 0 0% 100%;
     --secondary: 222 20% 16%;
     --secondary-foreground: 210 20% 96%;
     --muted: 222 20% 16%;
-    --muted-foreground: 220 10% 60%;
+    --muted-foreground: 220 10% 65%;
     --accent: 170 60% 42%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%;
@@ -55,7 +71,39 @@
     --border: 222 15% 20%;
     --input: 222 15% 20%;
     --ring: 210 100% 50%;
+    --chart-1: 210 100% 55%;
+    --chart-2: 170 60% 48%;
+    --chart-3: 35 92% 55%;
+    --chart-4: 0 72% 55%;
+    --chart-5: 220 20% 65%;
+    --success: 152 60% 48%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Surface white token in dark mode = card/surface dark background */
+    --surface-white: 222 25% 12%;
+
+    /* Gray scale inverted (dark mode) */
+    --gray-50: 222 30% 9%;
+    --gray-100: 222 22% 15%;
+    --gray-200: 222 16% 22%;
+    --gray-300: 220 14% 30%;
+    --gray-400: 218 11% 52%;
+    --gray-500: 220 10% 65%;
+    --gray-600: 216 14% 78%;
+    --gray-700: 215 18% 86%;
+    --gray-800: 210 20% 92%;
+    --gray-900: 210 20% 97%;
+    --gray-950: 0 0% 100%;
   }
+}
+
+/* Brand blue used as text is too dark on dark surfaces (AA contrast). */
+.dark .text-\[hsl\(210\,100\%\,38\%\)\],
+.dark .text-\[hsl\(210\,100\%\,40\%\)\],
+.dark .text-\[hsl\(210\,100\%\,45\%\)\] {
+  color: hsl(210 100% 70%);
 }
 
 @layer base {

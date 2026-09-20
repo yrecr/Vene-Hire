@@ -110,7 +110,7 @@ export function ContractSigningModal({ open, onClose, process, onSign }: Props) 
             {process?.contract_url ? (
               <iframe
                 src={process.contract_url}
-                className="w-full h-[500px] rounded-xl border border-gray-200"
+                className="w-full h-[500px] rounded-xl border border-gray-200 bg-white"
               />
             ) : (
               <div className="bg-gray-50 rounded-xl p-12 text-center text-muted-foreground">

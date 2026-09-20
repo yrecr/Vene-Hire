@@ -26,7 +26,7 @@ const roles: { role: DemoRole; icon: typeof ShieldCheck; title: string; descript
 
 export default function DemoPage() {
   return (
-    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50">
+    <div className="min-h-screen pt-24 pb-20 bg-gradient-to-br from-blue-50/80 via-white to-teal-50/50 dark:from-blue-950/20 dark:via-background dark:to-teal-950/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -47,7 +47,7 @@ export default function DemoPage() {
             <button
               key={role}
               onClick={() => enterDemo(role)}
-              className="group relative bg-white rounded-2xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 text-left hover:-translate-y-1"
+              className="group relative bg-white rounded-2xl border border-gray-100 p-8 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-black/50 transition-all duration-300 text-left hover:-translate-y-1"
             >
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[hsl(210,100%,45%)]/5 to-[hsl(170,60%,42%)]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <div className="relative">
