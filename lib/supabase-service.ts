@@ -19,6 +19,18 @@ function sb() {
   return _sb;
 }
 
+// The resumes bucket is private. resume_url still stores the old public-style
+// URL, so recover the object path from it and sign it — storage RLS decides
+// who (owner, admin, employer) actually gets a link.
+const RESUME_MARKER = '/object/public/resumes/';
+export async function getResumeSignedUrl(resumeUrl: string, seconds = 3600): Promise<string | null> {
+  const at = resumeUrl.indexOf(RESUME_MARKER);
+  if (at === -1) return null;
+  const path = decodeURIComponent(resumeUrl.slice(at + RESUME_MARKER.length).split('?')[0]);
+  const { data } = await sb().storage.from('resumes').createSignedUrl(path, seconds);
+  return data?.signedUrl ?? null;
+}
+
 // ─── Profiles ────────────────────────────────────────
 export async function fetchProfiles(): Promise<Profile[]> {
   const { data } = await sb().from('profiles').select('*');

@@ -51,7 +51,7 @@ export function ProfileCompletionBubble({ completion, items, href, ctaLabel, mes
       <button
         onClick={() => setAndPersist(false)}
         aria-label={t.profileCompletion.title}
-        className="fixed bottom-6 left-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center text-white"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-[hsl(210,100%,45%)] to-[hsl(170,60%,42%)] shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center text-white"
       >
         <User className="w-5 h-5" />
         <span className="absolute -top-1 -right-1 bg-white text-[hsl(210,100%,45%)] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow">
@@ -62,7 +62,7 @@ export function ProfileCompletionBubble({ completion, items, href, ctaLabel, mes
   }
 
   return (
-    <div className="fixed bottom-6 left-6 z-40 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-2xl border border-gray-100 shadow-xl p-5">
+    <div className="fixed bottom-6 right-6 z-40 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-2xl border border-gray-100 shadow-xl p-5">
       <div className="flex items-start justify-between mb-1">
         <h3 className="text-sm font-semibold text-foreground">{t.profileCompletion.title}</h3>
         <button

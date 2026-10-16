@@ -25,7 +25,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useData } from '@/lib/data-context';
+import { useSignedResumeUrl } from '@/hooks/use-signed-resume-url';
+import { toast } from '@/hooks/use-toast';
 import type { AvailabilitySlot, TalentProfile } from '@/types';
+
+// Candidates reach companies only through VeneHire, so summary/bio must not carry an email or a phone number (9+ digits).
+const CONTACT_INFO = /[^\s@]+@[^\s@]+\.[^\s@]+|(?:\+?\d[\s().-]?){9,}/;
 import { useT } from '@/lib/i18n';
 
 function toEmbedUrl(url: string): string {
@@ -119,7 +124,7 @@ export function ApplicantProfileSettings() {
   );
   const [saved, setSaved] = useState(false);
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
-  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
+  const { url: resumeSignedUrl, status: resumeStatus } = useSignedResumeUrl(talentProfile?.resume_url, !!talentProfile?.resume_url);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -234,6 +239,10 @@ export function ApplicantProfileSettings() {
 
   function handleSaveProfile() {
     if (!talentProfile) return;
+    if (CONTACT_INFO.test(`${summary}\n${bio}`)) {
+      toast({ title: t.errors.noContactInfo, variant: 'destructive' });
+      return;
+    }
     updateTalentProfile({
       ...talentProfile,
       display_name: displayName,
@@ -558,7 +567,7 @@ export function ApplicantProfileSettings() {
               </div>
               <div className="flex-1 min-w-0">
                 <a
-                  href={talentProfile!.resume_url!}
+                  href={resumeSignedUrl ?? undefined}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm font-medium text-foreground truncate hover:text-[hsl(210,100%,45%)] flex items-center gap-1"
@@ -576,7 +585,8 @@ export function ApplicantProfileSettings() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
+                disabled={!resumeSignedUrl}
+                onClick={() => setResumeModalOpen(true)}
               >
                 <ExternalLink className="w-4 h-4" />
                 {isEs ? 'Ver CV' : 'View Resume'}
@@ -622,11 +632,13 @@ export function ApplicantProfileSettings() {
         <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
           <DialogContent className="max-w-4xl h-[80vh]">
             <DialogTitle className="sr-only">{isEs ? 'Currículum' : 'Resume'}</DialogTitle>
-            <iframe
-              src={`${talentProfile?.resume_url ?? ''}?t=${resumeCacheBuster}`}
-              className="w-full h-full border-0 rounded-lg"
-              title={t.applicant.resume}
-            />
+            {resumeSignedUrl ? (
+              <iframe src={resumeSignedUrl} className="w-full h-full border-0 rounded-lg" title={t.applicant.resume} />
+            ) : (
+              <p className="m-auto text-sm text-muted-foreground">
+                {resumeStatus === 'error' ? t.talent.resumeUnavailable : t.talent.resumeLoading}
+              </p>
+            )}
           </DialogContent>
         </Dialog>
 

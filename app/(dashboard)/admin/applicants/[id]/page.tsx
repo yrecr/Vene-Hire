@@ -7,6 +7,7 @@ import { useData } from '@/lib/data-context';
 import { useT } from '@/lib/i18n';
 import { SkillBar } from '@/components/skill-bar';
 import { ProfileAvatar } from '@/components/profile-avatar';
+import { useSignedResumeUrl } from '@/hooks/use-signed-resume-url';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -32,9 +33,9 @@ export default function AdminApplicantDetailPage() {
   const id = params.id as string;
   const { getApplicantById } = useData();
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
-  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
 
   const talent = getApplicantById(id);
+  const { url: resumeSignedUrl, status: resumeStatus } = useSignedResumeUrl(talent?.resume_url, resumeModalOpen);
 
   const availabilityConfig: Record<string, { label: string; className: string }> = useMemo(() => ({
     Available: { label: t.badges.available, className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -155,7 +156,7 @@ export default function AdminApplicantDetailPage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.admin.resumeHeading}</h2>
                 <button
-                  onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
+                  onClick={() => setResumeModalOpen(true)}
                   className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
                 >
                   <FileText className="w-5 h-5" />
@@ -167,11 +168,13 @@ export default function AdminApplicantDetailPage() {
             <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
               <DialogContent className="max-w-4xl h-[80vh]">
                 <DialogTitle className="sr-only">{t.admin.resumeHeading}</DialogTitle>
-                <iframe
-                  src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
-                  className="w-full h-full border-0 rounded-lg"
-                  title={t.admin.resumeHeading}
-                />
+                {resumeSignedUrl ? (
+                  <iframe src={resumeSignedUrl} className="w-full h-full border-0 rounded-lg" title={t.admin.resumeHeading} />
+                ) : (
+                  <p className="m-auto text-sm text-muted-foreground">
+                    {resumeStatus === 'error' ? t.talent.resumeUnavailable : t.talent.resumeLoading}
+                  </p>
+                )}
               </DialogContent>
             </Dialog>
 

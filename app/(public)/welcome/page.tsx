@@ -29,6 +29,7 @@ export default function WelcomePage() {
     )
   );
   const [phase, setPhase] = useState<Phase>('verifying');
+  const [isRecovery, setIsRecovery] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,13 +41,19 @@ export default function WelcomePage() {
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
     const linkError = params.get('error_description');
+    const recovery = params.get('type') === 'recovery';
+    setIsRecovery(recovery);
 
     if (linkError || !accessToken || !refreshToken) {
       setError(
         linkError ||
-          (lang === 'es'
-            ? 'Este enlace de invitación es inválido o ya ha sido utilizado.'
-            : 'This invitation link is invalid or has already been used.')
+          (recovery
+            ? lang === 'es'
+              ? 'Este enlace es inválido o ha expirado. Solicita uno nuevo desde la página de inicio de sesión.'
+              : 'This reset link is invalid or has expired. Request a new one from the sign-in page.'
+            : lang === 'es'
+              ? 'Este enlace de invitación es inválido o ya ha sido utilizado.'
+              : 'This invitation link is invalid or has already been used.')
       );
       setPhase('invalid');
       return;
@@ -103,7 +110,7 @@ export default function WelcomePage() {
     }
 
     toast({
-      title: lang === 'es' ? 'Contraseña configurada' : 'Password set',
+      title: isRecovery ? t.auth.passwordUpdated : lang === 'es' ? 'Contraseña configurada' : 'Password set',
       description: lang === 'es' ? 'Redirigiendo a tu panel...' : 'Taking you to your dashboard...',
     });
     const role = (data.user?.user_metadata?.role as string) || '';
@@ -121,21 +128,27 @@ export default function WelcomePage() {
 
           {phase === 'verifying' && (
             <p className="text-center text-gray-500 py-8">
-              {lang === 'es' ? 'Verificando tu invitación...' : 'Verifying your invitation...'}
+              {isRecovery ? t.auth.resetVerifying : lang === 'es' ? 'Verificando tu invitación...' : 'Verifying your invitation...'}
             </p>
           )}
 
           {phase === 'invalid' && (
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-900">
-                {lang === 'es' ? 'Invitación no disponible' : 'Invitation unavailable'}
+                {isRecovery
+                  ? lang === 'es' ? 'Enlace no disponible' : 'Link unavailable'
+                  : lang === 'es' ? 'Invitación no disponible' : 'Invitation unavailable'}
               </h1>
               <div className="flex items-center gap-2 p-3 my-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg text-left">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
               <p className="text-sm text-gray-500">
-                {lang === 'es' ? (
+                {isRecovery ? (
+                  <Link href="/login" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
+                    {t.auth.backToSignIn}
+                  </Link>
+                ) : lang === 'es' ? (
                   <>
                     Solicita a un administrador una nueva invitación, o{' '}
                     <Link href="/login" className="text-[hsl(210,100%,45%)] hover:text-[hsl(210,100%,40%)] underline">
@@ -159,11 +172,13 @@ export default function WelcomePage() {
           {phase === 'ready' && (
             <>
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold text-gray-900">{t.auth.welcomeTitle}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{isRecovery ? t.auth.resetPasswordTitle : t.auth.welcomeTitle}</h1>
                 <p className="text-gray-500 mt-1">
-                  {lang === 'es'
-                    ? `Elige una contraseña para ${email || 'tu cuenta'} para completar la configuración.`
-                    : `Choose a password for ${email || 'your account'} to finish setting it up.`}
+                  {isRecovery
+                    ? t.auth.resetNewPasswordFor.replace('{email}', email || (lang === 'es' ? 'tu cuenta' : 'your account'))
+                    : lang === 'es'
+                      ? `Elige una contraseña para ${email || 'tu cuenta'} para completar la configuración.`
+                      : `Choose a password for ${email || 'your account'} to finish setting it up.`}
                 </p>
               </div>
 
@@ -216,7 +231,7 @@ export default function WelcomePage() {
                     t.common.saving
                   ) : (
                     <span className="flex items-center justify-center gap-2">
-                      {lang === 'es' ? 'Establecer contraseña y continuar' : 'Set password and continue'}
+                      {isRecovery ? t.auth.resetPasswordBtn : lang === 'es' ? 'Establecer contraseña y continuar' : 'Set password and continue'}
                       <ArrowRight className="w-4 h-4" />
                     </span>
                   )}
