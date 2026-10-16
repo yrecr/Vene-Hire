@@ -22,11 +22,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Reaching the real login means leaving the demo sandbox.
   useEffect(() => {
     clearDemoCookie();
   }, []);
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/welcome`,
+      });
+      if (resetError) {
+        setError(resetError.message);
+      } else {
+        // Same message whether or not the email has an account, so the form can't be used to probe for registered users.
+        setResetSent(true);
+      }
+    } catch {
+      setError(t.auth.networkError);
+    }
+    setLoading(false);
+  };
+
+  const switchMode = (forgot: boolean) => {
+    setForgotMode(forgot);
+    setResetSent(false);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +99,8 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">{t.auth.welcomeBack}</h1>
-            <p className="text-gray-500 mt-1">{t.auth.signInDesc}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{forgotMode ? t.auth.forgotTitle : t.auth.welcomeBack}</h1>
+            <p className="text-gray-500 mt-1">{forgotMode ? t.auth.forgotDesc : t.auth.signInDesc}</p>
           </div>
 
           {error && (
@@ -78,6 +110,40 @@ export default function LoginPage() {
             </div>
           )}
 
+          {forgotMode && resetSent ? (
+            <div className="space-y-6">
+              <p className="p-3 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-900/40 dark:text-emerald-300 rounded-lg">
+                {t.auth.resetLinkSent}
+              </p>
+              <button type="button" onClick={() => switchMode(false)} className="w-full text-center text-sm text-[hsl(210,100%,45%)] hover:underline">
+                {t.auth.backToSignIn}
+              </button>
+            </div>
+          ) : forgotMode ? (
+            <form onSubmit={handleReset} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">{t.auth.emailLabel}</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder={t.auth.emailPlaceholder}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? t.auth.sendingResetLink : t.auth.sendResetLink}
+              </Button>
+              <button type="button" onClick={() => switchMode(false)} className="w-full text-center text-sm text-gray-500 hover:underline">
+                {t.auth.backToSignIn}
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">{t.auth.emailLabel}</Label>
@@ -121,7 +187,11 @@ export default function LoginPage() {
                 </span>
               )}
             </Button>
+            <button type="button" onClick={() => switchMode(true)} className="w-full text-center text-sm text-[hsl(210,100%,45%)] hover:underline">
+              {t.auth.forgotPassword}
+            </button>
           </form>
+          )}
 
           <p className="text-center text-sm text-gray-400 mt-8">
             {t.auth.invitationOnly}{' '}

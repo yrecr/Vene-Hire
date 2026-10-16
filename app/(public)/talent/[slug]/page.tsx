@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { InterviewRequestModal } from '@/components/interview-request-modal';
 import { SkillBar } from '@/components/skill-bar';
 import { ProfileAvatar } from '@/components/profile-avatar';
+import { useSignedResumeUrl } from '@/hooks/use-signed-resume-url';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -45,11 +46,13 @@ export default function TalentProfilePage() {
   const { t, lang } = useT();
   const [modalOpen, setModalOpen] = useState(false);
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
-  const [resumeCacheBuster, setResumeCacheBuster] = useState(Date.now());
 
   const talent = talentProfiles.find((t) => t.slug === slug);
 
   const isEmployer = currentUser?.role === 'employer';
+  // Only registered companies (and admins) may open the original resume — it carries the candidate's own contact details.
+  const canSeeResume = isEmployer || currentUser?.role === 'admin';
+  const { url: resumeSignedUrl, status: resumeStatus } = useSignedResumeUrl(talent?.resume_url, canSeeResume && resumeModalOpen);
   const employerId = isEmployer && currentUser?.employer_profile_id
     ? (getEmployerById(currentUser.employer_profile_id)?.id || 'ep-acme')
     : null;
@@ -157,11 +160,11 @@ export default function TalentProfilePage() {
               <p className="text-gray-600 leading-relaxed">{talent.bio}</p>
             </div>
 
-            {talent.resume_url && (
+            {canSeeResume && talent.resume_url && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">{t.talent.resumeDownload}</h2>
                 <button
-                  onClick={() => { setResumeCacheBuster(Date.now()); setResumeModalOpen(true); }}
+                  onClick={() => setResumeModalOpen(true)}
                   className="inline-flex items-center gap-2 text-[hsl(210,100%,45%)] hover:underline"
                 >
                   <FileText className="w-5 h-5" />
@@ -170,16 +173,28 @@ export default function TalentProfilePage() {
               </div>
             )}
 
-            <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
-              <DialogContent className="max-w-4xl h-[80vh]">
-                <DialogTitle className="sr-only">{t.talent.viewResume}</DialogTitle>
-                <iframe
-                  src={`${talent.resume_url ?? ''}?t=${resumeCacheBuster}`}
-                  className="w-full h-full border-0 rounded-lg"
-                  title={t.applicant.resume}
-                />
-              </DialogContent>
-            </Dialog>
+            {canSeeResume && (
+              <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
+                <DialogContent className="max-w-4xl h-[80vh]">
+                  <DialogTitle className="sr-only">{t.talent.viewResume}</DialogTitle>
+                  {resumeSignedUrl ? (
+                    <iframe src={resumeSignedUrl} className="w-full h-full border-0 rounded-lg" title={t.applicant.resume} />
+                  ) : (
+                    <p className="m-auto text-sm text-muted-foreground">
+                      {resumeStatus === 'error' ? t.talent.resumeUnavailable : t.talent.resumeLoading}
+                    </p>
+                  )}
+                </DialogContent>
+              </Dialog>
+            )}
+
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">{t.talent.businessContactTitle}</h2>
+              <p className="text-gray-600 mb-2">{t.talent.businessContactDesc}</p>
+              <a href="mailto:business@venehire.com" className="text-[hsl(210,100%,45%)] font-medium hover:underline">
+                business@venehire.com
+              </a>
+            </div>
 
             {talent.video_url && (
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 md:p-8">

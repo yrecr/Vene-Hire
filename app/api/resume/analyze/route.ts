@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/auth-helpers-nextjs';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -51,12 +52,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Analysis service not configured' }, { status: 500 });
   }
 
+  // The bucket is private: hand n8n a short-lived link instead of the stored public-style URL.
+  const marker = '/object/public/resumes/';
+  const at = tp.resume_url.indexOf(marker);
+  const objectPath = at === -1 ? null : decodeURIComponent(tp.resume_url.slice(at + marker.length).split('?')[0]);
+  const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const { data: signed } = objectPath
+    ? await admin.storage.from('resumes').createSignedUrl(objectPath, 600)
+    : { data: null };
+  if (!signed?.signedUrl) {
+    return NextResponse.json({ error: 'Could not prepare the resume for analysis' }, { status: 500 });
+  }
+
   const n8nResp = await fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       talent_profile_id: tp.id,
-      resume_url: tp.resume_url,
+      resume_url: signed.signedUrl,
     }),
   });
 
